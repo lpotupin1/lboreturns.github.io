@@ -1,0 +1,2886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- ── PRIMARY SEO ── -->
+  <title>LBO Returns Calculator — Free Private Equity IRR & MoM Tool</title>
+  <meta name="description" content="Free LBO returns calculator for private equity professionals. Model IRR, MoM, debt paydown, and value bridge across any deal — entry/exit multiples, leverage, EBITDA growth, bolt-on acquisitions. No signup. Works offline. Excel export."/>
+  <meta name="keywords" content="LBO calculator, leveraged buyout calculator, IRR calculator, private equity calculator, MoM calculator, MOIC, PE model, debt paydown, value bridge, bolt-on acquisition model"/>
+  <meta name="author" content="LBOReturns.com"/>
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+  <link rel="canonical" href="https://lboreturns.com/"/>
+
+  <!-- ── OPEN GRAPH (LinkedIn, Slack previews) ── -->
+  <meta property="og:type"        content="website"/>
+  <meta property="og:url"         content="https://lboreturns.com/"/>
+  <meta property="og:title"       content="LBO Returns Calculator — Free Private Equity Tool"/>
+  <meta property="og:description" content="Instantly model IRR, MoM, debt paydown and value bridge for any LBO. Free, no signup, Excel export. Built for PE professionals."/>
+  <meta property="og:site_name"   content="LBOReturns"/>
+
+  <!-- ── TWITTER CARD ── -->
+  <meta name="twitter:card"        content="summary"/>
+  <meta name="twitter:title"       content="LBO Returns Calculator — Free PE Tool"/>
+  <meta name="twitter:description" content="Model IRR, MoM and debt paydown for any LBO. Free, no signup, Excel export."/>
+  <meta name="twitter:site"        content="@lboreturns"/>
+
+  <!-- ── STRUCTURED DATA (Google rich results) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "LBO Returns Calculator",
+    "url": "https://lboreturns.com/",
+    "description": "Free leveraged buyout returns calculator for private equity professionals. Model IRR, MoM, debt paydown, and value bridge.",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+      "IRR and MoM calculation",
+      "Debt paydown schedule",
+      "Value bridge waterfall",
+      "Bolt-on acquisition modeling",
+      "Excel export",
+      "Works offline"
+    ]
+  }
+  </script>
+
+  <!-- ── SECURITY META HEADERS ── -->
+  <!-- Note: HTTP headers in _headers file are stronger — these are fallbacks -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff"/>
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block"/>
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin"/>
+  <meta name="format-detection" content="telephone=no"/>
+
+  <!-- ── FAVICON ── -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%231e3a8a'/><text x='32' y='38' font-family='Georgia,serif' font-size='26' font-weight='700' fill='white' text-anchor='middle'>LBO</text></svg>">
+  <link rel="alternate icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC3SURBVFhH7ZbBCcAgDEWjuIAruIE7uIE7uIMbmEM6gQcRPBT8kEMgpNDkpf8dPIiXkJeQlyTJz1pr7RBCgFJqkFJa5hgREUopAEQEAOy9ByLiAQDee0TEJQAA7x0RkQQAACmlBKWUkiml9JxzTiml5JxTSgEAoJQCAIBSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSimllFJKKaWUUkoppZRSSim1tQEA/C8AAPgAMPMAAAAASUVORK5CYII=">
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9907881149931667" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --bg:        #f4f6f9;
+      --panel:     #ffffff;
+      --border:    #dde2ea;
+      --border-lt: #e8ecf2;
+      --text:      #1a2030;
+      --muted:     #6b7a96;
+      --dim:       #8a96a8;
+      --green:     #1e3a8a;
+      --green-dk:  #172d6e;
+      --green-lt:  #e8effe;
+      --amber:     #b45309;
+      --red:       #c0392b;
+      --blue:      #1d4ed8;
+      --white:     #1a2030;
+      --mono:      'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Consolas', monospace;
+      --sans:      -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      --serif:     Georgia, 'Times New Roman', serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; scroll-behavior: smooth; }
+
+    html { font-size: 108%; } /* Scale up all rem units ~8% for better readability */
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 2px solid var(--border);
+      background: var(--panel);
+      padding: 0 2rem;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 0;
+    }
+    .brand-wordmark {
+      display: flex;
+      align-items: baseline;
+      gap: 0.15rem;
+      text-decoration: none;
+    }
+    .brand-wordmark-lbo {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-style: normal;
+      color: var(--green);
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+    .brand-wordmark-returns {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 0.8rem;
+      font-weight: 400;
+      font-style: normal;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      line-height: 1;
+      align-self: flex-end;
+      margin-bottom: 0.15rem;
+    }
+    .brand-name {
+      display: none;
+    }
+    .brand-sub {
+      display: none;
+    }
+
+    /* ── HERO STRIP ── */
+    .hero-strip {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 2rem;
+    }
+    .hero-strip-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    .hero-strip-text {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .hero-strip-text strong { color: var(--text); font-weight: 600; }
+    .hero-strip-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .hero-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      font-family: var(--sans);
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .hero-badge.green { background: #e8effe; color: var(--green); }
+    .hero-badge.blue  { background: #eff6ff; color: #1d4ed8; }
+    .hero-badge.grey  { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+      margin-right: 0.4rem;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1rem 0;
+      padding-left: 1.5rem;
+      border-left: 1px solid var(--border);
+    }
+    .meta-item { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.06em; }
+    .meta-item strong { color: var(--green); font-weight: 500; }
+
+    /* ── MAIN LAYOUT ── */
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 4rem;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--green-lt);
+    }
+    .panel-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-family: var(--sans);
+    }
+    .panel-badge {
+      font-size: 0.68rem;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+      background: var(--border-lt);
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border);
+      font-family: var(--sans);
+    }
+
+    /* ── INPUTS ── */
+    .inputs-body { padding: 1.25rem; }
+
+    .input-section + .input-section {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .input-section-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      font-family: var(--sans);
+      font-weight: 600;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+    .input-label {
+      font-size: 0.82rem;
+      color: var(--text);
+      flex: 1;
+      letter-spacing: 0em;
+      font-family: var(--sans);
+    }
+    .input-hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+      font-family: var(--sans);
+    }
+    .input-field-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-prefix, .input-suffix {
+      position: absolute;
+      font-size: 0.68rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .input-prefix { left: 0.6rem; }
+    .input-suffix { right: 0.6rem; }
+
+    input[type="number"], input[type="range"] {
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+    }
+    .num-input {
+      width: 110px;
+      min-width: 0;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.45rem 0.6rem;
+      text-align: right;
+      transition: border-color 0.15s;
+    }
+    .num-input:focus { border-color: var(--green); outline: none; box-shadow: 0 0 0 2px rgba(10,124,92,0.12); }
+    .num-input.has-prefix { padding-left: 1.4rem; text-align: right; }
+    .num-input.has-suffix { padding-right: 1.4rem; }
+    .num-input::-webkit-inner-spin-button { opacity: 0.5; }
+
+    /* Slider */
+    .slider-row { margin-bottom: 0.6rem; }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.3rem;
+    }
+    .slider-label { font-size: 0.8rem; color: var(--text); font-family: var(--sans); }
+    .slider-val {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--green);
+      min-width: 50px;
+      text-align: right;
+    }
+    .slider-num-input {
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--green);
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed var(--border);
+      outline: none;
+      width: 62px;
+      text-align: right;
+      padding: 0 2px 1px;
+      transition: border-color 0.15s, color 0.15s;
+      -moz-appearance: textfield;
+    }
+    .slider-num-input:focus {
+      border-bottom-color: var(--green);
+      color: var(--green-dk);
+      background: var(--green-lt);
+    }
+    .slider-num-input::-webkit-inner-spin-button,
+    .slider-num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      cursor: pointer;
+      accent-color: var(--green);
+      touch-action: pan-x;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--green);
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--green);
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
+
+    /* ── TOGGLE ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+    }
+    .toggle-label { font-size: 0.72rem; color: var(--text); }
+    .toggle {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .toggle button {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .toggle button.active {
+      background: var(--green);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ── RESULTS PANEL ── */
+    .results-grid {
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 1.5rem;
+    }
+
+    /* BIG NUMBERS */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+    .kpi {
+      padding: 1.5rem 1.25rem;
+      border-right: 1px solid var(--border);
+      position: relative;
+      transition: background 0.2s;
+    }
+    .kpi:last-child { border-right: none; }
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: transparent;
+      transition: background 0.2s;
+    }
+    .kpi.positive::before { background: var(--green); }
+    .kpi.neutral::before  { background: var(--blue); }
+    .kpi.negative::before { background: var(--red); }
+    .kpi.amber::before    { background: var(--amber); }
+
+    .kpi-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      font-family: var(--sans);
+      font-weight: 600;
+    }
+    .kpi-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      transition: color 0.3s;
+    }
+    .kpi-value.green { color: var(--green); }
+    .kpi-value.amber { color: var(--amber); }
+    .kpi-value.red   { color: var(--red); }
+    .kpi-sub {
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── VERDICT BADGE ── */
+    .verdict-bar {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #fafbfc;
+    }
+    .verdict-label { font-size: 0.62rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+    .verdict-pill {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.9rem;
+      transition: all 0.3s;
+    }
+    .verdict-pill.strong  { background: #e8effe; color: var(--green); border: 1px solid var(--green); }
+    .verdict-pill.ok      { background: #fef3e2; color: var(--amber); border: 1px solid var(--amber); }
+    .verdict-pill.weak    { background: #fde8e6; color: var(--red);   border: 1px solid var(--red); }
+    .verdict-note { font-size: 0.65rem; color: var(--muted); font-style: italic; }
+
+    /* ── EXPORT BUTTON ── */
+    .export-strip {
+      padding: 0.75rem 1.25rem;
+      background: var(--green-lt);
+      border-top: 1px solid #c3e0d8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .export-strip-label {
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .export-strip-label strong { color: var(--text); }
+    .btn-export {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--green);
+      border: none;
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.4rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .btn-export:hover  { background: var(--green-dk); transform: translateY(-1px); }
+    .btn-export:active { transform: translateY(0); }
+    .btn-export svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .btn-export.exporting { background: var(--amber); cursor: wait; }
+
+    /* ── BOTTOM GRID ── */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    /* TABLE */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      font-size: 0.58rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.5rem 0.75rem;
+      text-align: right;
+      border-bottom: 2px solid var(--border);
+      background: var(--bg);
+    }
+    .data-table th:first-child { text-align: left; }
+    .data-table td {
+      font-size: 0.72rem;
+      padding: 0.5rem 0.75rem;
+      text-align: right;
+      border-bottom: 1px solid var(--border-lt);
+      color: var(--text);
+      transition: background 0.15s;
+    }
+    .data-table td:first-child { text-align: left; color: var(--muted); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--green-lt); }
+    .data-table td.pos { color: var(--green); font-weight: 600; }
+    .data-table td.neg { color: var(--red); }
+    .data-table td.hi  { color: var(--text); font-weight: 700; }
+
+    /* ── WATERFALL ── */
+    .waterfall-wrap { padding: 1rem 1.25rem; overflow-x: auto; }
+    svg.waterfall { display: block; }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      gap: 2rem;
+    }
+    .footer-disclaimer { max-width: 70ch; line-height: 1.5; }
+    .footer-links { display: flex; gap: 1.5rem; flex-shrink: 0; }
+    .footer-links a { color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--green); }
+
+    /* ── AD ZONE ── */
+    .ad-zone {
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      padding: 1rem;
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    .ad-label { font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+
+    /* ── SENSITIVITY TABLE ── */
+    .sensitivity-wrap {
+      padding: 0 1.25rem 1.25rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sens-table { border-collapse: collapse; width: 100%; min-width: 400px; }
+    .sens-table th, .sens-table td {
+      font-size: 0.65rem;
+      padding: 0.4rem 0.65rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .sens-table th { color: var(--muted); background: var(--bg); letter-spacing: 0.1em; font-weight: 600; }
+    .sens-table td { color: var(--text); transition: background 0.2s; }
+    .sens-table td.active-cell { outline: 2px solid var(--green); position: relative; z-index: 1; }
+
+    /* Scroll hint: hidden on desktop, shown on mobile */
+
+    /* Ensure panels never overflow their grid cell */
+    .panel { min-width: 0; overflow: hidden; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .panel { animation: fadeIn 0.4s ease both; }
+    .kpi   { animation: fadeIn 0.4s ease both; }
+    .kpi:nth-child(2) { animation-delay: 0.05s; }
+    .kpi:nth-child(3) { animation-delay: 0.1s; }
+    .kpi:nth-child(4) { animation-delay: 0.15s; }
+
+    @keyframes countUp {
+      from { opacity: 0.3; transform: scale(0.97); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .kpi-value.updated { animation: countUp 0.25s ease; }
+
+    /* ── RESPONSIVE ── */
+
+    /* Tablet */
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; padding: 1rem 1rem 3rem; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .kpi:nth-child(2) { border-right: none; }
+      .kpi:nth-child(3) { border-top: 1px solid var(--border); }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .header-meta { display: none; }
+    }
+
+    /* Mobile */
+    @media (max-width: 680px) {
+      header { padding: 0.75rem 1rem; gap: 0.5rem; flex-wrap: wrap; }
+      .header-brand { border-right: none; padding-right: 0; flex: 1; }
+      .header-status { font-size: 0.58rem; gap: 0.75rem; }
+      .hero-strip { padding: 0.75rem 1rem; }
+      .hero-strip-badges { display: none; }
+      .brand-name { font-size: 0.78rem; }
+      .app { padding: 0.75rem 0.75rem 2rem; gap: 1rem; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .kpi { padding: 1rem 0.75rem; }
+      .kpi-value { font-size: 1.75rem; }
+      .verdict-bar { flex-wrap: wrap; gap: 0.5rem; padding: 0.65rem 0.85rem; }
+      .export-strip { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+      .btn-export { justify-content: center; width: 100%; }
+      .input-row { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+      .input-field-wrap { width: 100%; }
+      .num-input { width: 100%; }
+      .panel-header { padding: 0.5rem 0.75rem; }
+      .inputs-body { padding: 0.85rem; }
+      .sensitivity-wrap { padding: 0 0.5rem 0.85rem; }
+      .sens-table { min-width: 320px; }
+      .sens-table th, .sens-table td { font-size: 0.58rem; padding: 0.28rem 0.35rem; letter-spacing: 0; }
+      .data-table th, .data-table td { font-size: 0.65rem; padding: 0.4rem 0.5rem; }
+      .page-footer { flex-direction: column; align-items: flex-start; gap: 0.75rem; padding: 1rem; }
+      .footer-links { flex-wrap: wrap; gap: 1rem; }
+      .waterfall-wrap { padding: 0.75rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
+
+    /* Very small phones */
+    @media (max-width: 400px) {
+      .kpi-value { font-size: 1.4rem; }
+      .kpi-label { font-size: 0.52rem; }
+      .brand-name { font-size: 0.7rem; letter-spacing: 0.03em; }
+    }
+    /* ── EDUCATIONAL CONTENT ── */
+    .content-section {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+    }
+    .content-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.75;
+    }
+    .content-inner h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 2.5rem 0 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--green);
+      display: inline-block;
+    }
+    .content-inner h2:first-child { margin-top: 0; }
+    .content-inner p {
+      font-size: 0.95rem;
+      color: #374151;
+      margin: 0 0 1rem;
+    }
+    .content-inner strong { color: var(--text); font-weight: 600; }
+    @media (max-width: 680px) {
+      .content-section { padding: 2rem 1rem; }
+      .content-inner h2 { font-size: 1rem; }
+      .content-inner p  { font-size: 0.88rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-brand">
+    <a class="brand-wordmark" href="#">
+      <span class="brand-wordmark-lbo">LBO</span><span class="brand-wordmark-returns">RETURNS</span>
+    </a>
+  </div>
+</header>
+
+<!-- HERO STRIP -->
+<div class="hero-strip">
+  <div class="hero-strip-inner">
+    <div class="hero-strip-text">
+      <strong>Free LBO Returns Calculator.</strong> Enter deal terms — entry/exit multiples, leverage, EBITDA growth, bolt-on acquisitions — and instantly model IRR, MoM, debt paydown, and value bridge.
+    </div>
+    <div class="hero-strip-badges">
+      <span class="hero-badge green">✓ No signup</span>
+      <span class="hero-badge blue">✓ Excel export</span>
+      <span class="hero-badge grey">✓ Works offline</span>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- ── LEFT: INPUTS ── -->
+  <div class="panel" style="animation-delay:0s">
+    <div class="panel-header">
+      <span class="panel-title">Model Inputs</span>
+    </div>
+    <div class="inputs-body">
+
+      <!-- DEAL ENTRY -->
+      <div class="input-section">
+        <div class="input-section-label">Deal Entry</div>
+
+        <div class="input-row">
+          <div class="input-label">
+            Entry EBITDA
+            <span class="input-hint">LTM at close ($M)</span>
+          </div>
+          <div class="input-field-wrap">
+            <span class="input-prefix">$</span>
+            <input class="num-input has-prefix" type="number" id="ebitda" value="50" min="1" max="10000" step="1"/>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">Entry EV/EBITDA Multiple</span>
+            <input class="slider-num-input" type="number" id="entryMultVal" value="12.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
+          </div>
+          <input type="range" id="entryMult" min="1" max="25" step="0.5" value="12"/>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">Leverage (Debt / EBITDA)</span>
+            <input class="slider-num-input" type="number" id="leverageVal" value="5.0" min="0" max="10" step="0.5" title="Type a value (0–10x)"/>
+          </div>
+          <input type="range" id="leverage" min="0" max="10" step="0.5" value="5"/>
+        </div>
+      </div>
+
+      <!-- EXIT -->
+      <div class="input-section">
+        <div class="input-section-label">Value Creation & Exit</div>
+
+        <!-- EBITDA CAGR override toggle -->
+        <div class="toggle-row" style="margin-bottom:0.75rem;">
+          <span class="slider-label" style="font-size:0.75rem;">EBITDA growth input mode</span>
+          <div class="toggle">
+            <button id="cagrModeSimple" class="active" onclick="setCagrMode('simple')">CAGR</button>
+            <button id="cagrModeDetail"            onclick="setCagrMode('detail')">Rev + Margin</button>
+          </div>
+        </div>
+
+        <!-- Simple mode: single EBITDA CAGR -->
+        <div id="cagrSimple">
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">EBITDA Growth (CAGR)</span>
+              <input class="slider-num-input" type="number" id="growthVal" value="10.0" min="-10" max="40" step="0.5" title="Type a value"/>
+            </div>
+            <input type="range" id="growth" min="-10" max="40" step="0.5" value="10"/>
+          </div>
+        </div>
+
+        <!-- Detail mode: revenue growth + margin expansion -->
+        <div id="cagrDetail" style="display:none;">
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">Revenue Growth (CAGR)</span>
+              <input class="slider-num-input" type="number" id="revGrowthVal" value="12.0" min="-20" max="50" step="0.5" title="Type a value"/>
+            </div>
+            <input type="range" id="revGrowth" min="-20" max="50" step="0.5" value="12"/>
+          </div>
+          <div class="input-row">
+            <div class="input-label">Entry EBITDA Margin<span class="input-hint">% of revenue at close</span></div>
+            <div class="input-field-wrap">
+              <input class="num-input has-suffix" type="number" id="entryMargin" value="20" min="1" max="80" step="0.5"/>
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-label">Exit EBITDA Margin<span class="input-hint">% of revenue at exit</span></div>
+            <div class="input-field-wrap">
+              <input class="num-input has-suffix" type="number" id="exitMargin" value="24" min="1" max="80" step="0.5"/>
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <!-- Derived EBITDA CAGR display -->
+          <div style="background:var(--green-lt);border:1px solid #c3e0d8;padding:0.5rem 0.75rem;margin-top:0.5rem;border-radius:3px;">
+            <span style="font-size:0.72rem;color:var(--muted);">Implied EBITDA CAGR: </span>
+            <span id="impliedCagr" style="font-size:0.8rem;font-weight:700;color:var(--green);">—</span>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">Exit EV/EBITDA Multiple</span>
+            <input class="slider-num-input" type="number" id="exitMultVal" value="12.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
+          </div>
+          <input type="range" id="exitMult" min="1" max="25" step="0.5" value="12"/>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">Hold Period (Years)</span>
+            <input class="slider-num-input" type="number" id="holdVal" value="5" min="1" max="10" step="1" title="Type a value (1–10 years)"/>
+          </div>
+          <input type="range" id="hold" min="1" max="10" step="1" value="5"/>
+        </div>
+
+        <div class="input-row" style="margin-top:0.5rem">
+          <div class="input-label">
+            Transaction Costs
+            <span class="input-hint">% of Entry EV (fees, closing)</span>
+          </div>
+          <div class="input-field-wrap">
+            <input class="num-input has-suffix" type="number" id="txCost" value="2" min="0" max="10" step="0.5"/>
+            <span class="input-suffix">%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEBT -->
+      <div class="input-section">
+        <div class="input-section-label">Debt Structure</div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <span class="slider-label">All-in Interest Rate</span>
+            <input class="slider-num-input" type="number" id="interestVal" value="9.00" min="4" max="18" step="0.25" title="Type a value (4–18%)"/>
+          </div>
+          <input type="range" id="interest" min="4" max="18" step="0.25" value="9"/>
+        </div>
+
+        <div class="toggle-row">
+          <span class="toggle-label">Cash Sweep (FCF → Debt Paydown)</span>
+          <div class="toggle">
+            <button id="sweepOn"  class="active" onclick="setSweep(true)">ON</button>
+            <button id="sweepOff"           onclick="setSweep(false)">OFF</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FCF SECTION -->
+      <div class="input-section">
+        <div class="toggle-row" style="margin-bottom:0.75rem;">
+          <span class="input-section-label" style="margin-bottom:0;">Free Cash Flow</span>
+          <div class="toggle">
+            <button id="fcfModeSimple" class="active" onclick="setFcfMode('simple')">Simple</button>
+            <button id="fcfModeDetail"            onclick="setFcfMode('detail')">Detailed</button>
+          </div>
+        </div>
+
+        <!-- Simple mode -->
+        <div id="fcfSimple">
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">FCF Conversion (% of EBITDA)</span>
+              <input class="slider-num-input" type="number" id="fcfVal" value="45" min="0" max="100" step="1" title="Type a value"/>
+            </div>
+            <input type="range" id="fcf" min="0" max="100" step="1" value="45"/>
+          </div>
+        </div>
+
+        <!-- Detailed mode -->
+        <div id="fcfDetail" style="display:none;">
+          <div class="input-row">
+            <div class="input-label">Tax Rate<span class="input-hint">Applied to EBIT − Interest</span></div>
+            <div class="input-field-wrap">
+              <input class="num-input has-suffix" type="number" id="taxRate" value="25" min="0" max="60" step="0.5"/>
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-label">D&A<span class="input-hint">% of EBITDA (add-back to FCF)</span></div>
+            <div class="input-field-wrap">
+              <input class="num-input has-suffix" type="number" id="daRate" value="8" min="0" max="40" step="0.5"/>
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-label">Capex<span class="input-hint">% of EBITDA</span></div>
+            <div class="input-field-wrap">
+              <input class="num-input has-suffix" type="number" id="capexRate" value="6" min="0" max="60" step="0.5"/>
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-label">Working Capital<span class="input-hint">% of EBITDA increment (+ = use)</span></div>
+            <div class="input-field-wrap">
+              <input class="num-input has-suffix" type="number" id="wcRate" value="3" min="-20" max="30" step="0.5"/>
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <!-- Implied FCF % display -->
+          <div style="background:var(--green-lt);border:1px solid #c3e0d8;padding:0.5rem 0.75rem;margin-top:0.5rem;border-radius:3px;">
+            <span style="font-size:0.72rem;color:var(--muted);">Implied unlevered FCF: </span>
+            <span id="impliedFcf" style="font-size:0.8rem;font-weight:700;color:var(--green);">—</span>
+          </div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-top:0.4rem;line-height:1.4;">
+            FCF = NOPAT + D&amp;A − Capex − ΔNWC. Interest is handled by the debt sweep separately.
+          </div>
+        </div>
+      </div>
+
+      <!-- BOLT-ON ACQUISITION -->
+      <div class="input-section">
+        <div class="toggle-row" style="margin-bottom:0.75rem;">
+          <span class="input-section-label" style="margin-bottom:0;">Bolt-on Acquisition</span>
+          <div class="toggle">
+            <button id="acqOn"  onclick="setAcq(true)">ON</button>
+            <button id="acqOff" class="active" onclick="setAcq(false)">OFF</button>
+          </div>
+        </div>
+
+        <div id="acqInputs" style="opacity:0.3; pointer-events:none; transition: opacity 0.2s;">
+          <div class="input-row">
+            <div class="input-label">
+              Annual Acquired EBITDA
+              <span class="input-hint">New EBITDA acquired each year ($M)</span>
+            </div>
+            <div class="input-field-wrap">
+              <span class="input-prefix">$</span>
+              <input class="num-input has-prefix" type="number" id="acqEbitda" value="0" min="0" max="10000" step="1" inputmode="decimal" onfocus="this.select()"/>
+            </div>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">Acquisition Multiple</span>
+              <input class="slider-num-input" type="number" id="acqMultVal" value="10.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
+            </div>
+            <input type="range" id="acqMult" min="1" max="25" step="0.5" value="10"/>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-header">
+              <span class="slider-label">Acquired EBITDA Growth Rate</span>
+              <input class="slider-num-input" type="number" id="acqGrowthVal" value="10.0" min="-10" max="40" step="0.5" title="Annual growth on acquired EBITDA"/>
+            </div>
+            <input type="range" id="acqGrowth" min="-10" max="40" step="0.5" value="10"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANAGEMENT OPTIONS -->
+      <div class="input-section">
+        <div class="toggle-row" style="margin-bottom:0.75rem;">
+          <span class="input-section-label" style="margin-bottom:0;">Management Option Pool</span>
+          <div class="toggle">
+            <button id="mgmtOn"  onclick="setMgmt(true)">ON</button>
+            <button id="mgmtOff" class="active" onclick="setMgmt(false)">OFF</button>
+          </div>
+        </div>
+        <div id="mgmtInputs" style="opacity:0.3; pointer-events:none; transition: opacity 0.2s;">
+          <div class="input-row">
+            <div class="input-label">
+              Option Pool Size
+              <span class="input-hint">% of exit equity paid to management</span>
+            </div>
+            <div class="input-field-wrap">
+              <input class="num-input has-suffix" type="number" id="mgmtPool" value="10" min="0" max="30" step="0.5"/>
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:1.5rem; min-width:0;">
+
+    <!-- KPI ROW -->
+    <div class="panel" style="animation-delay:0.1s">
+      <div class="kpi-row" id="kpiRow">
+        <div class="kpi positive">
+          <div class="kpi-label">IRR (Equity)</div>
+          <div class="kpi-value green" id="irr">—</div>
+          <div class="kpi-sub" id="irrSub">annualized return</div>
+        </div>
+        <div class="kpi neutral">
+          <div class="kpi-label">Money on Money (MoM)</div>
+          <div class="kpi-value" id="mom">—</div>
+          <div class="kpi-sub" id="momSub">total equity multiple</div>
+        </div>
+        <div class="kpi neutral">
+          <div class="kpi-label">Entry Equity</div>
+          <div class="kpi-value" id="entryEq">—</div>
+          <div class="kpi-sub" id="entryEqSub">equity invested ($M)</div>
+        </div>
+        <div class="kpi positive">
+          <div class="kpi-label">Exit Equity</div>
+          <div class="kpi-value" id="exitEq">—</div>
+          <div class="kpi-sub" id="exitEqSub">equity returned ($M)</div>
+        </div>
+      </div>
+
+      <div class="verdict-bar">
+        <span class="verdict-label">Verdict:</span>
+        <span class="verdict-pill" id="verdictPill">—</span>
+        <span class="verdict-note" id="verdictNote"></span>
+      </div>
+
+      <div class="export-strip">
+        <span class="export-strip-label"><strong>Export to Excel</strong> — fully formula-linked model with debt schedule &amp; IRR sensitivity table</span>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+          <button class="btn-export" id="shareBtn" onclick="shareScenario()" style="background:var(--panel-bg);color:var(--text);border:1.5px solid var(--border);">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="15" cy="4" r="2" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="15" cy="16" r="2" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="5" cy="10" r="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M7 9l6-4M7 11l6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Share
+          </button>
+          <button class="btn-export" id="exportBtn" onclick="exportToExcel()">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 4a1 1 0 011-1h7l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M11 3v4h4M7 12l3 3 3-3M10 15v-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Download .xlsx
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+
+      <!-- SCHEDULE TABLE -->
+      <div class="panel" style="animation-delay:0.2s">
+        <div class="panel-header">
+          <span class="panel-title">Year-by-Year Schedule</span>
+          <span class="panel-badge" id="tableLabel">5-Year Hold</span>
+        </div>
+        <div style="overflow-x:auto; padding: 0.25rem 0;">
+          <table class="data-table" id="scheduleTable">
+            <thead id="scheduleHead">
+              <tr>
+                <th>Year</th>
+                <th>EBITDA</th>
+                <th>Debt</th>
+                <th>Int. Exp.</th>
+                <th>FCF</th>
+                <th>Equity</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VALUE BRIDGE -->
+      <div class="panel" style="animation-delay:0.25s">
+        <div class="panel-header">
+          <span class="panel-title">Value Bridge</span>
+          <div class="toggle" style="margin-left:auto;">
+            <button id="wfDollar" class="active" onclick="setWfMode('dollar')">$</button>
+            <button id="wfMoic"                  onclick="setWfMode('moic')">MoM</button>
+          </div>
+        </div>
+        <div class="waterfall-wrap">
+          <svg id="waterfall" class="waterfall" viewBox="0 0 360 230" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SENSITIVITY TABLE -->
+    <div class="panel" style="animation-delay:0.3s">
+      <div class="panel-header">
+        <span class="panel-title">Sensitivity — Exit Multiple vs. EBITDA Growth</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
+            <span>Step:</span>
+            <select id="sensGrowthStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.005">0.5%</option>
+              <option value="0.010" selected>1.0%</option>
+              <option value="0.025">2.5%</option>
+              <option value="0.050">5.0%</option>
+            </select>
+            <select id="sensExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.25">0.25x</option>
+              <option value="0.5" selected>0.5x</option>
+              <option value="1.0">1.0x</option>
+            </select>
+          </div>
+          <div class="toggle">
+            <button id="sensModeIRR"  class="active" onclick="setSensMode('irr')">IRR</button>
+            <button id="sensModeMoM"          onclick="setSensMode('mom')">MoM</button>
+          </div>
+        </div>
+      </div>
+      <div class="sensitivity-wrap">
+        <table class="sens-table" id="sensTable"></table>
+      </div>
+    </div>
+
+    <!-- ENTRY vs EXIT MULTIPLE SENSITIVITY TABLE -->
+    <div class="panel" style="animation-delay:0.35s">
+      <div class="panel-header">
+        <span class="panel-title">Sensitivity — Entry Multiple vs. Exit Multiple</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
+            <span>Step:</span>
+            <select id="sensMultStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.25">0.25x</option>
+              <option value="0.5" selected>0.5x</option>
+              <option value="1.0">1.0x</option>
+            </select>
+          </div>
+          <div class="toggle">
+            <button id="sensModeIRR2" class="active" onclick="setSensMode('irr')">IRR</button>
+            <button id="sensModeMoM2"          onclick="setSensMode('mom')">MoM</button>
+          </div>
+        </div>
+      </div>
+      <div class="sensitivity-wrap">
+        <table class="sens-table" id="sensTable2"></table>
+      </div>
+    </div>
+
+    <!-- BOLT-ON SENSITIVITY TABLE (shown only when bolt-on is ON) -->
+    <div class="panel" id="sensAcqPanel" style="animation-delay:0.4s;display:none;">
+      <div class="panel-header">
+        <span class="panel-title">Sensitivity — Acquired EBITDA vs. Exit Multiple</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
+            <span>Acq. Step:</span>
+            <select id="sensAcqStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.5">$0.5M</option>
+              <option value="1" selected>$1M</option>
+              <option value="2">$2M</option>
+              <option value="5">$5M</option>
+              <option value="10">$10M</option>
+            </select>
+            <span>Exit Step:</span>
+            <select id="sensAcqExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.25">0.25x</option>
+              <option value="0.5" selected>0.5x</option>
+              <option value="1.0">1.0x</option>
+            </select>
+          </div>
+          <div class="toggle">
+            <button id="sensModeIRR3" class="active" onclick="setSensMode('irr')">IRR</button>
+            <button id="sensModeMoM3"          onclick="setSensMode('mom')">MoM</button>
+          </div>
+        </div>
+      </div>
+      <div class="sensitivity-wrap">
+        <table class="sens-table" id="sensTable3"></table>
+      </div>
+    </div>
+
+    <!-- AD ZONE -->
+    <div class="ad-zone">
+      <div class="ad-label">Advertisement</div>
+      <div style="min-height:90px; display:flex; align-items:center; justify-content:center;">
+        <ins class="adsbygoogle"
+          style="display:block"
+          data-ad-client="ca-pub-9907881149931667"
+          data-ad-slot=""
+          data-ad-format="auto"
+          data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDUCATIONAL CONTENT -->
+<div class="content-section">
+  <div class="content-inner">
+
+    <h2>What is an LBO?</h2>
+    <p>A leveraged buyout (LBO) is an acquisition of a company financed primarily with debt — typically 50–70% of the purchase price — with the remainder funded by private equity. The target company's own assets and cash flows serve as collateral for the borrowing. Private equity firms use this structure to amplify equity returns: because the sponsor puts in relatively little equity, any appreciation in the business value accrues disproportionately to that equity slice.</p>
+    <p>LBOs are the cornerstone transaction type for private equity firms. The buyer acquires a business, uses operational improvements and debt paydown to build value over a 3–7 year hold period, then exits through a sale or IPO — returning capital to limited partners with a target return of 20%+ IRR.</p>
+
+    <h2>How to Use This LBO Calculator</h2>
+    <p>This free tool models the core mechanics of an LBO and lets you stress-test returns across any deal. Start by entering your <strong>Entry EBITDA</strong> and <strong>Entry EV/EBITDA multiple</strong> to set the purchase price. Add your <strong>leverage assumption</strong> (Debt/EBITDA) and <strong>interest rate</strong> to size the debt. Then set your <strong>EBITDA growth CAGR</strong>, <strong>exit multiple</strong>, and <strong>hold period</strong> to model the exit.</p>
+    <p>The calculator instantly outputs <strong>IRR</strong> (internal rate of return) and <strong>MoM</strong> (money-on-money multiple), along with a year-by-year debt schedule, value bridge waterfall, and two IRR sensitivity tables. Advanced features include bolt-on acquisition modeling, management option pool dilution, revenue and margin disaggregation, and detailed FCF build-up with tax rate, D&amp;A, capex, and working capital assumptions.</p>
+
+    <h2>Understanding IRR and MoM</h2>
+    <p><strong>IRR (Internal Rate of Return)</strong> is the annualized return on the equity investment. Most institutional PE funds target a gross IRR of 20–25%+. IRR is sensitive to hold period — the same dollar return over 3 years produces a much higher IRR than over 7 years. This is why sponsors often try to exit early when performance exceeds plan.</p>
+    <p><strong>MoM (Money-on-Money)</strong>, also called MOIC (Multiple on Invested Capital), measures total return as a simple multiple of invested equity. A 2.0x MoM means the sponsor doubled their money. Institutional investors typically target 2.5x–3.5x gross MoM over a 5-year hold. Unlike IRR, MoM is unaffected by hold period — it purely measures magnitude of return, not speed.</p>
+    <p>Both metrics matter. A 3.0x MoM over 7 years is a mediocre deal (≈17% IRR); the same 3.0x over 3 years is exceptional (≈44% IRR). PE fund economics favor IRR because carried interest accrues faster, but LPs care about both.</p>
+
+    <h2>The Role of Leverage in LBO Returns</h2>
+    <p>Leverage is the primary return amplifier in an LBO. By financing a large portion of the purchase with debt and using the company's cash flows to repay it, the private equity firm concentrates value creation in the equity tranche. If a business is acquired at 10x EBITDA and exits at 12x with modest organic growth, the debt paydown alone can generate a 2x+ equity return even with no multiple expansion.</p>
+    <p>However, leverage cuts both ways. High debt loads increase interest expense, reduce financial flexibility, and amplify losses if the business underperforms. Typical LBO leverage ranges from 4x–7x Debt/EBITDA depending on the sector, cash flow predictability, and credit market conditions. Lenders generally require interest coverage of 1.5x–2.0x minimum.</p>
+
+    <h2>Value Creation Drivers</h2>
+    <p>The <strong>Value Bridge</strong> in this calculator decomposes your equity return into four distinct sources of value creation:</p>
+    <p><strong>EBITDA Growth</strong> — Operational improvements, revenue growth, and margin expansion increase the business's earnings, which are then multiplied at exit. This is the highest-quality form of value creation and what top-tier PE firms prioritize. Growth might come from organic sales growth, pricing power, cost reduction programs, or geographic expansion.</p>
+    <p><strong>Multiple Expansion</strong> — Buying at a lower multiple than you sell at. If you acquire at 8x and exit at 10x, you benefit from two turns of expansion on the exit EBITDA. Multiple expansion is less reliable than EBITDA growth — it depends on market conditions, investor sentiment, and timing — but can be a powerful tailwind in bull markets.</p>
+    <p><strong>Debt Paydown</strong> — As the company generates free cash flow and repays debt, the enterprise value stays constant but equity value increases. This is mechanical value creation that happens even in a flat business. A company acquired with $400M of debt that repays $150M over 5 years creates $150M of equity value through debt paydown alone.</p>
+    <p><strong>Bolt-on Acquisitions</strong> — Many PE firms pursue a "buy-and-build" strategy: acquiring smaller companies at lower multiples and adding them to the platform, which then exits at a higher consolidated multiple. This multiple arbitrage — buying at 6x and selling the combined entity at 12x — is one of the highest-conviction return strategies in private equity.</p>
+
+    <h2>Cash Sweep and Free Cash Flow</h2>
+    <p>In most LBO structures, the company's excess free cash flow is swept to repay debt as quickly as possible — this is the <strong>cash sweep</strong> mechanism. Faster debt paydown accelerates equity value creation, reduces refinancing risk, and allows for earlier dividend recapitalizations or exit opportunities. The cash sweep is typically the first priority in a company's cash flow waterfall, above capex reinvestment and acquisitions.</p>
+    <p>Free cash flow conversion — how much of EBITDA translates to actual cash available for debt service — is one of the most critical inputs in LBO underwriting. After taxes, capex, working capital changes, and interest expense, a typical industrial business might convert 35–50% of EBITDA to levered free cash flow. Asset-light businesses (software, services) can convert 60–80%, which is why they command premium multiples.</p>
+
+    <h2>LBO Benchmarks and Rule of Thumb</h2>
+    <p>While every deal is different, experienced practitioners use a few quick benchmarks when evaluating LBO returns. A deal entering at 10x EBITDA with 5x leverage, 10% EBITDA growth, and exiting at 12x over 5 years should generate roughly 20–25% IRR — solidly in institutional territory. The <strong>rule of 72</strong> — divide 72 by your IRR to estimate how long it takes to double money — is a useful sanity check: 20% IRR → 3.6 years to double.</p>
+    <p>Most institutional LBO funds target gross IRR of 20–25% and gross MoM of 2.5–3.5x before fees. After the 2% management fee and 20% carried interest typical of PE funds, net returns to LPs are roughly 5–7 percentage points lower. The J-curve — where returns appear negative in early fund years as fees accrue before investments mature — is another key concept for anyone evaluating PE as an asset class.</p>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <div class="footer-disclaimer">
+    ⚠ This calculator is for illustrative purposes only. Results are simplified models and do not account for all deal-specific variables including taxes, PIK interest, working capital, capex, or transaction-specific structures. Not financial or investment advice.
+  </div>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">Methodology</a>
+    <a href="#">Advertise</a>
+    <a href="#">Privacy</a>
+  </div>
+</footer>
+
+<script>
+  // ── CLOCK ──
+  function updateClock_unused() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('en-US', { hour12: false }) + ' EST';
+  }
+
+  // ── STATE ──
+  let cashSweep   = true;
+  let acqEnabled  = false;
+  let cagrMode    = 'simple';
+  let fcfMode     = 'simple';
+  let wfMode      = 'dollar';
+  let sensMode    = 'irr';
+  let mgmtEnabled = false;
+
+  function setMgmt(val) {
+    mgmtEnabled = val;
+    document.getElementById('mgmtOn').classList.toggle('active', val);
+    document.getElementById('mgmtOff').classList.toggle('active', !val);
+    const inputs = document.getElementById('mgmtInputs');
+    inputs.style.opacity       = val ? '1' : '0.3';
+    inputs.style.pointerEvents = val ? 'auto' : 'none';
+    calculate();
+  }
+
+  function setSensMode(mode) {
+    sensMode = mode;
+    document.getElementById('sensModeIRR').classList.toggle('active', mode === 'irr');
+    document.getElementById('sensModeMoM').classList.toggle('active', mode === 'mom');
+    document.getElementById('sensModeIRR2').classList.toggle('active', mode === 'irr');
+    document.getElementById('sensModeMoM2').classList.toggle('active', mode === 'mom');
+    document.getElementById('sensModeIRR3').classList.toggle('active', mode === 'irr');
+    document.getElementById('sensModeMoM3').classList.toggle('active', mode === 'mom');
+    const s = window._lboState;
+    if (s) {
+      const { ebitda, entryMult, leverage, interest, fcfPct, growth, exitMult, hold, txCost, acqEbitda, acqMult, acqGrowth, cashSweep: cs } = s.inputs;
+      const entryDebt = ebitda * leverage;
+      drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, s.inputs.fcfDetailParams||null);
+      drawMultipleSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, s.inputs.fcfDetailParams||null);
+      if (s.inputs.acqEnabled && acqEbitda > 0) drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, s.inputs.fcfDetailParams||null);
+    }
+  }
+
+  function setSweep(val) {
+    cashSweep = val;
+    document.getElementById('sweepOn').classList.toggle('active', val);
+    document.getElementById('sweepOff').classList.toggle('active', !val);
+    calculate();
+  }
+
+  function setWfMode(mode) {
+    wfMode = mode;
+    document.getElementById('wfDollar').classList.toggle('active', mode === 'dollar');
+    document.getElementById('wfMoic').classList.toggle('active', mode === 'moic');
+    const s = window._lboState;
+    if (s) {
+      const { ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib } = s.attribution;
+      const { entryEquity, netExitEq } = s.results;
+       drawWaterfall(entryEquity, ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, -(s.results.mgmtPayout||0), netExitEq, s.attribution.revGrowthContrib||null, s.attribution.marginContrib||null);
+    }
+  }
+
+  function setFcfMode(mode) {
+    fcfMode = mode;
+    document.getElementById('fcfModeSimple').classList.toggle('active', mode === 'simple');
+    document.getElementById('fcfModeDetail').classList.toggle('active', mode === 'detail');
+    document.getElementById('fcfSimple').style.display = mode === 'simple' ? '' : 'none';
+    document.getElementById('fcfDetail').style.display = mode === 'detail' ? '' : 'none';
+    calculate();
+  }
+
+  function setSweep(val) {
+    cashSweep = val;
+    document.getElementById('sweepOn').classList.toggle('active', val);
+    document.getElementById('sweepOff').classList.toggle('active', !val);
+    calculate();
+  }
+
+  function setAcq(val) {
+    acqEnabled = val;
+    document.getElementById('acqOn').classList.toggle('active', val);
+    document.getElementById('acqOff').classList.toggle('active', !val);
+    const inputs = document.getElementById('acqInputs');
+    inputs.style.opacity = val ? '1' : '0.3';
+    inputs.style.pointerEvents = val ? 'auto' : 'none';
+    calculate();
+  }
+
+  function setCagrMode(mode) {
+    cagrMode = mode;
+    document.getElementById('cagrModeSimple').classList.toggle('active', mode === 'simple');
+    document.getElementById('cagrModeDetail').classList.toggle('active', mode === 'detail');
+    document.getElementById('cagrSimple').style.display = mode === 'simple' ? '' : 'none';
+    document.getElementById('cagrDetail').style.display = mode === 'detail' ? '' : 'none';
+    calculate();
+  }
+
+  // ── WIRE SLIDERS (bidirectional: slider ↔ typed input) ──
+  const sliders = [
+    { id: 'entryMult', disp: 'entryMultVal', fmt: v => (+v).toFixed(1) },
+    { id: 'leverage',  disp: 'leverageVal',  fmt: v => (+v).toFixed(1) },
+    { id: 'interest',  disp: 'interestVal',  fmt: v => (+v).toFixed(2) },
+    { id: 'fcf',       disp: 'fcfVal',       fmt: v => (+v).toFixed(0) },
+    { id: 'growth',    disp: 'growthVal',    fmt: v => (+v).toFixed(1) },
+    { id: 'exitMult',  disp: 'exitMultVal',  fmt: v => (+v).toFixed(1) },
+    { id: 'hold',      disp: 'holdVal',      fmt: v => (+v).toFixed(0) },
+    { id: 'acqMult',   disp: 'acqMultVal',   fmt: v => (+v).toFixed(1) },
+    { id: 'acqGrowth', disp: 'acqGrowthVal', fmt: v => (+v).toFixed(1) },
+    { id: 'revGrowth', disp: 'revGrowthVal', fmt: v => (+v).toFixed(1) },
+  ];
+
+  sliders.forEach(s => {
+    const slider   = document.getElementById(s.id);
+    const numInput = document.getElementById(s.disp);
+    if (!slider || !numInput) return;
+
+    // Slider → number input
+    slider.addEventListener('input', () => {
+      numInput.value = s.fmt(slider.value);
+      calculate();
+    });
+
+    // Select all on focus so user can just type to replace
+    numInput.addEventListener('focus', () => numInput.select());
+
+    // Number input → slider (on blur/Enter: clamp slider POSITION only, value is uncapped)
+    const syncFromTyped = () => {
+      let v = parseFloat(numInput.value);
+      if (isNaN(v)) { numInput.value = s.fmt(slider.value); return; }
+      // Enforce hard minimum only
+      const min = +slider.min;
+      if (v < min) { v = min; numInput.value = s.fmt(v); }
+      // Move slider thumb to its max if value exceeds slider range (visual only)
+      slider.value = Math.min(v, +slider.max);
+      // Don't reformat — keep the user's typed value as-is in the input
+      calculate();
+    };
+    numInput.addEventListener('change', syncFromTyped);
+    numInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { syncFromTyped(); numInput.blur(); }
+    });
+  });
+  ['ebitda','txCost','acqEbitda','entryMargin','exitMargin','taxRate','daRate','capexRate','wcRate','mgmtPool'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calculate);
+  });
+
+  // ── CALCULATE ──
+  function calculate() {
+    const ebitda    = +document.getElementById('ebitda').value    || 50;
+    const entryMult = +document.getElementById('entryMultVal').value || 12;
+    const leverage  = +document.getElementById('leverageVal').value;
+    const interest  = +document.getElementById('interestVal').value  / 100;
+    const exitMult  = +document.getElementById('exitMultVal').value  || 12;
+    const hold      = Math.round(+document.getElementById('holdVal').value) || 5;
+    const txCost    = +document.getElementById('txCost').value       / 100;
+    const acqEbitda  = acqEnabled ? (+document.getElementById('acqEbitda').value  || 0) : 0;
+    const acqMult    = acqEnabled ? (+document.getElementById('acqMultVal').value  || 10) : 10;
+    const acqGrowth  = acqEnabled ? (+document.getElementById('acqGrowthVal').value / 100) : 0;
+
+    // ── Bolt-on math ──
+    // Each year a new $acqEbitda EBITDA business is acquired at acqMult.
+    // Each acquired cohort grows at acqGrowth from the year it's acquired.
+    // Total acquired EBITDA in year yr = sum_{i=1}^{yr} acqEbitda * (1+acqGrowth)^(yr-i)
+    // = acqEbitda * [(1+acqGrowth)^yr - 1] / acqGrowth  (geometric series, or yr if acqGrowth=0)
+    const totalAcqEbitda = yr => {
+      if (!acqEnabled || acqEbitda === 0) return 0;
+      if (Math.abs(acqGrowth) < 1e-9) return acqEbitda * yr;
+      return acqEbitda * (Math.pow(1 + acqGrowth, yr) - 1) / acqGrowth;
+    };
+    // Total acquisition debt added through year yr = acqMult * acqEbitda * yr (new debt each year)
+
+    // ── EBITDA growth: simple CAGR or disaggregated rev + margin ──
+    let growth;
+    if (cagrMode === 'detail') {
+      const revGrowth   = +document.getElementById('revGrowthVal').value / 100;
+      const entryMargin = +document.getElementById('entryMargin').value  / 100;
+      const exitMarginV = +document.getElementById('exitMargin').value   / 100;
+      // Implied EBITDA CAGR: exit EBITDA / entry EBITDA ^ (1/hold) - 1
+      // Entry EBITDA = ebitda (given). Exit EBITDA = entry revenue × (1+revGrowth)^hold × exitMargin
+      // Entry revenue = ebitda / entryMargin
+      const entryRev   = entryMargin > 0 ? ebitda / entryMargin : ebitda;
+      const exitRev    = entryRev * Math.pow(1 + revGrowth, hold);
+      const exitEbitdaFromMargin = exitRev * exitMarginV;
+      growth = Math.pow(exitEbitdaFromMargin / ebitda, 1 / hold) - 1;
+      // Update implied CAGR display
+      document.getElementById('impliedCagr').textContent =
+        (growth * 100 >= 0 ? '+' : '') + (growth * 100).toFixed(1) + '%';
+      // Sync simple mode slider display
+      document.getElementById('growthVal').value = (growth * 100).toFixed(1);
+      document.getElementById('growth').value = Math.min(Math.max(growth * 100, -10), 40);
+    } else {
+      growth = +document.getElementById('growthVal').value / 100;
+    }
+    // ── FCF: simple conversion % or detailed build-up ──
+    // computeFcf(ebitdaVal, prevEbitda) → UNLEVERED FCF (before debt service).
+    // Interest is ALWAYS subtracted separately in the sweep logic below — consistent between modes.
+    let computeFcf;
+    if (fcfMode === 'detail') {
+      const taxRate  = +document.getElementById('taxRate').value  / 100;
+      const daRate   = +document.getElementById('daRate').value   / 100;
+      const capexRate= +document.getElementById('capexRate').value/ 100;
+      const wcRate   = +document.getElementById('wcRate').value   / 100;
+      computeFcf = (ebitdaVal, prevEbitda) => {
+        // Unlevered FCF: EBIT × (1−tax) + D&A − Capex − ΔNWC
+        const da    = ebitdaVal * daRate;
+        const nopat = (ebitdaVal - da) * (1 - taxRate); // no interest deduction
+        const wc    = (ebitdaVal - prevEbitda) * wcRate;
+        return nopat + da - ebitdaVal * capexRate - wc;
+      };
+      // Analytical implied FCF% (no leverage dependency):
+      // FCF% = (1−D&A%)(1−tax) + D&A% − Capex% − WC%×growth
+      const impliedFcfPct = (1 - daRate) * (1 - taxRate) + daRate - capexRate - wcRate * growth;
+      document.getElementById('impliedFcf').textContent =
+        (impliedFcfPct * 100).toFixed(1) + '% of EBITDA';
+      document.getElementById('fcfVal').value = Math.max(0, Math.min(100, +(impliedFcfPct * 100).toFixed(0)));
+      document.getElementById('fcf').value    = Math.max(0, Math.min(100, impliedFcfPct * 100));
+    } else {
+      const fcfPctVal = +document.getElementById('fcfVal').value / 100;
+      computeFcf = (ebitdaVal) => ebitdaVal * fcfPctVal; // unlevered FCF % of EBITDA
+    }
+
+
+    // Entry
+    const entryEV     = ebitda * entryMult;
+    const entryDebt   = ebitda * leverage;
+    const entryEquity = entryEV - entryDebt + entryEV * txCost;
+
+    // ── Annual recurring bolt-on model ──
+    // Each year: acquire $acqEbitda new EBITDA at acqMult, adding that debt.
+    // Each cohort grows at acqGrowth from year of acquisition.
+    // Total acq EBITDA in yr = acqEbitda * sum_{i=1}^{yr} (1+acqGrowth)^(yr-i)
+    //                        = acqEbitda * [(1+acqGrowth)^yr - 1] / acqGrowth  (geometric series)
+    const totalAcqEbitdaFn = yr => {
+      if (!acqEnabled || acqEbitda === 0) return 0;
+      if (Math.abs(acqGrowth) < 1e-9) return acqEbitda * yr;
+      return acqEbitda * (Math.pow(1 + acqGrowth, yr) - 1) / acqGrowth;
+    };
+
+    // Year-by-year schedule
+    const rows = [];
+    let debt = entryDebt;   // platform debt only at entry; bolt-on debt added each year
+    let accruedCash = 0;
+    let prevLoopEbitda = ebitda;
+
+    for (let yr = 1; yr <= hold; yr++) {
+      // New acquisition debt this year
+      if (acqEnabled) debt += acqEbitda * acqMult;
+
+      const platformEbitda = ebitda * Math.pow(1 + growth, yr);
+      const acqEbitdaYr    = totalAcqEbitdaFn(yr);
+      const combinedEbitda = platformEbitda + acqEbitdaYr;
+      const intExp         = debt * interest;
+      const fcfAbs         = computeFcf(combinedEbitda, prevLoopEbitda);
+      prevLoopEbitda       = combinedEbitda;
+
+      if (cashSweep) {
+        const availForDebt = Math.max(fcfAbs - intExp, 0);
+        const debtPay = Math.min(availForDebt, debt);
+        debt = Math.max(debt - debtPay, 0);
+        // Excess FCF after full debt paydown accrues as cash
+        accruedCash += Math.max(availForDebt - debtPay, 0);
+      } else {
+        accruedCash += Math.max(fcfAbs - intExp, 0);
+      }
+      const ev        = combinedEbitda * (yr === hold ? exitMult : entryMult);
+      const equityVal = ev - debt + accruedCash;
+      rows.push({ yr, ebitda: combinedEbitda, organicEbitda: platformEbitda, acqEbitdaYr, debt, intExp, fcf: fcfAbs, cash: accruedCash, equity: Math.max(equityVal, 0) });
+    }
+
+    const exitEBITDA         = ebitda * Math.pow(1 + growth, hold);
+    const acqExitEBITDA      = totalAcqEbitdaFn(hold);
+    const combinedExitEBITDA = exitEBITDA + acqExitEBITDA;
+    const exitEV             = combinedExitEBITDA * exitMult;
+    const exitDebt           = debt;
+    const totalAcqDebt       = acqEnabled ? acqEbitda * acqMult * hold : 0;
+    const grossExitEq        = exitEV - exitDebt + accruedCash;
+
+    // Management option pool: sponsor receives (1 - poolPct) of exit equity
+    const mgmtPoolPct = mgmtEnabled ? (+document.getElementById('mgmtPool').value / 100) : 0;
+    const mgmtPayout  = grossExitEq * mgmtPoolPct;          // $ to management
+    const netExitEq   = grossExitEq - mgmtPayout;           // sponsor equity after dilution
+
+    const mom                = netExitEq / entryEquity;
+    const irr                = Math.pow(Math.max(mom, 0), 1 / hold) - 1;
+
+    // Attribution
+    const ebitdaGrowthContrib = (exitEBITDA - ebitda) * entryMult;
+    const acqContrib          = acqExitEBITDA * exitMult - totalAcqDebt;
+    const multipleExpansion   = exitEBITDA * (exitMult - entryMult);
+    const txCostAmt           = entryEV * txCost;
+    const debtPaydown         = cashSweep
+      ? (entryDebt + totalAcqDebt - exitDebt + accruedCash - txCostAmt)
+      : (accruedCash - txCostAmt);
+
+    // Rev/Margin split (only in detail mode)
+    let revGrowthContrib = null, marginContrib = null;
+    if (cagrMode === 'detail') {
+      const _revGrowth   = +document.getElementById('revGrowthVal').value / 100;
+      const _entryMargin = +document.getElementById('entryMargin').value  / 100;
+      const _exitMargin  = +document.getElementById('exitMargin').value   / 100;
+      if (_entryMargin > 0) {
+        const _entryRev = ebitda / _entryMargin;
+        const _exitRev  = _entryRev * Math.pow(1 + _revGrowth, hold);
+        // Revenue Growth: exit rev at ENTRY margin vs entry EBITDA, at entry multiple
+        revGrowthContrib = (_exitRev * _entryMargin - ebitda) * entryMult;
+        // Margin Expansion: same exit rev, margin delta, at entry multiple
+        marginContrib    = _exitRev * (_exitMargin - _entryMargin) * entryMult;
+        // Verify: revGrowthContrib + marginContrib ≈ ebitdaGrowthContrib
+      }
+    }
+
+    // KPIs
+    animateKPI('irr',    irr >= 0 ? (irr * 100).toFixed(1) + '%' : '—', irr >= 0.2 ? 'green' : irr >= 0.12 ? '' : 'red');
+    animateKPI('mom',    mom >= 0  ? mom.toFixed(2) + 'x' : '—',       mom >= 2   ? 'green' : mom >= 1.5  ? '' : 'red');
+    animateKPI('entryEq', fmtM(entryEquity), '');
+    animateKPI('exitEq',  fmtM(Math.max(netExitEq, 0)), netExitEq > entryEquity ? 'green' : 'red');
+
+    // Verdict
+    const vp = document.getElementById('verdictPill');
+    const vn = document.getElementById('verdictNote');
+    if (irr >= 0.22) {
+      vp.className = 'verdict-pill strong';
+      vp.textContent = 'STRONG DEAL';
+      vn.textContent = 'IRR > 22% — clears most institutional hurdle rates.';
+    } else if (irr >= 0.12) {
+      vp.className = 'verdict-pill ok';
+      vp.textContent = 'MARGINAL';
+      vn.textContent = 'IRR 12–22% — below typical PE target, but deal-dependent.';
+    } else {
+      vp.className = 'verdict-pill weak';
+      vp.textContent = 'BELOW HURDLE';
+      vn.textContent = 'IRR < 12% — unlikely to clear a standard 8% preferred return + carry.';
+    }
+
+    // Schedule table — split organic/acq columns when bolt-on is on
+    document.getElementById('tableLabel').textContent = hold + '-Year Hold';
+    const showAcq = acqEnabled && acqEbitda > 0;
+    document.getElementById('scheduleHead').innerHTML = `<tr>
+      <th>Year</th>
+      <th>EBITDA</th>
+      ${showAcq ? '<th style="color:var(--blue)">Organic</th><th style="color:var(--green)">Acquired</th>' : ''}
+      <th>Debt</th>
+      <th>Int. Exp.</th>
+      <th>FCF</th>
+      <th>Equity</th>
+    </tr>`;
+    const tbody = document.getElementById('scheduleBody');
+    tbody.innerHTML = '';
+    rows.forEach((r) => {
+      const isExit = r.yr === hold;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${isExit ? 'Exit' : 'Yr ' + r.yr}</td>
+        <td class="${isExit?'hi':''}">${fmtM(r.ebitda)}</td>
+        ${showAcq ? `<td>${fmtM(r.organicEbitda)}</td><td class="pos">${fmtM(r.acqEbitdaYr)}</td>` : ''}
+        <td class="${isExit?'neg':''}">${fmtM(r.debt)}</td>
+        <td class="neg">(${fmtM(r.intExp)})</td>
+        <td class="pos">${fmtM(r.fcf)}</td>
+        <td class="${isExit?'pos hi':'pos'}">${fmtM(Math.max(r.equity,0))}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Waterfall
+     drawWaterfall(entryEquity, ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, -mgmtPayout, netExitEq, revGrowthContrib, marginContrib);
+
+    // Effective FCF % for sensitivity tables — use exact value, not rounded slider
+    // In detailed FCF mode the implied FCF% is computed analytically; use that directly
+    let fcfPctEff;
+    if (fcfMode === 'detail') {
+      const _taxRate   = +document.getElementById('taxRate').value   / 100;
+      const _daRate    = +document.getElementById('daRate').value    / 100;
+      const _capexRate = +document.getElementById('capexRate').value / 100;
+      const _wcRate    = +document.getElementById('wcRate').value    / 100;
+      fcfPctEff = (1 - _daRate) * (1 - _taxRate) + _daRate - _capexRate - _wcRate * growth;
+    } else {
+      fcfPctEff = +document.getElementById('fcfVal').value / 100;
+    }
+
+    // FCF detail params for sensitivity — pass exact inputs so calc loop matches model exactly
+    const fcfDetailParams = fcfMode === 'detail' ? {
+      taxRate:   +document.getElementById('taxRate').value   / 100,
+      daRate:    +document.getElementById('daRate').value    / 100,
+      capexRate: +document.getElementById('capexRate').value / 100,
+      wcRate:    +document.getElementById('wcRate').value    / 100,
+    } : null;
+
+    // Sensitivity — dynamic exit multiple range centred on current exitMult
+    drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPctEff, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cashSweep, mgmtPoolPct, fcfDetailParams);
+
+    // Entry vs Exit multiple sensitivity
+    drawMultipleSensitivity(ebitda, entryMult, leverage, interest, fcfPctEff, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cashSweep, mgmtPoolPct, fcfDetailParams);
+
+    // Bolt-on sensitivity — show only when acquisitions are on
+    const acqPanel = document.getElementById('sensAcqPanel');
+    if (acqEnabled && acqEbitda > 0) {
+      acqPanel.style.display = '';
+      drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPctEff, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cashSweep, mgmtPoolPct, fcfDetailParams);
+    } else {
+      acqPanel.style.display = 'none';
+    }
+
+    // Store state
+    window._lboState = {
+      inputs: { ebitda, entryMult, leverage, interest, fcfPct: fcfPctEff, growth, exitMult, hold, txCost, acqEbitda, acqMult, acqGrowth, acqEnabled, cashSweep, mgmtPoolPct, fcfDetailParams },
+      results: { irr, mom, entryEquity, netExitEq, entryEV, exitEBITDA: combinedExitEBITDA, exitEV, exitDebt, totalAcqDebt, accruedCash, mgmtPayout },
+      attribution: { ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, revGrowthContrib, marginContrib },
+      rows,
+    };
+  }
+
+  function animateKPI(id, val, cls) {
+    const el = document.getElementById(id);
+    el.textContent = val;
+    el.className = 'kpi-value updated' + (cls ? ' ' + cls : '');
+    void el.offsetWidth;
+  }
+
+  // fmtM: formats a value in $M → returns complete display string e.g. "$123M", "$1.5B", "$2.1T"
+  function fmtM(n) {
+    const abs = Math.abs(n);
+    const sign = n < 0 ? '-' : '';
+    if (abs >= 1e6)  return sign + '$' + (abs/1e6).toFixed(1) + 'T';
+    if (abs >= 1e3)  return sign + '$' + (abs/1e3).toFixed(1) + 'B';
+    if (abs < 10)    return sign + '$' + abs.toFixed(1) + 'M';
+    return sign + '$' + Math.round(abs).toLocaleString() + 'M';
+  }
+
+  // ── WATERFALL ──
+   function drawWaterfall(entryEq, ebitdaG, multExp, debtPay, acqContrib, mgmtDrag, exitEq, revGrowthContrib=null, marginContrib=null) {
+    const svg = document.getElementById('waterfall');
+    const W = 360, H = 220, PAD = 42, BPAD = 32;
+    const chartH = H - PAD - BPAD;
+
+    // In MoM mode, express everything as a contribution to MoM (divided by entryEq)
+    const scale = (wfMode === 'moic' && entryEq > 0) ? (1 / entryEq) : 1;
+    const fmt   = wfMode === 'moic'
+      ? v => (v >= 0 ? '+' : '') + v.toFixed(2) + 'x'
+      : v => (v >= 0 ? '+' : '-') + fmtM(Math.abs(v));
+    const fmtAbs = wfMode === 'moic'
+      ? v => v.toFixed(2) + 'x'
+      : v => fmtM(v);
+
+    const runBase4 = entryEq + ebitdaG + multExp + debtPay + acqContrib;
+    // In Rev+Margin detail mode, split EBITDA Growth into two bars
+    const ebitdaItems = (revGrowthContrib !== null && marginContrib !== null)
+      ? [
+          { label: 'Rev\nGrowth',    value: revGrowthContrib, base: entryEq,                          type: revGrowthContrib >= 0 ? 'pos' : 'neg' },
+          { label: 'Margin\nExp.',   value: marginContrib,    base: entryEq + revGrowthContrib,        type: marginContrib    >= 0 ? 'pos' : 'neg' },
+        ]
+      : [
+          { label: 'EBITDA\nGrowth', value: ebitdaG,          base: entryEq,                          type: ebitdaG          >= 0 ? 'pos' : 'neg' },
+        ];
+
+    const raw = [
+      { label: 'Entry\nEquity',  value: entryEq,    base: 0,                                         type: 'base' },
+      ...ebitdaItems,
+      { label: 'Multiple\nExp.', value: multExp,    base: entryEq + ebitdaG,                         type: multExp   >= 0 ? 'pos' : 'neg' },
+      { label: 'Debt\nPaydown',  value: debtPay,    base: entryEq + ebitdaG + multExp,               type: debtPay   >= 0 ? 'pos' : 'neg' },
+      { label: 'Bolt-on\nValue', value: acqContrib, base: entryEq + ebitdaG + multExp + debtPay,     type: acqContrib >= 0 ? 'pos' : 'neg' },
+      ...(mgmtDrag < 0 ? [{ label: 'Mgmt\nOptions', value: mgmtDrag, base: runBase4, type: 'neg' }] : []),
+      { label: 'Exit\nEquity',   value: exitEq,     base: 0,                                         type: 'exit' },
+    ];
+
+    // Scale values for the chosen mode
+    const items = raw.map(it => ({
+      ...it,
+      value: it.value * scale,
+      base:  it.base  * scale,
+    }));
+
+    // Compute y-axis range accounting for negatives (bars can go below zero)
+    const allTops = items.map(it =>
+      (it.type === 'base' || it.type === 'exit') ? it.value : it.base + Math.max(it.value, 0)
+    );
+    const allBots = items.map(it =>
+      (it.type === 'base' || it.type === 'exit') ? 0 : it.base + Math.min(it.value, 0)
+    );
+    const maxV = Math.max(...allTops) * 1.15 || 1;
+    const minV = Math.min(0, ...allBots);
+    const range = maxV - minV;
+
+    const barW = 36;
+    const gap  = (W - PAD - items.length * barW) / (items.length - 1);
+    const colors = { base: '#1e3a8a', pos: '#1e3a8a', neg: '#c0392b', exit: '#1e3a8a' };
+
+    // y() maps a data value to SVG y-coordinate
+    const y = v => PAD + chartH * (1 - (v - minV) / range);
+    const zeroY = y(0); // baseline
+
+    let out = '';
+
+    // Axes
+    out += `<line x1="${PAD}" y1="${PAD}" x2="${PAD}" y2="${PAD + chartH}" stroke="#dde2ea" stroke-width="1"/>`;
+    out += `<line x1="${PAD}" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="#dde2ea" stroke-width="1"/>`;
+
+    // Grid lines (3 above zero, 1 below if minV < 0)
+    const gridCount = 4;
+    for (let gi = 1; gi <= gridCount; gi++) {
+      const gv = minV + (range / gridCount) * gi;
+      const gy = y(gv);
+      out += `<line x1="${PAD}" y1="${gy}" x2="${W}" y2="${gy}" stroke="#e8ecf2" stroke-width="1" stroke-dasharray="4,4"/>`;
+      out += `<text x="${PAD - 4}" y="${gy + 4}" fill="#6b7a96" font-size="7.5" text-anchor="end" font-family="monospace">${fmtAbs(gv)}</text>`;
+    }
+
+    items.forEach((item, i) => {
+      const x = PAD + i * (barW + gap);
+      const col = colors[item.type];
+
+      let barTop, barBot;
+      if (item.type === 'base' || item.type === 'exit') {
+        barTop = item.value;
+        barBot = 0;
+      } else {
+        barTop = item.base + Math.max(item.value, 0);
+        barBot = item.base + Math.min(item.value, 0);
+      }
+      const svgTop = y(barTop);
+      const svgBot = y(barBot);
+      const barH   = Math.max(svgBot - svgTop, 2);
+
+      // Connector dashed line
+      if (i > 0 && i < items.length - 1) {
+        const prev = items[i - 1];
+        const prevTop = prev.type === 'base' ? prev.value : prev.base + prev.value;
+        const lineY = y(prevTop);
+        const prevX = PAD + (i - 1) * (barW + gap) + barW;
+        out += `<line x1="${prevX}" y1="${lineY}" x2="${x + barW}" y2="${lineY}" stroke="#c0c8d4" stroke-width="1" stroke-dasharray="3,3"/>`;
+      }
+
+      out += `<rect x="${x}" y="${svgTop}" width="${barW}" height="${barH}" fill="${col}" opacity="${item.type === 'base' || item.type === 'exit' ? '0.9' : '0.75'}" rx="2"/>`;
+
+      // Value label — place above bar if positive, below if negative
+      const labelVal = item.type === 'base' || item.type === 'exit' ? fmtAbs(item.value) : fmt(item.value);
+      const labelY   = item.value >= 0 ? svgTop - 5 : svgBot + 12;
+      out += `<text x="${x + barW / 2}" y="${labelY}" fill="${col}" font-size="7.5" text-anchor="middle" font-family="monospace" font-weight="600">${labelVal}</text>`;
+
+      // X-axis label
+      const lines = item.label.split('\n');
+      lines.forEach((ln, li) => {
+        out += `<text x="${x + barW / 2}" y="${PAD + chartH + 12 + li * 10}" fill="#6b7a96" font-size="7.5" text-anchor="middle" font-family="monospace">${ln}</text>`;
+      });
+    });
+
+    svg.innerHTML = out;
+  }
+
+  // ── SHARED SENSITIVITY HELPER ──
+  function heatColorIRR(irr) {
+    if (irr>=25) return '#c6efce'; if (irr>=20) return '#d9f0dd';
+    if (irr>=15) return '#edf7ef'; if (irr>=10) return '#fff2cc';
+    if (irr>=5)  return '#fde4c8'; return '#fcc8c3';
+  }
+  function heatColorMom(mom) {
+    if (mom>=3.0) return '#c6efce'; if (mom>=2.5) return '#d9f0dd';
+    if (mom>=2.0) return '#edf7ef'; if (mom>=1.5) return '#fff2cc';
+    if (mom>=1.0) return '#fde4c8'; return '#fcc8c3';
+  }
+
+  // ── SENSITIVITY 1: Exit Multiple vs EBITDA Growth ──
+  function drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, activeGrowth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
+    const gStep = +( document.getElementById('sensGrowthStep')?.value || 0.025);
+    const xStep = +( document.getElementById('sensExitStep')?.value  || 0.5);
+    const snapG = v => Math.round(v / gStep) * gStep;
+    const snapX = v => Math.round(v / xStep) * xStep;
+
+    // Build grid centred on snapped active value, then pin exact active value
+    let growthVals = [-3,-2,-1,0,1,2,3,4].map(d => snapG(activeGrowth) + d * gStep);
+    let exitVals   = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapX(activeExit) + d * xStep, 1));
+    const gi = growthVals.reduce((bi,g,i) => Math.abs(g-activeGrowth)<Math.abs(growthVals[bi]-activeGrowth)?i:bi, 0);
+    growthVals[gi] = activeGrowth;
+    const xi = exitVals.reduce((bi,x,i) => Math.abs(x-activeExit)<Math.abs(exitVals[bi]-activeExit)?i:bi, 0);
+    exitVals[xi] = activeExit;
+
+    const acqFn = n => {
+      if (acqEbitda===0) return 0;
+      if (Math.abs(acqGrowth)<1e-9) return acqEbitda*n;
+      return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
+    };
+    // Exact FCF function — mirrors computeFcf in calculate()
+    const calcFcfExact = fcfDetailParams
+      ? (eVal, prevEVal) => {
+          const {taxRate,daRate,capexRate,wcRate} = fcfDetailParams;
+          const da = eVal * daRate;
+          const nopat = (eVal - da) * (1 - taxRate);
+          const wc = (eVal - prevEVal) * wcRate;
+          return nopat + da - eVal * capexRate - wc;
+        }
+      : (eVal) => eVal * fcfPct;
+
+    const calc = (g, ex) => {
+      const eq0 = ebitda*entryMult - entryDebt + ebitda*entryMult*txCost;
+      if (eq0<=0) return null;
+      let debt=entryDebt, cash=0, prevE=ebitda;
+      for (let yr=1;yr<=hold;yr++) {
+        debt += acqEbitda*acqMult;
+        const combinedE = ebitda*Math.pow(1+g,yr)+acqFn(yr);
+        const intExp=debt*interest;
+        const fcfAbs = calcFcfExact(combinedE, prevE);
+        prevE = combinedE;
+        if (cashSweep){const avail=Math.max(fcfAbs-intExp,0);const dp=Math.min(avail,debt);debt=Math.max(debt-dp,0);cash+=Math.max(avail-dp,0);}
+        else cash+=Math.max(fcfAbs-intExp,0);
+      }
+      const grossExit=(ebitda*Math.pow(1+g,hold)+acqFn(hold))*ex-debt+cash;
+      const exitE=grossExit*(1-mgmtPoolPct);
+      const mom=Math.max(exitE/eq0,0);
+      return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
+    };
+    const showMom = sensMode==='mom';
+
+    const table = document.getElementById('sensTable');
+    let htmlStr = '<thead><tr><th>Exit ↓ / Growth →</th>';
+    growthVals.forEach(g => { htmlStr+=`<th>${g>=0?'+':''}${(g*100).toFixed(1)}%</th>`; });
+    htmlStr += '</tr></thead><tbody>';
+    exitVals.forEach(ex => {
+      htmlStr += `<tr><td>${ex.toFixed(1)}x</td>`;
+      growthVals.forEach(g => {
+        const res=calc(g,ex);
+        const isActive=g===activeGrowth && ex===activeExit;
+        if (!res||res.mom<=0){htmlStr+=`<td style="background:#fcc8c3" class="${isActive?'active-cell':''}">N/A</td>`;return;}
+        const bg=showMom?heatColorMom(res.mom):heatColorIRR(res.irr);
+        const lbl=showMom?res.mom.toFixed(2)+'x':res.irr.toFixed(1)+'%';
+        htmlStr+=`<td style="background:${bg}" class="${isActive?'active-cell':''}">${lbl}</td>`;
+      });
+      htmlStr+='</tr>';
+    });
+    htmlStr+='</tbody>'; table.innerHTML=htmlStr;
+  }
+
+  // ── SENSITIVITY 2: Entry Multiple vs Exit Multiple ──
+  function drawMultipleSensitivity(ebitda, activeEntry, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
+    const mStep = +( document.getElementById('sensMultStep')?.value || 0.5);
+    const snapM = v => Math.round(v / mStep) * mStep;
+    const entryDebt = ebitda*leverage;
+
+    let entryVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapM(activeEntry)+d*mStep, 1));
+    let exitVals  = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapM(activeExit) +d*mStep, 1));
+    const ni=entryVals.reduce((bi,x,i)=>Math.abs(x-activeEntry)<Math.abs(entryVals[bi]-activeEntry)?i:bi,0);
+    entryVals[ni]=activeEntry;
+    const xi=exitVals.reduce((bi,x,i) =>Math.abs(x-activeExit) <Math.abs(exitVals[bi]-activeExit) ?i:bi,0);
+    exitVals[xi]=activeExit;
+
+    const acqFn = n => {
+      if (acqEbitda===0) return 0;
+      if (Math.abs(acqGrowth)<1e-9) return acqEbitda*n;
+      return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
+    };
+    // Exact FCF function — mirrors computeFcf in calculate()
+    const calcFcfExact = fcfDetailParams
+      ? (eVal, prevEVal) => {
+          const {taxRate,daRate,capexRate,wcRate} = fcfDetailParams;
+          const da = eVal * daRate;
+          const nopat = (eVal - da) * (1 - taxRate);
+          const wc = (eVal - prevEVal) * wcRate;
+          return nopat + da - eVal * capexRate - wc;
+        }
+      : (eVal) => eVal * fcfPct;
+
+    const calc = (en, ex) => {
+      const ev0=ebitda*en, d0=entryDebt;
+      const eq0=ev0-d0+ev0*txCost;
+      if (eq0<=0) return null;
+      let debt=d0, cash=0, prevE=ebitda;
+      for (let yr=1;yr<=hold;yr++) {
+        debt+=acqEbitda*acqMult;
+        const combinedE=ebitda*Math.pow(1+growth,yr)+acqFn(yr);
+        const intExp=debt*interest;
+        const fcfAbs=calcFcfExact(combinedE, prevE);
+        prevE=combinedE;
+        if (cashSweep){const avail=Math.max(fcfAbs-intExp,0);const dp=Math.min(avail,debt);debt=Math.max(debt-dp,0);cash+=Math.max(avail-dp,0);}
+        else cash+=Math.max(fcfAbs-intExp,0);
+      }
+      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFn(hold))*ex-debt+cash;
+      const exitE=grossExit*(1-mgmtPoolPct);
+      const mom=Math.max(exitE/eq0,0);
+      return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
+    };
+    const showMom=sensMode==='mom';
+
+    const table=document.getElementById('sensTable2');
+    let htmlStr='<thead><tr><th>Entry ↓ / Exit →</th>';
+    exitVals.forEach(ex=>{htmlStr+=`<th>${ex.toFixed(1)}x</th>`;});
+    htmlStr+='</tr></thead><tbody>';
+    entryVals.forEach(en=>{
+      htmlStr+=`<tr><td>${en.toFixed(1)}x</td>`;
+      exitVals.forEach(ex=>{
+        const res=calc(en,ex);
+        const isActive=en===activeEntry && ex===activeExit;
+        if (!res||res.mom<=0){htmlStr+=`<td style="background:#fcc8c3" class="${isActive?'active-cell':''}">N/A</td>`;return;}
+        const bg=showMom?heatColorMom(res.mom):heatColorIRR(res.irr);
+        const lbl=showMom?res.mom.toFixed(2)+'x':res.irr.toFixed(1)+'%';
+        htmlStr+=`<td style="background:${bg}" class="${isActive?'active-cell':''}">${lbl}</td>`;
+      });
+      htmlStr+='</tr>';
+    });
+    htmlStr+='</tbody>'; table.innerHTML=htmlStr;
+  }
+
+  // ── SENSITIVITY 3: Acquired EBITDA vs Exit Multiple ──
+  function drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
+    const xStep = +( document.getElementById('sensAcqExitStep')?.value || 0.5);
+    const snapX = v => Math.round(v / xStep) * xStep;
+    const aqStep = +( document.getElementById('sensAcqStep')?.value || 1);
+    const entryDebt = ebitda * leverage;
+
+    // Acquired EBITDA axis: centred on current value using selected step
+    let aqVals = [-3,-2,-1,0,1,2,3,4].map(d => Math.max((acqEbitda || 0) + d * aqStep, 0));
+    aqVals = [...new Set(aqVals.map(v => Math.round(v*10)/10))];
+    while (aqVals.length > 8) aqVals.pop();
+    // Pin exact active value
+    const ai = aqVals.reduce((bi,a,i) => Math.abs(a-acqEbitda)<Math.abs(aqVals[bi]-acqEbitda)?i:bi, 0);
+    aqVals[ai] = acqEbitda;
+
+    let exitVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapX(activeExit) + d * xStep, 1));
+    const xi = exitVals.reduce((bi,x,i) => Math.abs(x-activeExit)<Math.abs(exitVals[bi]-activeExit)?i:bi, 0);
+    exitVals[xi] = activeExit;
+
+    const acqFnFor = (aq, n) => {
+      if (aq===0) return 0;
+      if (Math.abs(acqGrowth)<1e-9) return aq*n;
+      return aq*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
+    };
+    const calcFcfExact = fcfDetailParams
+      ? (eVal, prevEVal) => {
+          const {taxRate,daRate,capexRate,wcRate} = fcfDetailParams;
+          const da = eVal*daRate;
+          const nopat = (eVal-da)*(1-taxRate);
+          const wc = (eVal-prevEVal)*wcRate;
+          return nopat+da-eVal*capexRate-wc;
+        }
+      : (eVal) => eVal*fcfPct;
+
+    const calc = (aq, ex) => {
+      const eq0 = ebitda*entryMult - entryDebt + ebitda*entryMult*txCost;
+      if (eq0<=0) return null;
+      let debt=entryDebt, cash=0, prevE=ebitda;
+      for (let yr=1; yr<=hold; yr++) {
+        debt += aq * acqMult;
+        const combinedE = ebitda*Math.pow(1+growth,yr) + acqFnFor(aq,yr);
+        const intExp = debt*interest;
+        const fcfAbs = calcFcfExact(combinedE, prevE); prevE = combinedE;
+        if (cashSweep){const av=Math.max(fcfAbs-intExp,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}
+        else cash+=Math.max(fcfAbs-intExp,0);
+      }
+      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFnFor(aq,hold))*ex-debt+cash;
+      const exitE=grossExit*(1-mgmtPoolPct);
+      const mom=Math.max(exitE/eq0,0);
+      return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
+    };
+    const showMom = sensMode==='mom';
+
+    const table = document.getElementById('sensTable3');
+    let htmlStr = `<thead><tr><th>Acq. EBITDA ↓ / Exit →</th>`;
+    exitVals.forEach(ex => { htmlStr+=`<th>${ex.toFixed(1)}x</th>`; });
+    htmlStr += '</tr></thead><tbody>';
+    aqVals.forEach(aq => {
+      htmlStr += `<tr><td>$${aq.toFixed(1)}M</td>`;
+      exitVals.forEach(ex => {
+        const res=calc(aq,ex);
+        const isActive=Math.abs(aq-acqEbitda)<0.05 && ex===activeExit;
+        if (!res||res.mom<=0){htmlStr+=`<td style="background:#fcc8c3" class="${isActive?'active-cell':''}">N/A</td>`;return;}
+        const bg  = showMom ? heatColorMom(res.mom) : heatColorIRR(res.irr);
+        const lbl = showMom ? res.mom.toFixed(2)+'x' : res.irr.toFixed(1)+'%';
+        htmlStr+=`<td style="background:${bg}" class="${isActive?'active-cell':''}">${lbl}</td>`;
+      });
+      htmlStr+='</tr>';
+    });
+    htmlStr+='</tbody>'; table.innerHTML=htmlStr;
+  }
+
+
+  // Generates a real .xlsx (OOXML) file with full cell formatting.
+  // Uses STORE (uncompressed) ZIP for simplicity and reliability.
+  // ═══════════════════════════════════════════════════════════════
+  const XLSX = (() => {
+    // ── ZIP utilities ──
+    const enc = str => new TextEncoder().encode(str);
+    const u16 = n => { const b=new Uint8Array(2); new DataView(b.buffer).setUint16(0,n,true); return b; };
+    const u32 = n => { const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0,n,true); return b; };
+    const cat = (...aa) => { const r=new Uint8Array(aa.reduce((s,a)=>s+a.length,0)); let o=0; for(const a of aa){r.set(a,o);o+=a.length;} return r; };
+
+    const CRC = (() => {
+      const t=new Uint32Array(256);
+      for(let i=0;i<256;i++){let c=i;for(let j=0;j<8;j++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[i]=c;}
+      return buf=>{let c=0xFFFFFFFF;for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&0xFF]^(c>>>8);return(c^0xFFFFFFFF)>>>0;};
+    })();
+
+    function makeZip(files) {
+      const locals=[], centrals=[];
+      let off=0;
+      for(const {name,data} of files){
+        const nb=enc(name), crc=CRC(data), sz=data.length;
+        const local=cat(
+          new Uint8Array([0x50,0x4B,0x03,0x04]),
+          u16(20),u16(0),u16(0),u16(0),u16(0x5460),
+          u32(crc),u32(sz),u32(sz),u16(nb.length),u16(0),nb,data
+        );
+        const central=cat(
+          new Uint8Array([0x50,0x4B,0x01,0x02]),
+          u16(20),u16(20),u16(0),u16(0),u16(0),u16(0x5460),
+          u32(crc),u32(sz),u32(sz),u16(nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off),nb
+        );
+        locals.push(local); centrals.push(central); off+=local.length;
+      }
+      const cd=cat(...centrals);
+      const eod=cat(new Uint8Array([0x50,0x4B,0x05,0x06]),u16(0),u16(0),u16(files.length),u16(files.length),u32(cd.length),u32(off),u16(0));
+      return cat(...locals,cd,eod);
+    }
+
+    // ── OOXML helpers ──
+    // Style IDs we'll define in styles.xml:
+    //  0 = default plain
+    //  1 = header       (white bold, dark bg #1F2937)
+    //  2 = section hdr  (blue bold, light blue bg #D6E4F7)
+    //  3 = input        (blue bold #1A6BBC, white bg) + numFmt varies
+    //  4 = formula      (black, white bg)
+    //  5 = cross-sheet  (blue bold #1344c0, white bg)
+    //  6 = return key   (black bold, light green bg #E6F4EA)
+    //  7 = label        (grey #444, white bg)
+    //  8 = alt row      (black, #F5F7FA bg)
+    //  9 = heat-green   (black, #C8E6C9)
+    // 10 = heat-ltgreen (black, #DCEDC8)
+    // 11 = heat-yellow  (black, #FFF9C4)
+    // 12 = heat-amber   (black, #FFE0B2)
+    // 13 = heat-red     (black, #FFCDD2)
+    // 14 = heat-active  (white bold, #1A5276)
+    // 15 = input-pct    (blue bold, white bg) -- same as 3 but pct numFmt
+    // 16 = formula-pct  (black, white bg) -- same as 4 but pct numFmt
+    // 17 = cross-pct    (green, white bg) -- same as 5 but pct numFmt
+    // 18 = formula-mult (black) -- 0.00"x"
+    // 19 = return-pct   (black bold, light green) -- pct
+
+    const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <numFmts count="5">
+    <numFmt numFmtId="164" formatCode="$#,##0.0"/>
+    <numFmt numFmtId="165" formatCode="0.0%"/>
+    <numFmt numFmtId="167" formatCode='0.0&quot;x&quot;'/>
+    <numFmt numFmtId="168" formatCode='+0.0%;-0.0%;0.0%'/>
+    <numFmt numFmtId="169" formatCode='0.0&quot;x&quot;'/>
+  </numFmts>
+  <fonts count="9">
+    <font><sz val="10"/><name val="Calibri"/><color rgb="FF212121"/></font>
+    <font><sz val="11"/><b/><name val="Calibri"/><color rgb="FFFFFFFF"/></font>
+    <font><sz val="10"/><b/><name val="Calibri"/><color rgb="FF1F3461"/></font>
+    <font><sz val="10"/><name val="Calibri"/><color rgb="FF212121"/></font>
+    <font><sz val="10"/><b/><name val="Calibri"/><color rgb="FF212121"/></font>
+    <font><sz val="10"/><b/><name val="Calibri"/><color rgb="FF212121"/></font>
+    <font><sz val="10"/><name val="Calibri"/><color rgb="FF616161"/></font>
+    <font><sz val="10"/><b/><name val="Calibri"/><color rgb="FFFFFFFF"/></font>
+    <font><sz val="10"/><b/><name val="Calibri"/><color rgb="FF1e3a8a"/></font>
+  </fonts>
+  <fills count="11">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF1F3461"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF7F7F7"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFc7d2fe"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFe8effe"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFF9C4"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFE0B2"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFCDD2"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF1F3461"/></patternFill></fill>
+  </fills>
+  <borders count="3">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border><left style="thin"><color rgb="FFBDBDBD"/></left><right style="thin"><color rgb="FFBDBDBD"/></right><top style="thin"><color rgb="FFBDBDBD"/></top><bottom style="thin"><color rgb="FFBDBDBD"/></bottom><diagonal/></border>
+    <border><left/><right/><top/><bottom style="medium"><color rgb="FF1F3461"/></bottom><diagonal/></border>
+  </borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="23">
+    <xf numFmtId="164" fontId="3" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="0"   fontId="1" fillId="2" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0"   fontId="2" fillId="3" borderId="2" xfId="0"><alignment horizontal="left"   vertical="center"/></xf>
+    <xf numFmtId="164" fontId="8" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="164" fontId="3" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="164" fontId="4" fillId="3" borderId="2" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="164" fontId="4" fillId="4" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="0"   fontId="6" fillId="3" borderId="0" xfId="0"><alignment horizontal="left"   vertical="center"/></xf>
+    <xf numFmtId="164" fontId="3" fillId="4" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="3" fillId="5" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="3" fillId="6" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="3" fillId="7" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="3" fillId="8" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="3" fillId="9" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="7" fillId="10" borderId="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="8" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="3" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="4" fillId="3" borderId="2" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="3" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="165" fontId="4" fillId="4" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="169" fontId="8" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
+    <xf numFmtId="168" fontId="1" fillId="2" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="1" fillId="2" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+  </cellXfs>
+</styleSheet>`
+
+    // Style ID constants
+    const S = {
+      NUM:0, HDR:1, SECT:2, INPUT:3, FML:4, CROSS:5, RET:6, LBL:7,
+      ALT:8, HG1:9, HG2:10, HY:11, HA:12, HR:13, HACT:14,
+      INPUT_PCT:15, FML_PCT:16, CROSS_PCT:17, FML_MULT:18, RET_PCT:19, INPUT_MULT:20,
+      HDR_PCT:21, HDR_MULT:22
+    };
+
+    // ── Cell address helpers ──
+    const COL_LETTERS = ['','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA','AB','AC','AD'];
+    const colLtr = c => COL_LETTERS[c] || ('A'+COL_LETTERS[c-26]);
+    const addr   = (r,c) => colLtr(c)+r;
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Sheet row/cell builders ──
+    // cell(r, c, value, styleId, formula?)
+    // value: string → type 's' (shared string), number → type 'n', null → empty
+    function buildSheet(rows, colWidths, freezeRow, freezeCol) {
+      let xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n`;
+      xml += `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">\n`;
+
+      // sheetViews MUST come before cols and sheetData per OOXML spec
+      if (freezeRow || freezeCol) {
+        const fr = freezeRow||0, fc = freezeCol||0;
+        const topLeft = addr(fr+1, fc+1);
+        xml += `<sheetViews><sheetView workbookViewId="0"><pane xSplit="${fc}" ySplit="${fr}" topLeftCell="${topLeft}" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>\n`;
+      }
+
+      if (colWidths && colWidths.length) {
+        xml += '<cols>\n';
+        colWidths.forEach((w,i)=>{
+          if(w) xml+=`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>\n`;
+        });
+        xml += '</cols>\n';
+      }
+
+      xml += '<sheetData>\n';
+      rows.forEach((row, ri) => {
+        if (!row || !row.length) return;
+        const rNum = ri+1;
+        // Determine row height: section labels get 18pt, column headers 16pt, data rows 15pt
+        const firstCell = row.find(c => c && c.s !== undefined);
+        const s = firstCell ? firstCell.s : -1;
+        const ht = (s === 1) ? ' ht="18" customHeight="1"'   // HDR col headers
+                 : (s === 2) ? ' ht="16" customHeight="1"'   // SECT labels
+                 : ' ht="15" customHeight="1"';              // data rows
+        xml += `<row r="${rNum}"${ht}>\n`;
+        row.forEach((cell, ci) => {
+          if (!cell || cell.v === null || cell.v === undefined) return;
+          const cAddr = addr(rNum, ci+1);
+          const sAttr = cell.s !== undefined ? ` s="${cell.s}"` : '';
+          if (cell.f) {
+            const result = typeof cell.v === 'number' ? cell.v : 0;
+            xml += `<c r="${cAddr}"${sAttr}><f>${esc(cell.f)}</f><v>${result}</v></c>\n`;
+          } else if (typeof cell.v === 'number') {
+            xml += `<c r="${cAddr}"${sAttr}><v>${cell.v}</v></c>\n`;
+          } else if (typeof cell.v === 'string' && cell.v !== '') {
+            xml += `<c r="${cAddr}" t="inlineStr"${sAttr}><is><t>${esc(cell.v)}</t></is></c>\n`;
+          }
+        });
+        xml += '</row>\n';
+      });
+      xml += '</sheetData>\n';
+      xml += '</worksheet>';
+      return xml;
+    }
+
+    // ── Workbook assembly ──
+    function build(sheets) {
+      // sheets: [{name, rows, colWidths, freezeRow, freezeCol}]
+      const files = [];
+
+      files.push({name:'[Content_Types].xml', data: enc(
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
+        `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`+
+        `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`+
+        `<Default Extension="xml" ContentType="application/xml"/>`+
+        `<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>`+
+        sheets.map((_,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')+
+        `<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`+
+        `</Types>`
+      )});
+
+      files.push({name:'_rels/.rels', data: enc(
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
+        `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`+
+        `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>`+
+        `</Relationships>`
+      )});
+
+      const wbRels = sheets.map((s,i)=>
+        `<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`
+      ).join('')+
+      `<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`;
+
+      files.push({name:'xl/_rels/workbook.xml.rels', data: enc(
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
+        `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${wbRels}</Relationships>`
+      )});
+
+      const wbSheets = sheets.map((s,i)=>
+        `<sheet name="${esc(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`
+      ).join('');
+      files.push({name:'xl/workbook.xml', data: enc(
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
+        `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`+
+        `<sheets>${wbSheets}</sheets></workbook>`
+      )});
+
+      files.push({name:'xl/styles.xml', data: enc(STYLES_XML)});
+
+      sheets.forEach((sheet, i) => {
+        const xml = buildSheet(sheet.rows, sheet.colWidths, sheet.freezeRow, sheet.freezeCol);
+        files.push({name:`xl/worksheets/sheet${i+1}.xml`, data: enc(xml)});
+      });
+
+      return makeZip(files);
+    }
+
+    return { build, S, colLtr, addr };
+  })();
+
+  // ── EXPORT ──
+  function exportToExcel() {
+    const s = window._lboState;
+    if (!s) return;
+    const btn = document.getElementById('exportBtn');
+    btn.classList.add('exporting'); btn.textContent = 'Building…';
+    try {
+      const { ebitda, entryMult, leverage, interest, fcfPct, growth,
+              exitMult, hold, txCost, acqEbitda, acqMult, acqGrowth,
+              acqEnabled, cashSweep, mgmtPoolPct } = s.inputs;
+      const { entryEquity, netExitEq, mom, irr, mgmtPayout } = s.results;
+      const SR = s.rows; // Exact values from calculate() — guaranteed to tie
+
+      const S = XLSX.S;
+      const colLtr = XLSX.colLtr;
+
+      // ── Style shortcuts ──
+      // Dollar values: round v to 1 decimal so the cached value always shows $0.0
+      // regardless of whether the host app honours the custom numFmt.
+      const r1  = v => Math.round(v * 10) / 10;
+      const n$  = (v, sid=S.NUM)       => ({v:r1(v), s:sid});     // $0.0  right
+      const nl  = (v, sid=S.LBL)       => ({v:String(v), s:sid}); // label left
+      const pIn = (v, sid=S.INPUT_PCT) => ({v, s:sid});            // % blue (keep precision)
+      const nIn = (v, sid=S.INPUT)     => ({v:r1(v), s:sid});      // $ blue
+      const mIn = (v, sid=S.INPUT_MULT)=> ({v, s:sid});            // x blue (keep precision)
+      const f$  = (v, fml, sid=S.FML)      => ({v:r1(v), s:sid, f:fml});   // $ formula
+      const fM  = (v, fml, sid=S.FML_MULT) => ({v, s:sid, f:fml});          // x formula
+      const fp  = (v, fml, sid=S.FML_PCT)  => ({v, s:sid, f:fml});          // % formula
+      const fx  = (v, fml, sid=S.CROSS)    => ({v:r1(v), s:sid, f:fml});   // cross-ref
+
+      // ── Layout: Col A=labels(1), Col B=Entry(2), Col C..=Year 1..hold ──
+      const ENTRY = 2;
+      const colYr = k => colLtr(ENTRY + k);
+      const cRef  = (k, r) => `${colYr(k)}${r}`;
+      const bRef  = r => `$B$${r}`;
+
+      const entryEV   = ebitda * entryMult;
+      const txAmt     = entryEV * txCost;
+      const entryDebt = ebitda * leverage;
+
+      const rows = []; let rn = 0;
+      const addRow = cells => {
+        const row = [];
+        cells.forEach(([ci, cell]) => { if (cell != null) row[ci-1] = cell; });
+        rows.push(row); return ++rn;
+      };
+      const blank = () => { rows.push([]); return ++rn; };
+      const sect  = (t, sid=S.SECT) => addRow([[1, nl(t, sid)]]);
+
+      // dataRow: label col A, then values starting at col B+k for k=0..hold
+      const dataRow = (lbl, vals, lblSty=S.LBL) => {
+        const row = []; row[0] = nl(lbl, lblSty);
+        vals.forEach((v, k) => {
+          if (v != null) row[ENTRY-1+k] = typeof v === 'object' ? v : n$(v);
+        });
+        rows.push(row); return ++rn;
+      };
+
+      const yrHdr = () => {
+        const row = [nl('', S.HDR)];
+        for (let k=0; k<=hold; k++)
+          row[ENTRY-1+k] = nl(k===0?'Entry':k===hold?`Year ${k} (Exit)`:`Year ${k}`, S.HDR);
+        rows.push(row); return ++rn;
+      };
+
+      // ════════════════════════════════════════
+      // TITLE
+      // ════════════════════════════════════════
+      addRow([[1, nl('LBORETURNS.COM — LBO RETURNS MODEL', S.HDR)],
+              [ENTRY, nl(`IRR: ${(irr*100).toFixed(1)}%  |  MoM: ${mom.toFixed(2)}x  |  Entry ${entryMult}x  |  Exit ${exitMult}x  |  ${new Date().toLocaleDateString('en-US')}`, S.HDR)]]);
+      blank();
+
+      // ════════════════════════════════════════
+      // INPUTS
+      // ════════════════════════════════════════
+      sect('MODEL INPUTS  (blue = hardcoded — change these)');
+      addRow([[1, nl('PARAMETER', S.HDR)], [ENTRY, nl('VALUE', S.HDR)]]);
+      const IR = {};
+      const inp = (key, label, cell) => { IR[key] = addRow([[1, nl(label)], [ENTRY, cell]]); };
+
+      inp('ebitda',    'Entry EBITDA ($M)',              nIn(ebitda));
+      inp('entryMult', 'Entry EV/EBITDA (x)',            mIn(entryMult));
+      inp('leverage',  'Leverage — Debt/EBITDA (x)',     mIn(leverage));
+      inp('interest',  'All-in Interest Rate',            pIn(interest));
+
+      // EBITDA growth — formula or hardcode depending on cagrMode
+      if (cagrMode === 'detail') {
+        const revG = +document.getElementById('revGrowthVal').value / 100;
+        const entM = +document.getElementById('entryMargin').value  / 100;
+        const exM  = +document.getElementById('exitMargin').value   / 100;
+        inp('revGrowth',   'Revenue Growth CAGR',       pIn(revG));
+        inp('entryMargin', 'Entry EBITDA Margin (%)',   pIn(entM));
+        inp('exitMargin',  'Exit EBITDA Margin (%)',    pIn(exM));
+        // EBITDA CAGR as a formula referencing the 3 inputs above
+        const cagrFml = `((${bRef(IR.exitMargin)}/${bRef(IR.entryMargin)})*(1+${bRef(IR.revGrowth)})^${hold})^(1/${hold})-1`;
+        inp('growth', 'Implied EBITDA CAGR (formula)', fp(growth, cagrFml));
+      } else {
+        inp('growth', 'EBITDA Growth CAGR', pIn(growth));
+      }
+
+      inp('exitMult', 'Exit EV/EBITDA (x)',              mIn(exitMult));
+      inp('hold',     'Hold Period (Years)',               nIn(hold));
+      inp('txCost',   'Transaction Costs (% EV)',          pIn(txCost));
+
+      // FCF — formula or hardcode depending on fcfMode
+      if (fcfMode === 'detail') {
+        const tx  = +document.getElementById('taxRate').value   / 100;
+        const da  = +document.getElementById('daRate').value    / 100;
+        const cap = +document.getElementById('capexRate').value / 100;
+        const wc  = +document.getElementById('wcRate').value    / 100;
+        inp('taxRate',   'Tax Rate',                     pIn(tx));
+        inp('daRate',    'D&A (% of EBITDA)',             pIn(da));
+        inp('capexRate', 'Capex (% of EBITDA)',           pIn(cap));
+        inp('wcRate',    'NWC Delta (% of ΔEBITDA)',      pIn(wc));
+        // FCF% as formula: (1-da)*(1-tax)+da-capex-wc*growth
+        const fcfFml = `(1-${bRef(IR.daRate)})*(1-${bRef(IR.taxRate)})+${bRef(IR.daRate)}-${bRef(IR.capexRate)}-${bRef(IR.wcRate)}*${bRef(IR.growth)}`;
+        inp('fcfPct', 'Implied FCF % EBITDA (formula)', fp(fcfPct, fcfFml));
+      } else {
+        inp('fcfPct', 'FCF Conversion (% EBITDA)',        pIn(fcfPct));
+      }
+
+      inp('acqEbitda', 'Annual Acq. EBITDA ($M/yr)',      nIn(acqEbitda));
+      inp('acqMult',   'Acquisition Multiple (x)',         mIn(acqMult));
+      inp('acqGrowth', 'Acquired EBITDA Growth Rate',      pIn(acqGrowth));
+      inp('sweep',     'Cash Sweep (1=ON, 0=OFF)',         nIn(cashSweep?1:0));
+      inp('mgmtPool',  'Mgmt Option Pool (% exit equity)', pIn(mgmtPoolPct));
+      blank();
+
+      // ════════════════════════════════════════
+      // SOURCES & USES
+      // ════════════════════════════════════════
+      sect('SOURCES & USES');
+      const R_ev  = addRow([[1, nl('Entry EV ($M)')],
+        [ENTRY, f$(entryEV, `${bRef(IR.ebitda)}*${bRef(IR.entryMult)}`) ]]);
+      const R_tx  = addRow([[1, nl('+ Transaction Costs ($M)')],
+        [ENTRY, f$(txAmt,   `${cRef(0,R_ev)}*${bRef(IR.txCost)}`)       ]]);
+      // Total Uses — CROSS style so it's green, right-aligned $0.0
+      const R_uses= addRow([[1, nl('= Total Uses ($M)', S.SECT)],
+        [ENTRY, fx(entryEV+txAmt, `${cRef(0,R_ev)}+${cRef(0,R_tx)}`)   ]]);
+      const R_d0  = addRow([[1, nl('— Entry Debt ($M)')],
+        [ENTRY, f$(entryDebt, `${bRef(IR.ebitda)}*${bRef(IR.leverage)}`) ]]);
+      const R_eq0 = addRow([[1, nl('= Entry Equity ($M)', S.SECT)],
+        [ENTRY, fx(entryEquity, `${cRef(0,R_uses)}-${cRef(0,R_d0)}`)    ]]);
+      blank();
+
+      // ════════════════════════════════════════
+      // EBITDA SCHEDULE — exact values from SR
+      // ════════════════════════════════════════
+      sect('EBITDA SCHEDULE ($M)'); yrHdr();
+
+      // Platform EBITDA: formula = ebitda*(1+growth)^k
+      const platVals = [fx(ebitda, bRef(IR.ebitda))];
+      for (let k=1; k<=hold; k++)
+        platVals.push(f$(SR[k-1].organicEbitda,
+          `${bRef(IR.ebitda)}*(1+${bRef(IR.growth)})^${k}`));
+      const R_plat = dataRow('Platform EBITDA', platVals);
+
+      // Bolt-on cohort rows: each row i = EBITDA acquired in year i, grown at acqGrowth
+      const R_cohorts = [];
+      let R_totAcq = null;
+      if (acqEnabled && acqEbitda > 0) {
+        for (let i=1; i<=hold; i++) {
+          const vals = [n$(0)];
+          for (let k=1; k<=hold; k++) {
+            if (k < i) { vals.push(n$(0)); continue; }
+            const yg = k - i;
+            const v  = acqEbitda * Math.pow(1+acqGrowth, yg);
+            const fml= yg===0 ? bRef(IR.acqEbitda)
+                               : `${bRef(IR.acqEbitda)}*(1+${bRef(IR.acqGrowth)})^${yg}`;
+            vals.push(f$(v, fml));
+          }
+          R_cohorts.push(dataRow(`  Bolt-on Cohort Yr ${i}`, vals));
+        }
+        // Total acquired EBITDA = SUM of cohort rows
+        const totVals = [n$(0)];
+        for (let k=1; k<=hold; k++) {
+          const refs = R_cohorts.filter((_,i2) => i2+1 <= k).map(r => `${colYr(k)}${r}`);
+          totVals.push(refs.length
+            ? f$(SR[k-1].acqEbitdaYr, `SUM(${refs.join(',')})`, S.CROSS)
+            : n$(0));
+        }
+        R_totAcq = dataRow('Total Acquired EBITDA', totVals, S.SECT);
+
+        // Combined EBITDA = Platform + Total Acquired
+        const combVals = [fx(ebitda, bRef(IR.ebitda))];
+        for (let k=1; k<=hold; k++)
+          combVals.push(fx(SR[k-1].ebitda,
+            `${cRef(k,R_plat)}+${cRef(k,R_totAcq)}`));
+        dataRow('Combined EBITDA', combVals, S.SECT);
+        blank();
+      }
+
+      // Helper: get the right EBITDA row reference for year k
+      // If bolt-on, use Combined EBITDA row (= R_totAcq + 1)
+      const combEbitdaRow = R_totAcq ? R_totAcq + 1 : R_plat;
+      const ebitdaRef = k => R_totAcq
+        ? `${colYr(k)}${combEbitdaRow}`   // combined EBITDA
+        : cRef(k, R_plat);                 // platform only
+
+      // ════════════════════════════════════════
+      // DEBT & FCF SCHEDULE — exact SR values as v, formulas for transparency
+      // ════════════════════════════════════════
+      sect('DEBT & FCF SCHEDULE ($M)'); yrHdr();
+
+      // Enterprise Value
+      const evVals = [f$(entryEV, `${cRef(0,R_d0)}+${cRef(0,R_eq0)}`)];
+      for (let k=1; k<=hold; k++) {
+        const mult = k===hold ? bRef(IR.exitMult) : bRef(IR.entryMult);
+        evVals.push(f$(SR[k-1].ebitda*(k===hold?exitMult:entryMult),
+          `${ebitdaRef(k)}*${mult}`));
+      }
+      const R_EV = dataRow('Enterprise Value', evVals);
+
+      // New acquisition debt added this year (0 at entry)
+      let R_acqLine = null;
+      if (acqEnabled && acqEbitda > 0) {
+        const adVals = [n$(0)];
+        for (let k=1; k<=hold; k++)
+          adVals.push(f$(acqEbitda*acqMult, `${bRef(IR.acqEbitda)}*${bRef(IR.acqMult)}`));
+        R_acqLine = dataRow('+ New Acquisition Debt', adVals);
+      }
+
+      // Beginning debt: entry=entryDebt, each year = prior EndDebt + acq debt
+      // We build EndDebt first using SR values, then backfill Beginning formula
+      // (Use exact SR values to guarantee tie-out)
+      const begVals = [fx(entryDebt, cRef(0,R_d0))];
+      for (let k=1; k<=hold; k++) {
+        const begDebt = k===1 ? entryDebt
+                      : SR[k-2].debt + (acqEnabled ? acqEbitda*acqMult : 0);
+        begVals.push(n$(begDebt)); // will upgrade to formula after EndDebt row
+      }
+      const R_beg = dataRow('Beginning Debt', begVals);
+
+      // Total opening debt = Beginning + Acq this year
+      const totBegVals = [fx(entryDebt, cRef(0,R_d0))];
+      for (let k=1; k<=hold; k++) {
+        const v = SR[k-1].intExp / interest; // = total opening debt
+        const acqAdd = R_acqLine ? `+${cRef(k,R_acqLine)}` : '';
+        totBegVals.push(f$(v, `${cRef(k,R_beg)}${acqAdd}`, S.SECT));
+      }
+      const R_totBeg = dataRow('Total Opening Debt (incl. Acq)', totBegVals, S.SECT);
+
+      // Interest expense — exact SR value, formula = -TotalBeg*rate
+      const intVals = [n$(0)];
+      for (let k=1; k<=hold; k++)
+        intVals.push(f$(-SR[k-1].intExp,
+          `-${cRef(k,R_totBeg)}*${bRef(IR.interest)}`));
+      const R_int = dataRow('Interest Expense', intVals);
+
+      // FCF — COMBINED EBITDA * fcfPct (acquired EBITDA contributes)
+      const fcfVals = [n$(0)];
+      for (let k=1; k<=hold; k++)
+        fcfVals.push(f$(SR[k-1].fcf,
+          `${ebitdaRef(k)}*${bRef(IR.fcfPct)}`));
+      const R_fcf = dataRow('Free Cash Flow (Unlevered)', fcfVals);
+
+      // Net cash after interest = MAX(FCF + IntExp, 0)  [IntExp is negative]
+      const netVals = [n$(0)];
+      for (let k=1; k<=hold; k++)
+        netVals.push(f$(Math.max(SR[k-1].fcf - SR[k-1].intExp, 0),
+          `MAX(${cRef(k,R_fcf)}+${cRef(k,R_int)},0)`));
+      const R_net = dataRow('Net Cash After Interest', netVals);
+
+      // Debt paydown
+      const dpVals = [n$(0)];
+      for (let k=1; k<=hold; k++) {
+        const v = SR[k-1].intExp/interest - SR[k-1].debt; // TotalBeg - EndDebt
+        const dp = Math.max(v, 0);
+        dpVals.push(f$(dp, cashSweep
+          ? `IF(${bRef(IR.sweep)}=1,MIN(${cRef(k,R_net)},${cRef(k,R_totBeg)}),0)`
+          : `0`));
+      }
+      const R_dp = dataRow('Debt Paydown', dpVals);
+
+      // Ending debt — formula: MAX(TotalBeg - Paydown, 0), exact SR value
+      const edVals = [fx(entryDebt, cRef(0,R_d0))];
+      for (let k=1; k<=hold; k++)
+        edVals.push(f$(SR[k-1].debt,
+          `MAX(${cRef(k,R_totBeg)}-${cRef(k,R_dp)},0)`));
+      const R_ed = dataRow('Ending Debt', edVals);
+
+      // Backfill Beginning Debt formulas now that EndDebt row is known
+      // BegDebt_k = prior year EndDebt (before this year's acq debt)
+      // Acq debt is added separately in TotBeg = BegDebt + AcqLine
+      for (let k=1; k<=hold; k++) {
+        const prevEnd = k===1 ? cRef(0,R_ed) : `${colYr(k-1)}${R_ed}`;
+        const begDebt = k===1 ? entryDebt : SR[k-2].debt; // prior EndDebt, no acq debt added yet
+        rows[R_beg-1][ENTRY-1+k] = f$(begDebt, prevEnd);
+      }
+
+      // Accrued cash — running sum of FCF not used for debt paydown
+      // Same formula for both sweep modes: Cash_k = PrevCash + MAX(NetCash_k - DebtPaydown_k, 0)
+      // When sweep=OFF, DebtPaydown=0 so this simplifies to PrevCash + NetCash
+      // When sweep=ON, any excess after paying debt accrues (matches the calculate() loop)
+      const cashVals = [n$(0)];
+      const R_cash_placeholder = rn + 1; // row number assigned after dataRow call
+      for (let k=1; k<=hold; k++) {
+        const prevCash = k===1 ? `${colYr(0)}${R_cash_placeholder}` : `${colYr(k-1)}${R_cash_placeholder}`;
+        const fml = `${prevCash}+MAX(${cRef(k,R_net)}-${cRef(k,R_dp)},0)`;
+        cashVals.push(f$(SR[k-1].cash, fml));
+      }
+      const R_cash = dataRow('Accrued Cash', cashVals);
+
+      // Equity = EV - EndDebt + Cash — exact SR values
+      const eqVals = [fx(entryEquity, cRef(0,R_eq0))];
+      for (let k=1; k<=hold; k++)
+        eqVals.push(f$(SR[k-1].equity,
+          `${cRef(k,R_EV)}-${cRef(k,R_ed)}+${cRef(k,R_cash)}`));
+      const R_eq = dataRow('Equity Value', eqVals, S.SECT);
+      blank();
+
+      // ════════════════════════════════════════
+      // RETURNS — formula-linked to model rows
+      // ════════════════════════════════════════
+      sect('RETURNS SUMMARY');
+      const R_rGross = addRow([[1, nl('Gross Exit Equity ($M)')],
+        [ENTRY, fx(netExitEq+(mgmtPayout||0), cRef(hold,R_eq))]]);
+      const R_rMgmt = (mgmtPoolPct > 0)
+        ? addRow([[1, nl('— Mgmt Option Pool ($M)')],
+            [ENTRY, f$(-(mgmtPayout||0), `-${cRef(0,R_rGross)}*${bRef(IR.mgmtPool)}`)]])
+        : null;
+      const R_rEnt  = addRow([[1, nl('Entry Equity ($M)')],
+        [ENTRY, fx(entryEquity, cRef(0,R_eq0))]]);
+      const R_rExit = addRow([[1, nl('Net Exit Equity ($M)', S.SECT)],
+        [ENTRY, fx(netExitEq, R_rMgmt
+          ? `${cRef(0,R_rGross)}+${cRef(0,R_rMgmt)}`
+          : cRef(hold,R_eq))]]);
+      addRow([[1, nl('Money-on-Money (MoM)', S.SECT)],
+        [ENTRY, fM(mom, `${cRef(0,R_rExit)}/${cRef(0,R_rEnt)}`)]]);
+      addRow([[1, nl('IRR (Equity)', S.SECT)],
+        [ENTRY, fp(irr,
+          `POWER(MAX(${cRef(0,R_rExit)}/${cRef(0,R_rEnt)},0),1/${bRef(IR.hold)})-1`,
+          S.RET_PCT)]]);
+      blank(); blank();
+
+
+      // ════════════════════════════════════════
+      // ════════════════════════════════════════
+      // SENSITIVITY TABLES — dynamic LET formulas, recalculate on any input change
+      // ════════════════════════════════════════
+      const snapG = v => Math.round(v*40)/40;
+      const snapMv = v => Math.round(v*2)/2;
+      let sGVals = [-3,-2,-1,0,1,2,3,4].map(d => snapG(growth)+d*0.025);
+      let sXVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapMv(exitMult)+d*0.5,2));
+      let sNVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapMv(entryMult)+d*0.5,1));
+      const gi2=sGVals.reduce((bi,g,i)=>Math.abs(g-growth)<Math.abs(sGVals[bi]-growth)?i:bi,0); sGVals[gi2]=growth;
+      const xi2=sXVals.reduce((bi,x,i)=>Math.abs(x-exitMult)<Math.abs(sXVals[bi]-exitMult)?i:bi,0); sXVals[xi2]=exitMult;
+      const ni2=sNVals.reduce((bi,x,i)=>Math.abs(x-entryMult)<Math.abs(sNVals[bi]-entryMult)?i:bi,0); sNVals[ni2]=entryMult;
+
+      // JS sensCalc for cached v values
+      const acqFnX = n => { if(!acqEnabled||acqEbitda===0)return 0; if(Math.abs(acqGrowth)<1e-9)return acqEbitda*n; return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth; };
+      const sensCalc = (en,g,ex) => {
+        const ev0=ebitda*en,d0=ebitda*leverage,eq0=ev0-d0+ev0*txCost; if(eq0<=0)return null;
+        let debt=d0,cash=0;
+        for(let yr=1;yr<=hold;yr++){debt+=acqEnabled?acqEbitda*acqMult:0;const e2=ebitda*Math.pow(1+g,yr)+acqFnX(yr);const ie=debt*interest,fc=e2*fcfPct;if(cashSweep){const av=Math.max(fc-ie,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}else cash+=Math.max(fc-ie,0);}
+        const grossExit=(ebitda*Math.pow(1+g,hold)+acqFnX(hold))*ex-debt+cash;
+        const mom2=Math.max(grossExit*(1-mgmtPoolPct)/eq0,0); return {irr:(Math.pow(mom2,1/hold)-1),mom:mom2};
+      };
+      const hS=iv=>iv>=0.25?S.HG1:iv>=0.20?S.HG2:iv>=0.10?S.HY:iv>=0.05?S.HA:S.HR;
+
+      // Build dynamic LET formula for IRR — gRef=growth cell, exRef=exit cell, enRef=entry mult cell
+      // Unrolled loop for hold periods 1-10; uses named LET vars so formula recalculates on input change
+
+
+      // Sensitivity 1: Exit Multiple vs EBITDA Growth
+      sect('SENSITIVITY 1 — IRR: Exit Multiple vs. EBITDA Growth CAGR');
+      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
+      {
+        const hdr=[nl('Exit ↓ / Growth →',S.HDR)];
+        sGVals.forEach(g=>hdr.push(nl(`${g>=0?'+':''}${(g*100).toFixed(1)}%`,S.HDR)));
+        addRow(hdr.map((c,ci)=>[ci+1,c]));
+      }
+      sXVals.forEach(ex=>{
+        const r=[[1,n$(ex,S.HDR)]];
+        sGVals.forEach((g,gi3)=>{
+          const res=sensCalc(entryMult,g,ex);
+          const isAct=g===growth&&ex===exitMult;
+          const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
+          r.push([2+gi3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
+        });
+        addRow(r);
+      });
+      blank(); blank();
+
+      // Sensitivity 2: Entry Multiple vs Exit Multiple
+      sect('SENSITIVITY 2 — IRR: Entry Multiple vs. Exit Multiple');
+      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
+      {
+        const hdr=[nl('Entry ↓ / Exit →',S.HDR)];
+        sXVals.forEach(ex=>hdr.push(nl(`${ex.toFixed(1)}x`,S.HDR)));
+        addRow(hdr.map((c,ci)=>[ci+1,c]));
+      }
+      sNVals.forEach(en=>{
+        const r=[[1,n$(en,S.HDR)]];
+        sXVals.forEach((ex,ei3)=>{
+          const res=sensCalc(en,growth,ex);
+          const isAct=en===entryMult&&ex===exitMult;
+          const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
+          r.push([2+ei3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
+        });
+        addRow(r);
+      });
+
+      // ── Build & download ──
+      const colWidths = [40, ...Array(hold+1).fill(14)];
+      const buf = XLSX.build([{name:'LBO Model', rows, colWidths, freezeRow:3, freezeCol:1}]);
+      const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=`LBOReturns_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+
+      btn.classList.remove('exporting');
+      btn.innerHTML=`<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 4a1 1 0 011-1h7l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" stroke="currentColor" stroke-width="1.5"/><path d="M11 3v4h4M7 12l3 3 3-3M10 15v-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Download .xlsx`;
+
+    } catch(err) {
+      console.error('Export error:',err);
+      btn.classList.remove('exporting');
+      btn.textContent='Error — see console';
+    }
+  }
+  function getScenarioParams() {
+    const g = id => document.getElementById(id)?.value ?? '';
+    return {
+      eb: g('ebitda'),         em: g('entryMultVal'),  lv: g('leverageVal'),
+      ri: g('interestVal'),    fc: g('fcfVal'),         gr: g('growthVal'),
+      xm: g('exitMultVal'),    hp: g('holdVal'),        tc: g('txCost'),
+      ae: g('acqEbitda'),      am: g('acqMultVal'),     ag: g('acqGrowthVal'),
+      mp: g('mgmtPool'),       tr: g('taxRate'),        da: g('daRate'),
+      cx: g('capexRate'),      wc: g('wcRate'),         rg: g('revGrowthVal'),
+      nm: g('entryMargin'),    xn: g('exitMargin'),
+      sw: cashSweep   ? '1' : '0',
+      aq: acqEnabled  ? '1' : '0',
+      mg: mgmtEnabled ? '1' : '0',
+      cm: cagrMode === 'detail' ? '1' : '0',
+      fm: fcfMode  === 'detail' ? '1' : '0',
+    };
+  }
+
+  function buildShareUrl() {
+    const p = getScenarioParams();
+    const hash = 'v1&' + Object.entries(p).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+    return window.location.href.split('#')[0] + '#' + hash;
+  }
+
+  function shareScenario() {
+    const url = buildShareUrl();
+    const btn = document.getElementById('shareBtn');
+
+    const markCopied = () => {
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => {
+        btn.innerHTML = `<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="4" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="16" r="2" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="10" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9l6-4M7 11l6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Share`;
+      }, 2000);
+    };
+
+    // Always try clipboard API first — works on HTTPS (lboreturns.com)
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url)
+        .then(markCopied)
+        .catch(() => showPrompt(url));
+    } else {
+      showPrompt(url);
+    }
+  }
+
+  function showPrompt(url) {
+    // Show a simple modal overlay with the URL — works everywhere, no clipboard needed
+    let overlay = document.getElementById('shareOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'shareOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem;';
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:0.5rem;color:#1a2030;">Share this scenario</div>
+          <div style="font-size:0.8rem;color:#6b7280;margin-bottom:0.75rem;">Copy the link below to share your exact inputs with a colleague.</div>
+          <input id="shareUrlInput" type="text" readonly style="width:100%;box-sizing:border-box;border:1.5px solid #dde2ea;border-radius:6px;padding:0.5rem 0.75rem;font-size:0.8rem;color:#1a2030;background:#f9fafb;margin-bottom:0.75rem;" />
+          <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+            <button onclick="document.getElementById('shareOverlay').remove()" style="padding:0.45rem 1rem;border:1.5px solid #dde2ea;border-radius:6px;background:#fff;cursor:pointer;font-size:0.85rem;">Close</button>
+            <button id="shareCopyBtn" style="padding:0.45rem 1rem;border:none;border-radius:6px;background:var(--green);color:#fff;cursor:pointer;font-size:0.85rem;font-weight:600;">Copy</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    }
+    const input = document.getElementById('shareUrlInput');
+    input.value = url;
+    // Try to copy from the input
+    document.getElementById('shareCopyBtn').onclick = () => {
+      input.select(); input.setSelectionRange(0, 99999);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(() => {
+          document.getElementById('shareCopyBtn').textContent = '✓ Copied!';
+          setTimeout(() => overlay.remove(), 1200);
+        }).catch(() => { document.execCommand('copy'); });
+      } else {
+        try { document.execCommand('copy'); document.getElementById('shareCopyBtn').textContent = '✓ Copied!'; setTimeout(() => overlay.remove(), 1200); } catch(_) {}
+      }
+    };
+    overlay.style.display = 'flex';
+    setTimeout(() => { input.focus(); input.select(); }, 50);
+  }
+
+  function loadFromHash() {
+    const hash = window.location.hash.slice(1);
+    if (!hash.startsWith('v1&')) return false;
+    const params = {};
+    hash.slice(3).split('&').forEach(pair => {
+      const [k, v] = pair.split('=');
+      if (k && v !== undefined) params[k] = decodeURIComponent(v);
+    });
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+    const setSlider = (sliderId, dispId, val, fmt) => {
+      const sl = document.getElementById(sliderId);
+      const ni = document.getElementById(dispId);
+      if (!sl || !ni || val === undefined) return;
+      const n = parseFloat(val);
+      if (isNaN(n)) return;
+      sl.value = Math.min(Math.max(n, +sl.min), +sl.max);
+      ni.value = fmt ? fmt(n) : n;
+    };
+
+    setSlider('entryMult', 'entryMultVal', params.em, v => (+v).toFixed(1));
+    setSlider('leverage',  'leverageVal',  params.lv, v => (+v).toFixed(1));
+    setSlider('interest',  'interestVal',  params.ri, v => (+v).toFixed(2));
+    setSlider('fcf',       'fcfVal',       params.fc, v => (+v).toFixed(0));
+    setSlider('growth',    'growthVal',    params.gr, v => (+v).toFixed(1));
+    setSlider('exitMult',  'exitMultVal',  params.xm, v => (+v).toFixed(1));
+    setSlider('hold',      'holdVal',      params.hp, v => (+v).toFixed(0));
+    setSlider('acqMult',   'acqMultVal',   params.am, v => (+v).toFixed(1));
+    setSlider('acqGrowth', 'acqGrowthVal', params.ag, v => (+v).toFixed(1));
+    setSlider('revGrowth', 'revGrowthVal', params.rg, v => (+v).toFixed(1));
+
+    set('ebitda',      params.eb);
+    set('txCost',      params.tc);
+    set('acqEbitda',   params.ae);
+    set('mgmtPool',    params.mp);
+    set('taxRate',     params.tr);
+    set('daRate',      params.da);
+    set('capexRate',   params.cx);
+    set('wcRate',      params.wc);
+    set('entryMargin', params.nm);
+    set('exitMargin',  params.xn);
+
+    // Toggles
+    if (params.sw !== undefined) setSweep(params.sw === '1');
+    if (params.aq !== undefined) setAcq(params.aq === '1');
+    if (params.mg !== undefined) setMgmt(params.mg === '1');
+    if (params.cm !== undefined) setCagrMode(params.cm === '1' ? 'detail' : 'simple');
+    if (params.fm !== undefined) setFcfMode(params.fm === '1' ? 'detail' : 'simple');
+
+    return true;
+  }
+
+  // Set display values from initial slider positions, then load URL hash if present
+  sliders.forEach(s => {
+    const slider   = document.getElementById(s.id);
+    const numInput = document.getElementById(s.disp);
+    if (slider && numInput) numInput.value = s.fmt(+slider.value);
+  });
+  const loadedFromUrl = loadFromHash();
+  calculate();
+</script>
+</body>
+</html>
