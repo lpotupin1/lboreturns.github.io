@@ -2523,7 +2523,7 @@
       inp('acqMult',   'Acquisition Multiple (x)',         mIn(acqMult));
       inp('acqGrowth', 'Acquired EBITDA Growth Rate',      pIn(acqGrowth));
       inp('sweep',     'Cash Sweep (1=ON, 0=OFF)',         nIn(cashSweep?1:0));
-      inp('mgmtPool',  'Mgmt Option Pool (% equity gain)', pIn(mgmtPoolPct));
+      inp('mgmtPool',  'Mgmt Option Pool (% exit equity)',  pIn(mgmtPoolPct));
       blank();
 
       // ════════════════════════════════════════
@@ -2754,62 +2754,26 @@
         let debt=d0,cash=0;
         for(let yr=1;yr<=hold;yr++){debt+=acqEnabled?acqEbitda*acqMult:0;const e2=ebitda*Math.pow(1+g,yr)+acqFnX(yr);const ie=debt*interest,fc=e2*fcfPct;if(cashSweep){const av=Math.max(fc-ie,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}else cash+=Math.max(fc-ie,0);}
         const grossEq=(ebitda*Math.pow(1+g,hold)+acqFnX(hold))*ex*(1-(exitFee||0))-debt+cash;
-        const net=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
+        const net=grossEq*(1-mgmtPoolPct);  // mgmt pool = % of gross exit equity (matches website)
         const mom2=Math.max(net/eq0,0); return {irr:(Math.pow(mom2,1/hold)-1),mom:mom2};
       };
       const hS=iv=>iv>=0.25?S.HG1:iv>=0.20?S.HG2:iv>=0.10?S.HY:iv>=0.05?S.HA:S.HR;
 
-      // Build dynamic LET formula for IRR — fully self-contained, recalculates on any input change
-      const buildIrrLet = (gRef, exRef, enRef) => {
-        const v = [];
-        const lv = (n,val) => v.push(n, val);
-        lv('xe',bRef(IR.ebitda)); lv('xen',enRef); lv('xlev',bRef(IR.leverage));
-        lv('xri',bRef(IR.interest)); lv('xfp',bRef(IR.fcfPct)); lv('xh',bRef(IR.hold));
-        lv('xtx',bRef(IR.txCost)); lv('xaq',bRef(IR.acqEbitda)); lv('xam',bRef(IR.acqMult));
-        lv('xag',bRef(IR.acqGrowth)); lv('xsw',bRef(IR.sweep)); lv('xmp',bRef(IR.mgmtPool));
-        lv('xef',bRef(IR.exitFee||'$B$1')); // exit fee ref (0 if none)
-        lv('xg',gRef); lv('xex',exRef);
-        lv('xd0','xe*xlev'); lv('xeq0','xe*xen-xd0+xe*xen*xtx');
-        for(let k=1;k<=10;k++){
-          const pd=k===1?'xd0':`xd${k-1}`, pc=k===1?'0':`xc${k-1}`;
-          const af=`IF(xaq=0,0,IF(ABS(xag)<1E-5,xaq*${k},xaq*(POWER(1+xag,${k})-1)/xag))`;
-          lv(`xda${k}`,`${pd}+xaq*xam`);
-          lv(`xf${k}`,`(xe*POWER(1+xg,${k})+${af})*xfp`);
-          lv(`xi${k}`,`xda${k}*xri`);
-          lv(`xn${k}`,`MAX(xf${k}-xi${k},0)`);
-          lv(`xp${k}`,`IF(xsw=1,MIN(xn${k},xda${k}),0)`);
-          lv(`xd${k}`,`MAX(xda${k}-xp${k},0)`);
-          lv(`xc${k}`,`${pc}+IF(xsw=1,MAX(xn${k}-xp${k},0),MAX(xf${k}-xi${k},0))`);
-        }
-        const dh=`CHOOSE(xh,${Array.from({length:10},(_,i)=>`xd${i+1}`).join(',')})`;
-        const ch=`CHOOSE(xh,${Array.from({length:10},(_,i)=>`xc${i+1}`).join(',')})`;
-        const afH=`IF(xaq=0,0,IF(ABS(xag)<1E-5,xaq*xh,xaq*(POWER(1+xag,xh)-1)/xag))`;
-        lv('xdh',dh); lv('xch',ch);
-        lv('xgE',`(xe*POWER(1+xg,xh)+${afH})*xex*(1-xef)-xdh+xch`);
-        lv('xnE',`xgE-MAX(xgE-xeq0,0)*xmp`); // mgmt = % of equity gain
-        const pairs=[];for(let i=0;i<v.length;i+=2)pairs.push(`${v[i]},${v[i+1]}`);
-        return `LET(${pairs.join(',')},IFERROR(POWER(MAX(xnE/xeq0,0),1/xh)-1,0))`;
-      };
-
       // Sensitivity 1: Exit Multiple vs EBITDA Growth
       sect('SENSITIVITY 1 — IRR: Exit Multiple vs. EBITDA Growth CAGR');
-      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%  (formulas update when inputs change)`)]]);
+      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
       {
         const hdr=[[1,nl('Exit ↓ / Growth →',S.HDR)]];
         sGVals.forEach((g,gi3)=>hdr.push([2+gi3,{v:g,s:S.HDR_PCT}]));
         addRow(hdr);
       }
-      const R_s1_hdr = rn;
       sXVals.forEach(ex=>{
-        const thisRow=rn+1;
-        const exColRef=`$A$${thisRow}`;
         const r=[[1,{v:ex,s:S.HDR_MULT}]];
         sGVals.forEach((g,gi3)=>{
-          const gColRef=`$${colLtr(2+gi3)}$${R_s1_hdr}`;
           const res=sensCalc(entryMult,g,ex);
           const isAct=g===growth&&ex===exitMult;
           const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
-          r.push([2+gi3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR),f:buildIrrLet(gColRef,exColRef,bRef(IR.entryMult))}]);
+          r.push([2+gi3,{v:irrV, s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
         });
         addRow(r);
       });
@@ -2817,23 +2781,19 @@
 
       // Sensitivity 2: Entry Multiple vs Exit Multiple
       sect('SENSITIVITY 2 — IRR: Entry Multiple vs. Exit Multiple');
-      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%  (formulas update when inputs change)`)]]);
+      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
       {
         const hdr=[[1,nl('Entry ↓ / Exit →',S.HDR)]];
         sXVals.forEach((ex,ei3)=>hdr.push([2+ei3,{v:ex,s:S.HDR_MULT}]));
         addRow(hdr);
       }
-      const R_s2_hdr=rn;
       sNVals.forEach(en=>{
-        const thisRow=rn+1;
-        const enColRef=`$A$${thisRow}`;
         const r=[[1,{v:en,s:S.HDR_MULT}]];
         sXVals.forEach((ex,ei3)=>{
-          const exColRef=`$${colLtr(2+ei3)}$${R_s2_hdr}`;
           const res=sensCalc(en,growth,ex);
           const isAct=en===entryMult&&ex===exitMult;
           const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
-          r.push([2+ei3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR),f:buildIrrLet(bRef(IR.growth),exColRef,enColRef)}]);
+          r.push([2+ei3,{v:irrV, s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
         });
         addRow(r);
       });
