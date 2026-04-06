@@ -471,6 +471,9 @@
       margin-bottom: 0.5rem;
       font-family: var(--sans);
       font-weight: 600;
+      min-height: 2.2em;
+      display: flex;
+      align-items: flex-end;
     }
     .kpi-value {
       font-size: 2.2rem;
@@ -787,14 +790,14 @@
           </div>
           <div class="input-field-wrap">
             <span class="input-prefix">$</span>
-            <input class="num-input has-prefix" type="number" id="ebitda" value="50" min="1" max="10000" step="1"/>
+            <input class="num-input has-prefix" type="number" onfocus="this.select()" id="ebitda" value="50" min="1" max="10000" step="1"/>
           </div>
         </div>
 
         <div class="slider-row">
           <div class="slider-header">
             <span class="slider-label">Entry EV/EBITDA Multiple</span>
-            <input class="slider-num-input" type="number" id="entryMultVal" value="12.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
+            <input class="slider-num-input" type="number" onfocus="this.select()" id="entryMultVal" value="12.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
           </div>
           <input type="range" id="entryMult" min="1" max="25" step="0.5" value="12"/>
         </div>
@@ -802,7 +805,7 @@
         <div class="slider-row">
           <div class="slider-header">
             <span class="slider-label">Leverage (Debt / EBITDA)</span>
-            <input class="slider-num-input" type="number" id="leverageVal" value="5.0" min="0" max="10" step="0.5" title="Type a value (0–10x)"/>
+            <input class="slider-num-input" type="number" onfocus="this.select()" id="leverageVal" value="5.0" min="0" max="10" step="0.5" title="Type a value (0–10x)"/>
           </div>
           <input type="range" id="leverage" min="0" max="10" step="0.5" value="5"/>
         </div>
@@ -826,9 +829,9 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">EBITDA Growth (CAGR)</span>
-              <input class="slider-num-input" type="number" id="growthVal" value="10.0" min="-10" max="40" step="0.5" title="Type a value"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="growthVal" value="10.0" min="-100" max="40" step="0.5" title="Type a value"/>
             </div>
-            <input type="range" id="growth" min="-10" max="40" step="0.5" value="10"/>
+            <input type="range" id="growth" min="-20" max="40" step="0.5" value="10"/>
           </div>
         </div>
 
@@ -837,21 +840,21 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">Revenue Growth (CAGR)</span>
-              <input class="slider-num-input" type="number" id="revGrowthVal" value="12.0" min="-20" max="50" step="0.5" title="Type a value"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="revGrowthVal" value="12.0" min="-100" max="50" step="0.5" title="Type a value"/>
             </div>
             <input type="range" id="revGrowth" min="-20" max="50" step="0.5" value="12"/>
           </div>
           <div class="input-row">
             <div class="input-label">Entry EBITDA Margin<span class="input-hint">% of revenue at close</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" id="entryMargin" value="20" min="1" max="80" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="entryMargin" value="20" min="1" max="80" step="0.5"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
           <div class="input-row">
             <div class="input-label">Exit EBITDA Margin<span class="input-hint">% of revenue at exit</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" id="exitMargin" value="24" min="1" max="80" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="exitMargin" value="24" min="1" max="80" step="0.5"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
@@ -865,7 +868,7 @@
         <div class="slider-row">
           <div class="slider-header">
             <span class="slider-label">Exit EV/EBITDA Multiple</span>
-            <input class="slider-num-input" type="number" id="exitMultVal" value="12.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
+            <input class="slider-num-input" type="number" onfocus="this.select()" id="exitMultVal" value="12.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
           </div>
           <input type="range" id="exitMult" min="1" max="25" step="0.5" value="12"/>
         </div>
@@ -873,7 +876,7 @@
         <div class="slider-row">
           <div class="slider-header">
             <span class="slider-label">Hold Period (Years)</span>
-            <input class="slider-num-input" type="number" id="holdVal" value="5" min="1" max="10" step="1" title="Type a value (1–10 years)"/>
+            <input class="slider-num-input" type="number" onfocus="this.select()" id="holdVal" value="5" min="1" max="10" step="1" title="Type a value (1–10 years)"/>
           </div>
           <input type="range" id="hold" min="1" max="10" step="1" value="5"/>
         </div>
@@ -884,7 +887,18 @@
             <span class="input-hint">% of Entry EV (fees, closing)</span>
           </div>
           <div class="input-field-wrap">
-            <input class="num-input has-suffix" type="number" id="txCost" value="2" min="0" max="10" step="0.5"/>
+            <input class="num-input has-suffix" type="number" onfocus="this.select()" id="txCost" value="2" min="0" max="10" step="0.5"/>
+            <span class="input-suffix">%</span>
+          </div>
+        </div>
+
+        <div class="input-row" style="margin-top:0.5rem">
+          <div class="input-label">
+            Exit Fees
+            <span class="input-hint">% of Exit EV (advisory, closing)</span>
+          </div>
+          <div class="input-field-wrap">
+            <input class="num-input has-suffix" type="number" onfocus="this.select()" id="exitFee" value="0" min="0" max="10" step="0.25"/>
             <span class="input-suffix">%</span>
           </div>
         </div>
@@ -897,7 +911,7 @@
         <div class="slider-row">
           <div class="slider-header">
             <span class="slider-label">All-in Interest Rate</span>
-            <input class="slider-num-input" type="number" id="interestVal" value="9.00" min="4" max="18" step="0.25" title="Type a value (4–18%)"/>
+            <input class="slider-num-input" type="number" onfocus="this.select()" id="interestVal" value="9.00" min="4" max="18" step="0.25" title="Type a value (4–18%)"/>
           </div>
           <input type="range" id="interest" min="4" max="18" step="0.25" value="9"/>
         </div>
@@ -926,7 +940,7 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">FCF Conversion (% of EBITDA)</span>
-              <input class="slider-num-input" type="number" id="fcfVal" value="45" min="0" max="100" step="1" title="Type a value"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="fcfVal" value="45" min="0" max="100" step="1" title="Type a value"/>
             </div>
             <input type="range" id="fcf" min="0" max="100" step="1" value="45"/>
           </div>
@@ -937,28 +951,28 @@
           <div class="input-row">
             <div class="input-label">Tax Rate<span class="input-hint">Applied to EBIT − Interest</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" id="taxRate" value="25" min="0" max="60" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="taxRate" value="25" min="0" max="60" step="0.5"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
           <div class="input-row">
             <div class="input-label">D&A<span class="input-hint">% of EBITDA (add-back to FCF)</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" id="daRate" value="8" min="0" max="40" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="daRate" value="8" min="0" max="40" step="0.5"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
           <div class="input-row">
             <div class="input-label">Capex<span class="input-hint">% of EBITDA</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" id="capexRate" value="6" min="0" max="60" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="capexRate" value="6" min="0" max="60" step="0.5"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
           <div class="input-row">
             <div class="input-label">Working Capital<span class="input-hint">% of EBITDA increment (+ = use)</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" id="wcRate" value="3" min="-20" max="30" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="wcRate" value="3" min="-20" max="30" step="0.5"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
@@ -998,7 +1012,7 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">Acquisition Multiple</span>
-              <input class="slider-num-input" type="number" id="acqMultVal" value="10.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="acqMultVal" value="10.0" min="1" max="25" step="0.5" title="Type a value (1–25x)"/>
             </div>
             <input type="range" id="acqMult" min="1" max="25" step="0.5" value="10"/>
           </div>
@@ -1006,9 +1020,9 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">Acquired EBITDA Growth Rate</span>
-              <input class="slider-num-input" type="number" id="acqGrowthVal" value="10.0" min="-10" max="40" step="0.5" title="Annual growth on acquired EBITDA"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="acqGrowthVal" value="10.0" min="-100" max="40" step="0.5" title="Annual growth on acquired EBITDA"/>
             </div>
-            <input type="range" id="acqGrowth" min="-10" max="40" step="0.5" value="10"/>
+            <input type="range" id="acqGrowth" min="-20" max="40" step="0.5" value="10"/>
           </div>
         </div>
       </div>
@@ -1029,7 +1043,7 @@
               <span class="input-hint">% of exit equity paid to management</span>
             </div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" id="mgmtPool" value="10" min="0" max="30" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="mgmtPool" value="10" min="0" max="30" step="0.5"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
@@ -1049,7 +1063,7 @@
           <div class="kpi-sub" id="irrSub">annualized return</div>
         </div>
         <div class="kpi neutral">
-          <div class="kpi-label">Money on Money (MoM)</div>
+          <div class="kpi-label">MoM</div>
           <div class="kpi-value" id="mom">—</div>
           <div class="kpi-sub" id="momSub">total equity multiple</div>
         </div>
@@ -1247,11 +1261,11 @@
     <p>A leveraged buyout (LBO) is an acquisition of a company financed primarily with debt — typically 50–70% of the purchase price — with the remainder funded by private equity. The target company's own assets and cash flows serve as collateral for the borrowing. Private equity firms use this structure to amplify equity returns: because the sponsor puts in relatively little equity, any appreciation in the business value accrues disproportionately to that equity slice.</p>
     <p>LBOs are the cornerstone transaction type for private equity firms. The buyer acquires a business, uses operational improvements and debt paydown to build value over a 3–7 year hold period, then exits through a sale or IPO — returning capital to limited partners with a target return of 20%+ IRR.</p>
 
-    <h2>How to Use This LBO Calculator</h2>
-    <p>This free tool models the core mechanics of an LBO and lets you stress-test returns across any deal. Start by entering your <strong>Entry EBITDA</strong> and <strong>Entry EV/EBITDA multiple</strong> to set the purchase price. Add your <strong>leverage assumption</strong> (Debt/EBITDA) and <strong>interest rate</strong> to size the debt. Then set your <strong>EBITDA growth CAGR</strong>, <strong>exit multiple</strong>, and <strong>hold period</strong> to model the exit.</p>
-    <p>The calculator instantly outputs <strong>IRR</strong> (internal rate of return) and <strong>MoM</strong> (money-on-money multiple), along with a year-by-year debt schedule, value bridge waterfall, and two IRR sensitivity tables. Advanced features include bolt-on acquisition modeling, management option pool dilution, revenue and margin disaggregation, and detailed FCF build-up with tax rate, D&amp;A, capex, and working capital assumptions.</p>
+    <h2 id="methodology">How to Use This Free LBO Returns Calculator</h2>
+    <p>This free LBO calculator models the core mechanics of a leveraged buyout and lets you stress-test returns across any deal scenario. Start by entering your <strong>Entry EBITDA</strong> and <strong>Entry EV/EBITDA multiple</strong> to set the purchase price. Add your <strong>leverage assumption</strong> (Debt/EBITDA) and <strong>interest rate</strong> to size the debt. Then set your <strong>EBITDA growth CAGR</strong>, <strong>exit multiple</strong>, and <strong>hold period</strong> to model the exit.</p>
+    <p>The calculator instantly outputs <strong>IRR</strong> (internal rate of return) and <strong>MoM</strong> (money-on-money multiple), along with a year-by-year debt paydown schedule, value bridge waterfall, and IRR sensitivity tables. Advanced features include bolt-on acquisition modeling, management option pool dilution, revenue and margin disaggregation, and a detailed FCF build-up with tax rate, D&amp;A, capex, and working capital assumptions. You can also model severe EBITDA declines by entering negative growth rates as low as −100%.</p>
 
-    <h2>Understanding IRR and MoM</h2>
+    <h2>Understanding IRR and MoM in Private Equity</h2>
     <p><strong>IRR (Internal Rate of Return)</strong> is the annualized return on the equity investment. Most institutional PE funds target a gross IRR of 20–25%+. IRR is sensitive to hold period — the same dollar return over 3 years produces a much higher IRR than over 7 years. This is why sponsors often try to exit early when performance exceeds plan.</p>
     <p><strong>MoM (Money-on-Money)</strong>, also called MOIC (Multiple on Invested Capital), measures total return as a simple multiple of invested equity. A 2.0x MoM means the sponsor doubled their money. Institutional investors typically target 2.5x–3.5x gross MoM over a 5-year hold. Unlike IRR, MoM is unaffected by hold period — it purely measures magnitude of return, not speed.</p>
     <p>Both metrics matter. A 3.0x MoM over 7 years is a mediocre deal (≈17% IRR); the same 3.0x over 3 years is exceptional (≈44% IRR). PE fund economics favor IRR because carried interest accrues faster, but LPs care about both.</p>
@@ -1260,22 +1274,83 @@
     <p>Leverage is the primary return amplifier in an LBO. By financing a large portion of the purchase with debt and using the company's cash flows to repay it, the private equity firm concentrates value creation in the equity tranche. If a business is acquired at 10x EBITDA and exits at 12x with modest organic growth, the debt paydown alone can generate a 2x+ equity return even with no multiple expansion.</p>
     <p>However, leverage cuts both ways. High debt loads increase interest expense, reduce financial flexibility, and amplify losses if the business underperforms. Typical LBO leverage ranges from 4x–7x Debt/EBITDA depending on the sector, cash flow predictability, and credit market conditions. Lenders generally require interest coverage of 1.5x–2.0x minimum.</p>
 
-    <h2>Value Creation Drivers</h2>
+    <h2>LBO Value Creation Drivers</h2>
     <p>The <strong>Value Bridge</strong> in this calculator decomposes your equity return into four distinct sources of value creation:</p>
     <p><strong>EBITDA Growth</strong> — Operational improvements, revenue growth, and margin expansion increase the business's earnings, which are then multiplied at exit. This is the highest-quality form of value creation and what top-tier PE firms prioritize. Growth might come from organic sales growth, pricing power, cost reduction programs, or geographic expansion.</p>
     <p><strong>Multiple Expansion</strong> — Buying at a lower multiple than you sell at. If you acquire at 8x and exit at 10x, you benefit from two turns of expansion on the exit EBITDA. Multiple expansion is less reliable than EBITDA growth — it depends on market conditions, investor sentiment, and timing — but can be a powerful tailwind in bull markets.</p>
     <p><strong>Debt Paydown</strong> — As the company generates free cash flow and repays debt, the enterprise value stays constant but equity value increases. This is mechanical value creation that happens even in a flat business. A company acquired with $400M of debt that repays $150M over 5 years creates $150M of equity value through debt paydown alone.</p>
     <p><strong>Bolt-on Acquisitions</strong> — Many PE firms pursue a "buy-and-build" strategy: acquiring smaller companies at lower multiples and adding them to the platform, which then exits at a higher consolidated multiple. This multiple arbitrage — buying at 6x and selling the combined entity at 12x — is one of the highest-conviction return strategies in private equity.</p>
 
+    <h2>Exit Fees and Transaction Costs in LBOs</h2>
+    <p>Transaction costs — typically 1–3% of entry EV — are incurred at close and include investment banking advisory fees, legal fees, financing fees, and management consulting. These reduce the equity invested on day one and are factored into entry equity in this calculator.</p>
+    <p>Exit fees — typically 1–2% of exit EV — are incurred when selling the company and include sell-side advisory, legal, and closing costs. Unlike entry costs, exit fees reduce the gross exit equity and therefore directly lower IRR and MoM. Modelling them separately gives a more accurate picture of net returns to the fund.</p>
+
     <h2>Cash Sweep and Free Cash Flow</h2>
-    <p>In most LBO structures, the company's excess free cash flow is swept to repay debt as quickly as possible — this is the <strong>cash sweep</strong> mechanism. Faster debt paydown accelerates equity value creation, reduces refinancing risk, and allows for earlier dividend recapitalizations or exit opportunities. The cash sweep is typically the first priority in a company's cash flow waterfall, above capex reinvestment and acquisitions.</p>
+    <p>In most LBO structures, the company's excess free cash flow is swept to repay debt as quickly as possible — this is the <strong>cash sweep</strong> mechanism. Faster debt paydown accelerates equity value creation, reduces refinancing risk, and allows for earlier dividend recapitalizations or exit opportunities. Once debt reaches zero, excess cash accrues on the balance sheet and is returned at exit.</p>
     <p>Free cash flow conversion — how much of EBITDA translates to actual cash available for debt service — is one of the most critical inputs in LBO underwriting. After taxes, capex, working capital changes, and interest expense, a typical industrial business might convert 35–50% of EBITDA to levered free cash flow. Asset-light businesses (software, services) can convert 60–80%, which is why they command premium multiples.</p>
 
-    <h2>LBO Benchmarks and Rule of Thumb</h2>
+    <h2>LBO Benchmarks and Rules of Thumb</h2>
     <p>While every deal is different, experienced practitioners use a few quick benchmarks when evaluating LBO returns. A deal entering at 10x EBITDA with 5x leverage, 10% EBITDA growth, and exiting at 12x over 5 years should generate roughly 20–25% IRR — solidly in institutional territory. The <strong>rule of 72</strong> — divide 72 by your IRR to estimate how long it takes to double money — is a useful sanity check: 20% IRR → 3.6 years to double.</p>
     <p>Most institutional LBO funds target gross IRR of 20–25% and gross MoM of 2.5–3.5x before fees. After the 2% management fee and 20% carried interest typical of PE funds, net returns to LPs are roughly 5–7 percentage points lower. The J-curve — where returns appear negative in early fund years as fees accrue before investments mature — is another key concept for anyone evaluating PE as an asset class.</p>
 
+    <h2 id="about">Frequently Asked Questions</h2>
+
+    <p><strong>What is a good IRR for an LBO?</strong><br/>
+    Most institutional private equity funds target a gross IRR of 20–25%+. A deal below 15% is generally considered sub-threshold for a buyout fund unless there are strategic reasons. The best PE vintages consistently deliver 25–35% gross IRR on individual deals.</p>
+
+    <p><strong>What is a typical LBO entry multiple?</strong><br/>
+    Entry multiples vary by sector and market conditions. Software companies typically trade at 12–20x EBITDA, business services at 8–14x, and industrials at 6–10x. In competitive auction processes, winning bids often carry 1–2x of premium above sector medians.</p>
+
+    <p><strong>How much leverage is used in a typical LBO?</strong><br/>
+    Leverage levels depend on the business's cash flow stability. A predictable, recurring-revenue software company might support 5–6x Debt/EBITDA, while a cyclical industrial might only support 3–4x. Most LBOs use a mix of senior secured debt and subordinated notes or preferred equity.</p>
+
+    <p><strong>What is the difference between IRR and MOIC in private equity?</strong><br/>
+    IRR (Internal Rate of Return) is time-weighted — it rewards faster returns. MOIC (Multiple on Invested Capital, also called MoM) is not time-weighted — it measures the total dollar return regardless of how long it took. A fund with 2.5x MOIC over 3 years is far better than 2.5x over 7 years when measured by IRR, but identical on MOIC.</p>
+
+    <p><strong>Can I model declining EBITDA in this LBO calculator?</strong><br/>
+    Yes — you can enter negative EBITDA growth rates as low as −100% to model severe operational deterioration, distressed situations, or businesses with declining revenue. This makes the tool useful for stress-testing downside scenarios and covenant headroom analysis.</p>
+
   </div>
+</div>
+
+<!-- FAQ SCHEMA for Google rich results -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a good IRR for an LBO?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Most institutional private equity funds target a gross IRR of 20–25%+. A deal below 15% is generally considered sub-threshold for a buyout fund. The best PE vintages consistently deliver 25–35% gross IRR on individual deals." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a typical LBO entry multiple?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Entry multiples vary by sector. Software companies typically trade at 12–20x EBITDA, business services at 8–14x, and industrials at 6–10x. Competitive auctions often carry a 1–2x premium above sector medians." }
+    },
+    {
+      "@type": "Question",
+      "name": "How much leverage is used in a typical LBO?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Leverage depends on cash flow stability. Recurring-revenue software might support 5–6x Debt/EBITDA, while cyclical industrials might support only 3–4x. Most LBOs use senior secured debt with subordinated notes." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between IRR and MOIC in private equity?",
+      "acceptedAnswer": { "@type": "Answer", "text": "IRR is time-weighted — it rewards faster returns. MOIC (or MoM) is not time-weighted — it measures total dollar return. A 2.5x MOIC over 3 years is far better than 2.5x over 7 years by IRR, but identical on MOIC." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I model declining EBITDA in this LBO calculator?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — you can enter negative EBITDA growth rates as low as −100% to model severe operational deterioration, distressed situations, or declining businesses." }
+    }
+  ]
+}
+</script>
+
+<div id="privacy" style="background:#f4f6f9;border-top:1px solid #dde2ea;padding:2rem 1.5rem;max-width:900px;margin:0 auto;font-size:0.82rem;color:#6b7280;line-height:1.6;">
+  <strong style="color:#1a2030;font-size:0.9rem;">Privacy Policy</strong><br/><br/>
+  LBOReturns.com does not collect, store, or sell any personal data. All calculations run entirely in your browser — no data is sent to any server. We use Google AdSense to display advertisements, which may use cookies to show relevant ads. You can opt out of personalised ads via <a href="https://www.google.com/settings/ads" style="color:var(--green);">Google Ad Settings</a>. By using this site you accept these terms.
 </div>
 
 <!-- FOOTER -->
@@ -1284,10 +1359,10 @@
     ⚠ This calculator is for illustrative purposes only. Results are simplified models and do not account for all deal-specific variables including taxes, PIK interest, working capital, capex, or transaction-specific structures. Not financial or investment advice.
   </div>
   <div class="footer-links">
-    <a href="#">About</a>
-    <a href="#">Methodology</a>
-    <a href="#">Advertise</a>
-    <a href="#">Privacy</a>
+    <a href="#about">About</a>
+    <a href="#methodology">Methodology</a>
+    <a href="mailto:hello@lboreturns.com">Advertise</a>
+    <a href="#privacy">Privacy</a>
   </div>
 </footer>
 
@@ -1351,7 +1426,7 @@
     if (s) {
       const { ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib } = s.attribution;
       const { entryEquity, netExitEq } = s.results;
-       drawWaterfall(entryEquity, ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, -(s.results.mgmtPayout||0), netExitEq, s.attribution.revGrowthContrib||null, s.attribution.marginContrib||null);
+       drawWaterfall(entryEquity, ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, -(s.results.mgmtPayout||0), netExitEq, s.attribution.revGrowthContrib||null, s.attribution.marginContrib||null, -(s.results.exitFeeAmt||0));
     }
   }
 
@@ -1435,7 +1510,7 @@
       if (e.key === 'Enter') { syncFromTyped(); numInput.blur(); }
     });
   });
-  ['ebitda','txCost','acqEbitda','entryMargin','exitMargin','taxRate','daRate','capexRate','wcRate','mgmtPool'].forEach(id => {
+  ['ebitda','txCost','exitFee','acqEbitda','entryMargin','exitMargin','taxRate','daRate','capexRate','wcRate','mgmtPool'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', calculate);
   });
@@ -1449,6 +1524,7 @@
     const exitMult  = +document.getElementById('exitMultVal').value  || 12;
     const hold      = Math.round(+document.getElementById('holdVal').value) || 5;
     const txCost    = +document.getElementById('txCost').value       / 100;
+    const exitFee   = +document.getElementById('exitFee').value      / 100;
     const acqEbitda  = acqEnabled ? (+document.getElementById('acqEbitda').value  || 0) : 0;
     const acqMult    = acqEnabled ? (+document.getElementById('acqMultVal').value  || 10) : 10;
     const acqGrowth  = acqEnabled ? (+document.getElementById('acqGrowthVal').value / 100) : 0;
@@ -1567,9 +1643,10 @@
     const acqExitEBITDA      = totalAcqEbitdaFn(hold);
     const combinedExitEBITDA = exitEBITDA + acqExitEBITDA;
     const exitEV             = combinedExitEBITDA * exitMult;
+    const exitFeeAmt         = exitEV * exitFee;                    // advisory + closing fees at exit
     const exitDebt           = debt;
     const totalAcqDebt       = acqEnabled ? acqEbitda * acqMult * hold : 0;
-    const grossExitEq        = exitEV - exitDebt + accruedCash;
+    const grossExitEq        = exitEV - exitFeeAmt - exitDebt + accruedCash;
 
     // Management option pool: sponsor receives (1 - poolPct) of exit equity
     const mgmtPoolPct = mgmtEnabled ? (+document.getElementById('mgmtPool').value / 100) : 0;
@@ -1658,7 +1735,7 @@
     });
 
     // Waterfall
-     drawWaterfall(entryEquity, ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, -mgmtPayout, netExitEq, revGrowthContrib, marginContrib);
+     drawWaterfall(entryEquity, ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, -mgmtPayout, netExitEq, revGrowthContrib, marginContrib, -exitFeeAmt);
 
     // Effective FCF % for sensitivity tables — use exact value, not rounded slider
     // In detailed FCF mode the implied FCF% is computed analytically; use that directly
@@ -1698,8 +1775,8 @@
 
     // Store state
     window._lboState = {
-      inputs: { ebitda, entryMult, leverage, interest, fcfPct: fcfPctEff, growth, exitMult, hold, txCost, acqEbitda, acqMult, acqGrowth, acqEnabled, cashSweep, mgmtPoolPct, fcfDetailParams },
-      results: { irr, mom, entryEquity, netExitEq, entryEV, exitEBITDA: combinedExitEBITDA, exitEV, exitDebt, totalAcqDebt, accruedCash, mgmtPayout },
+      inputs: { ebitda, entryMult, leverage, interest, fcfPct: fcfPctEff, growth, exitMult, hold, txCost, exitFee, acqEbitda, acqMult, acqGrowth, acqEnabled, cashSweep, mgmtPoolPct, fcfDetailParams },
+      results: { irr, mom, entryEquity, netExitEq, entryEV, exitEBITDA: combinedExitEBITDA, exitEV, exitDebt, totalAcqDebt, accruedCash, mgmtPayout, exitFeeAmt },
       attribution: { ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, revGrowthContrib, marginContrib },
       rows,
     };
@@ -1723,7 +1800,7 @@
   }
 
   // ── WATERFALL ──
-   function drawWaterfall(entryEq, ebitdaG, multExp, debtPay, acqContrib, mgmtDrag, exitEq, revGrowthContrib=null, marginContrib=null) {
+   function drawWaterfall(entryEq, ebitdaG, multExp, debtPay, acqContrib, mgmtDrag, exitEq, revGrowthContrib=null, marginContrib=null, exitFeeDrag=0) {
     const svg = document.getElementById('waterfall');
     const W = 360, H = 220, PAD = 42, BPAD = 32;
     const chartH = H - PAD - BPAD;
@@ -1738,6 +1815,7 @@
       : v => fmtM(v);
 
     const runBase4 = entryEq + ebitdaG + multExp + debtPay + acqContrib;
+    const runBase5 = runBase4 + (mgmtDrag < 0 ? mgmtDrag : 0);
     // In Rev+Margin detail mode, split EBITDA Growth into two bars
     const ebitdaItems = (revGrowthContrib !== null && marginContrib !== null)
       ? [
@@ -1754,7 +1832,8 @@
       { label: 'Multiple\nExp.', value: multExp,    base: entryEq + ebitdaG,                         type: multExp   >= 0 ? 'pos' : 'neg' },
       { label: 'Debt\nPaydown',  value: debtPay,    base: entryEq + ebitdaG + multExp,               type: debtPay   >= 0 ? 'pos' : 'neg' },
       { label: 'Bolt-on\nValue', value: acqContrib, base: entryEq + ebitdaG + multExp + debtPay,     type: acqContrib >= 0 ? 'pos' : 'neg' },
-      ...(mgmtDrag < 0 ? [{ label: 'Mgmt\nOptions', value: mgmtDrag, base: runBase4, type: 'neg' }] : []),
+      ...(mgmtDrag < 0   ? [{ label: 'Mgmt\nOptions', value: mgmtDrag,    base: runBase4,  type: 'neg' }] : []),
+      ...(exitFeeDrag < 0 ? [{ label: 'Exit\nFees',    value: exitFeeDrag, base: runBase5,  type: 'neg' }] : []),
       { label: 'Exit\nEquity',   value: exitEq,     base: 0,                                         type: 'exit' },
     ];
 
@@ -1778,7 +1857,7 @@
 
     const barW = 36;
     const gap  = (W - PAD - items.length * barW) / (items.length - 1);
-    const colors = { base: '#1e3a8a', pos: '#1e3a8a', neg: '#c0392b', exit: '#1e3a8a' };
+    const colors = { base: '#1e3a8a', pos: '#16a34a', neg: '#c0392b', exit: '#1e3a8a' };
 
     // y() maps a data value to SVG y-coordinate
     const y = v => PAD + chartH * (1 - (v - minV) / range);
@@ -1855,6 +1934,7 @@
 
   // ── SENSITIVITY 1: Exit Multiple vs EBITDA Growth ──
   function drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, activeGrowth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
+    const exitFee = +(document.getElementById('exitFee')?.value||0)/100;
     const gStep = +( document.getElementById('sensGrowthStep')?.value || 0.025);
     const xStep = +( document.getElementById('sensExitStep')?.value  || 0.5);
     const snapG = v => Math.round(v / gStep) * gStep;
@@ -1897,8 +1977,8 @@
         if (cashSweep){const avail=Math.max(fcfAbs-intExp,0);const dp=Math.min(avail,debt);debt=Math.max(debt-dp,0);cash+=Math.max(avail-dp,0);}
         else cash+=Math.max(fcfAbs-intExp,0);
       }
-      const grossExit=(ebitda*Math.pow(1+g,hold)+acqFn(hold))*ex-debt+cash;
-      const exitE=grossExit*(1-mgmtPoolPct);
+      const grossExit=(ebitda*Math.pow(1+g,hold)+acqFn(hold))*ex;
+      const exitE=(grossExit*(1-exitFee)-debt+cash)*(1-mgmtPoolPct);
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -1925,6 +2005,7 @@
 
   // ── SENSITIVITY 2: Entry Multiple vs Exit Multiple ──
   function drawMultipleSensitivity(ebitda, activeEntry, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
+    const exitFee = +(document.getElementById('exitFee')?.value||0)/100;
     const mStep = +( document.getElementById('sensMultStep')?.value || 0.5);
     const snapM = v => Math.round(v / mStep) * mStep;
     const entryDebt = ebitda*leverage;
@@ -1966,8 +2047,8 @@
         if (cashSweep){const avail=Math.max(fcfAbs-intExp,0);const dp=Math.min(avail,debt);debt=Math.max(debt-dp,0);cash+=Math.max(avail-dp,0);}
         else cash+=Math.max(fcfAbs-intExp,0);
       }
-      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFn(hold))*ex-debt+cash;
-      const exitE=grossExit*(1-mgmtPoolPct);
+      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFn(hold))*ex;
+      const exitE=(grossExit*(1-exitFee)-debt+cash)*(1-mgmtPoolPct);
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -1994,6 +2075,7 @@
 
   // ── SENSITIVITY 3: Acquired EBITDA vs Exit Multiple ──
   function drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
+    const exitFee = +(document.getElementById('exitFee')?.value||0)/100;
     const xStep = +( document.getElementById('sensAcqExitStep')?.value || 0.5);
     const snapX = v => Math.round(v / xStep) * xStep;
     const aqStep = +( document.getElementById('sensAcqStep')?.value || 1);
@@ -2038,8 +2120,8 @@
         if (cashSweep){const av=Math.max(fcfAbs-intExp,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}
         else cash+=Math.max(fcfAbs-intExp,0);
       }
-      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFnFor(aq,hold))*ex-debt+cash;
-      const exitE=grossExit*(1-mgmtPoolPct);
+      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFnFor(aq,hold))*ex;
+      const exitE=(grossExit*(1-exitFee)-debt+cash)*(1-mgmtPoolPct);
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -2325,7 +2407,7 @@
     btn.classList.add('exporting'); btn.textContent = 'Building…';
     try {
       const { ebitda, entryMult, leverage, interest, fcfPct, growth,
-              exitMult, hold, txCost, acqEbitda, acqMult, acqGrowth,
+              exitMult, hold, txCost, exitFee, acqEbitda, acqMult, acqGrowth,
               acqEnabled, cashSweep, mgmtPoolPct } = s.inputs;
       const { entryEquity, netExitEq, mom, irr, mgmtPayout } = s.results;
       const SR = s.rows; // Exact values from calculate() — guaranteed to tie
@@ -2420,6 +2502,7 @@
       inp('exitMult', 'Exit EV/EBITDA (x)',              mIn(exitMult));
       inp('hold',     'Hold Period (Years)',               nIn(hold));
       inp('txCost',   'Transaction Costs (% EV)',          pIn(txCost));
+      inp('exitFee',  'Exit Fees (% Exit EV)',              pIn(exitFee||0));
 
       // FCF — formula or hardcode depending on fcfMode
       if (fcfMode === 'detail') {
@@ -2672,7 +2755,8 @@
         const ev0=ebitda*en,d0=ebitda*leverage,eq0=ev0-d0+ev0*txCost; if(eq0<=0)return null;
         let debt=d0,cash=0;
         for(let yr=1;yr<=hold;yr++){debt+=acqEnabled?acqEbitda*acqMult:0;const e2=ebitda*Math.pow(1+g,yr)+acqFnX(yr);const ie=debt*interest,fc=e2*fcfPct;if(cashSweep){const av=Math.max(fc-ie,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}else cash+=Math.max(fc-ie,0);}
-        const grossExit=(ebitda*Math.pow(1+g,hold)+acqFnX(hold))*ex-debt+cash;
+        const exitEVs=(ebitda*Math.pow(1+g,hold)+acqFnX(hold))*ex;
+        const grossExit=exitEVs*(1-(exitFee||0))-debt+cash;
         const mom2=Math.max(grossExit*(1-mgmtPoolPct)/eq0,0); return {irr:(Math.pow(mom2,1/hold)-1),mom:mom2};
       };
       const hS=iv=>iv>=0.25?S.HG1:iv>=0.20?S.HG2:iv>=0.10?S.HY:iv>=0.05?S.HA:S.HR;
@@ -2746,7 +2830,7 @@
       ri: g('interestVal'),    fc: g('fcfVal'),         gr: g('growthVal'),
       xm: g('exitMultVal'),    hp: g('holdVal'),        tc: g('txCost'),
       ae: g('acqEbitda'),      am: g('acqMultVal'),     ag: g('acqGrowthVal'),
-      mp: g('mgmtPool'),       tr: g('taxRate'),        da: g('daRate'),
+      ef: g('exitFee'),        mp: g('mgmtPool'),       tr: g('taxRate'),        da: g('daRate'),
       cx: g('capexRate'),      wc: g('wcRate'),         rg: g('revGrowthVal'),
       nm: g('entryMargin'),    xn: g('exitMargin'),
       sw: cashSweep   ? '1' : '0',
@@ -2853,6 +2937,7 @@
     setSlider('revGrowth', 'revGrowthVal', params.rg, v => (+v).toFixed(1));
 
     set('ebitda',      params.eb);
+    set('exitFee',     params.ef);
     set('txCost',      params.tc);
     set('acqEbitda',   params.ae);
     set('mgmtPool',    params.mp);
