@@ -2245,7 +2245,7 @@
     <border><left/><right/><top/><bottom style="medium"><color rgb="FF1F3461"/></bottom><diagonal/></border>
   </borders>
   <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-  <cellXfs count="23">
+  <cellXfs count="29">
     <xf numFmtId="164" fontId="3" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
     <xf numFmtId="0"   fontId="1" fillId="2" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0"   fontId="2" fillId="3" borderId="2" xfId="0"><alignment horizontal="left"   vertical="center"/></xf>
@@ -2269,6 +2269,12 @@
     <xf numFmtId="169" fontId="8" fillId="3" borderId="0" xfId="0"><alignment horizontal="right" vertical="center"/></xf>
     <xf numFmtId="168" fontId="1" fillId="2" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="167" fontId="1" fillId="2" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="3" fillId="5" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="3" fillId="6" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="3" fillId="7" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="3" fillId="8" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="3" fillId="9" borderId="0" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="167" fontId="7" fillId="10" borderId="1" xfId="0"><alignment horizontal="center" vertical="center"/></xf>
   </cellXfs>
 </styleSheet>`
 
@@ -2277,7 +2283,8 @@
       NUM:0, HDR:1, SECT:2, INPUT:3, FML:4, CROSS:5, RET:6, LBL:7,
       ALT:8, HG1:9, HG2:10, HY:11, HA:12, HR:13, HACT:14,
       INPUT_PCT:15, FML_PCT:16, CROSS_PCT:17, FML_MULT:18, RET_PCT:19, INPUT_MULT:20,
-      HDR_PCT:21, HDR_MULT:22
+      HDR_PCT:21, HDR_MULT:22,
+      MHG1:23, MHG2:24, MHY:25, MHA:26, MHR:27, MHACT:28
     };
 
     // ── Cell address helpers ──
@@ -2747,56 +2754,147 @@
       const xi2=sXVals.reduce((bi,x,i)=>Math.abs(x-exitMult)<Math.abs(sXVals[bi]-exitMult)?i:bi,0); sXVals[xi2]=exitMult;
       const ni2=sNVals.reduce((bi,x,i)=>Math.abs(x-entryMult)<Math.abs(sNVals[bi]-entryMult)?i:bi,0); sNVals[ni2]=entryMult;
 
-      // JS sensCalc for cached v values
-      const acqFnX = n => { if(!acqEnabled||acqEbitda===0)return 0; if(Math.abs(acqGrowth)<1e-9)return acqEbitda*n; return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth; };
-      const sensCalc = (en,g,ex) => {
-        const ev0=ebitda*en,d0=ebitda*leverage,eq0=ev0-d0+ev0*txCost; if(eq0<=0)return null;
-        let debt=d0,cash=0;
-        for(let yr=1;yr<=hold;yr++){debt+=acqEnabled?acqEbitda*acqMult:0;const e2=ebitda*Math.pow(1+g,yr)+acqFnX(yr);const ie=debt*interest,fc=e2*fcfPct;if(cashSweep){const av=Math.max(fc-ie,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}else cash+=Math.max(fc-ie,0);}
-        const grossEq=(ebitda*Math.pow(1+g,hold)+acqFnX(hold))*ex*(1-(exitFee||0))-debt+cash;
-        const net=grossEq*(1-mgmtPoolPct);  // mgmt pool = % of gross exit equity (matches website)
-        const mom2=Math.max(net/eq0,0); return {irr:(Math.pow(mom2,1/hold)-1),mom:mom2};
+      // ── Sensitivity helpers — exact replica of website calc() ──
+      // Uses fcfDetailParams from s.inputs when in detail mode
+      const fdp = fcfDetailParams; // null in simple mode
+      const acqFnX = n => {
+        if (!acqEnabled||acqEbitda===0) return 0;
+        if (Math.abs(acqGrowth)<1e-9) return acqEbitda*n;
+        return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
       };
-      const hS=iv=>iv>=0.25?S.HG1:iv>=0.20?S.HG2:iv>=0.10?S.HY:iv>=0.05?S.HA:S.HR;
+      const acqFnFor = (aq,n) => {
+        if (aq===0) return 0;
+        if (Math.abs(acqGrowth)<1e-9) return aq*n;
+        return aq*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
+      };
+      const calcFcfX = fdp
+        ? (eVal,prevEVal) => {
+            const da=eVal*fdp.daRate, nopat=(eVal-da)*(1-fdp.taxRate);
+            return nopat+da-eVal*fdp.capexRate-(eVal-prevEVal)*fdp.wcRate;
+          }
+        : (eVal) => eVal*fcfPct;
 
-      // Sensitivity 1: Exit Multiple vs EBITDA Growth
-      sect('SENSITIVITY 1 — IRR: Exit Multiple vs. EBITDA Growth CAGR');
-      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
+      // Core loop — matches website drawSensitivity calc exactly
+      const runLoop = (en, g, ex, aqOverride) => {
+        const aq    = aqOverride !== undefined ? aqOverride : (acqEnabled ? acqEbitda : 0);
+        const d0    = ebitda*leverage;
+        const eq0   = ebitda*en - d0 + ebitda*en*txCost;
+        if (eq0<=0) return null;
+        let debt=d0, cash=0, prevE=ebitda;
+        for (let yr=1; yr<=hold; yr++) {
+          debt += aq * acqMult;
+          const e2 = ebitda*Math.pow(1+g,yr) + acqFnFor(aq,yr);
+          const ie = debt*interest;
+          const fc = calcFcfX(e2, prevE); prevE=e2;
+          if (cashSweep){const av=Math.max(fc-ie,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}
+          else cash+=Math.max(fc-ie,0);
+        }
+        const grossExit=(ebitda*Math.pow(1+g,hold)+acqFnFor(aq,hold))*ex;
+        const grossEq=grossExit*(1-(exitFee||0))-debt+cash;
+        const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct; // % of gain — matches website
+        const mom2=Math.max(exitE/eq0,0);
+        return {irr:(Math.pow(mom2,1/hold)-1), mom:mom2};
+      };
+
+      const hS   = iv => iv>=0.25?S.HG1:iv>=0.20?S.HG2:iv>=0.10?S.HY:iv>=0.05?S.HA:S.HR;
+      const hSM  = mv => mv>=3.0?S.MHG1:mv>=2.5?S.MHG2:mv>=2.0?S.MHY:mv>=1.5?S.MHA:S.MHR;
+      const irrCell  = (res,isAct) => { const v=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;  return {v,s:isAct?S.HACT:(v>0?hS(v):S.HR)}; };
+      const momCell  = (res,isAct) => { const v=res&&res.mom>0?Math.round(res.mom*100)/100:0;    return {v,s:isAct?S.MHACT:(v>0?hSM(v):S.MHR)}; };
+
+      const writeTable = (title, rowHdr, colVals, rowVals, cellFn, numSid) => {
+        sect(title);
+        const hdr=[[1,nl(rowHdr,S.HDR)]];
+        colVals.forEach((cv,ci)=>hdr.push([2+ci,{v:cv,s:numSid}]));
+        addRow(hdr);
+        rowVals.forEach(rv=>{
+          const r=[[1,{v:rv,s:numSid}]];
+          colVals.forEach((cv,ci)=>r.push([2+ci, cellFn(rv,cv)]));
+          addRow(r);
+        });
+        blank(); blank();
+      };
+
+      // ── Sensitivity 1: Exit Multiple vs EBITDA Growth ──
       {
+        const colVals=sGVals, rowVals=sXVals;
+        addRow([[1,nl(`SENSITIVITY — IRR: Exit Multiple vs. EBITDA Growth  (Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%)`,S.SECT)]]);
         const hdr=[[1,nl('Exit ↓ / Growth →',S.HDR)]];
-        sGVals.forEach((g,gi3)=>hdr.push([2+gi3,{v:g,s:S.HDR_PCT}]));
+        colVals.forEach((g,ci)=>hdr.push([2+ci,{v:g,s:S.HDR_PCT}]));
         addRow(hdr);
-      }
-      sXVals.forEach(ex=>{
-        const r=[[1,{v:ex,s:S.HDR_MULT}]];
-        sGVals.forEach((g,gi3)=>{
-          const res=sensCalc(entryMult,g,ex);
-          const isAct=g===growth&&ex===exitMult;
-          const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
-          r.push([2+gi3,{v:irrV, s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
+        rowVals.forEach(ex=>{
+          const r=[[1,{v:ex,s:S.HDR_MULT}]];
+          colVals.forEach((g,ci)=>r.push([2+ci, irrCell(runLoop(entryMult,g,ex), g===growth&&ex===exitMult)]));
+          addRow(r);
         });
-        addRow(r);
-      });
-      blank(); blank();
+        blank();
+        const hdr2=[[1,nl('Exit ↓ / Growth → (MoM)',S.HDR)]];
+        colVals.forEach((g,ci)=>hdr2.push([2+ci,{v:g,s:S.HDR_PCT}]));
+        addRow(hdr2);
+        rowVals.forEach(ex=>{
+          const r=[[1,{v:ex,s:S.HDR_MULT}]];
+          colVals.forEach((g,ci)=>r.push([2+ci, momCell(runLoop(entryMult,g,ex), g===growth&&ex===exitMult)]));
+          addRow(r);
+        });
+        blank(); blank();
+      }
 
-      // Sensitivity 2: Entry Multiple vs Exit Multiple
-      sect('SENSITIVITY 2 — IRR: Entry Multiple vs. Exit Multiple');
-      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
+      // ── Sensitivity 2: Entry Multiple vs Exit Multiple ──
       {
+        const colVals=sXVals, rowVals=sNVals;
+        addRow([[1,nl(`SENSITIVITY — IRR: Entry Multiple vs. Exit Multiple  (Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%)`,S.SECT)]]);
         const hdr=[[1,nl('Entry ↓ / Exit →',S.HDR)]];
-        sXVals.forEach((ex,ei3)=>hdr.push([2+ei3,{v:ex,s:S.HDR_MULT}]));
+        colVals.forEach((ex,ci)=>hdr.push([2+ci,{v:ex,s:S.HDR_MULT}]));
         addRow(hdr);
-      }
-      sNVals.forEach(en=>{
-        const r=[[1,{v:en,s:S.HDR_MULT}]];
-        sXVals.forEach((ex,ei3)=>{
-          const res=sensCalc(en,growth,ex);
-          const isAct=en===entryMult&&ex===exitMult;
-          const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
-          r.push([2+ei3,{v:irrV, s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
+        rowVals.forEach(en=>{
+          const r=[[1,{v:en,s:S.HDR_MULT}]];
+          colVals.forEach((ex,ci)=>r.push([2+ci, irrCell(runLoop(en,growth,ex), en===entryMult&&ex===exitMult)]));
+          addRow(r);
         });
-        addRow(r);
-      });
+        blank();
+        const hdr2=[[1,nl('Entry ↓ / Exit → (MoM)',S.HDR)]];
+        colVals.forEach((ex,ci)=>hdr2.push([2+ci,{v:ex,s:S.HDR_MULT}]));
+        addRow(hdr2);
+        rowVals.forEach(en=>{
+          const r=[[1,{v:en,s:S.HDR_MULT}]];
+          colVals.forEach((ex,ci)=>r.push([2+ci, momCell(runLoop(en,growth,ex), en===entryMult&&ex===exitMult)]));
+          addRow(r);
+        });
+        blank(); blank();
+      }
+
+      // ── Sensitivity 3: Bolt-on (Acq EBITDA vs Exit Multiple) — only if enabled ──
+      if (acqEnabled && acqEbitda > 0) {
+        const aqStep=1;
+        let aqVals=[-3,-2,-1,0,1,2,3,4].map(d=>Math.max(acqEbitda+d*aqStep,0));
+        aqVals=[...new Set(aqVals.map(v=>Math.round(v*10)/10))];
+        while(aqVals.length>8) aqVals.pop();
+        const ai=aqVals.reduce((bi,a,i)=>Math.abs(a-acqEbitda)<Math.abs(aqVals[bi]-acqEbitda)?i:bi,0); aqVals[ai]=acqEbitda;
+
+        const snapX=v=>Math.round(v*2)/2;
+        let aqExitVals=[-4,-3,-2,-1,0,1,2,3].map(d=>Math.max(snapX(exitMult)+d*0.5,1));
+        const xi3=aqExitVals.reduce((bi,x,i)=>Math.abs(x-exitMult)<Math.abs(aqExitVals[bi]-exitMult)?i:bi,0); aqExitVals[xi3]=exitMult;
+
+        addRow([[1,nl(`SENSITIVITY — Bolt-on: Acq. EBITDA vs. Exit Multiple  (Base: $${acqEbitda}M/yr acq | ${(growth*100).toFixed(1)}% growth)`,S.SECT)]]);
+        const hdr=[[1,nl('Acq. EBITDA ↓ / Exit →',S.HDR)]];
+        aqExitVals.forEach((ex,ci)=>hdr.push([2+ci,{v:ex,s:S.HDR_MULT}]));
+        addRow(hdr);
+        aqVals.forEach(aq=>{
+          const r=[[1,{v:aq,s:S.NUM}]];
+          aqExitVals.forEach((ex,ci)=>r.push([2+ci, irrCell(runLoop(entryMult,growth,ex,aq), Math.abs(aq-acqEbitda)<0.05&&ex===exitMult)]));
+          addRow(r);
+        });
+        blank();
+        const hdr2=[[1,nl('Acq. EBITDA ↓ / Exit → (MoM)',S.HDR)]];
+        aqExitVals.forEach((ex,ci)=>hdr2.push([2+ci,{v:ex,s:S.HDR_MULT}]));
+        addRow(hdr2);
+        aqVals.forEach(aq=>{
+          const r=[[1,{v:aq,s:S.NUM}]];
+          aqExitVals.forEach((ex,ci)=>r.push([2+ci, momCell(runLoop(entryMult,growth,ex,aq), Math.abs(aq-acqEbitda)<0.05&&ex===exitMult)]));
+          addRow(r);
+        });
+        blank(); blank();
+      }
+
 
       // ── Build & download ──
       const colWidths = [40, ...Array(hold+1).fill(14)];
