@@ -2413,7 +2413,7 @@
     try {
       const { ebitda, entryMult, leverage, interest, fcfPct, growth,
               exitMult, hold, txCost, exitFee, acqEbitda, acqMult, acqGrowth,
-              acqEnabled, cashSweep, mgmtPoolPct } = s.inputs;
+              acqEnabled, cashSweep, mgmtPoolPct, fcfDetailParams } = s.inputs;
       const { entryEquity, netExitEq, mom, irr, mgmtPayout } = s.results;
       const SR = s.rows; // Exact values from calculate() — guaranteed to tie
 
@@ -2745,18 +2745,11 @@
       // ════════════════════════════════════════
       // SENSITIVITY TABLES — dynamic LET formulas, recalculate on any input change
       // ════════════════════════════════════════
-      const snapG = v => Math.round(v*40)/40;
-      const snapMv = v => Math.round(v*2)/2;
-      let sGVals = [-3,-2,-1,0,1,2,3,4].map(d => snapG(growth)+d*0.025);
-      let sXVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapMv(exitMult)+d*0.5,2));
-      let sNVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapMv(entryMult)+d*0.5,1));
-      const gi2=sGVals.reduce((bi,g,i)=>Math.abs(g-growth)<Math.abs(sGVals[bi]-growth)?i:bi,0); sGVals[gi2]=growth;
-      const xi2=sXVals.reduce((bi,x,i)=>Math.abs(x-exitMult)<Math.abs(sXVals[bi]-exitMult)?i:bi,0); sXVals[xi2]=exitMult;
-      const ni2=sNVals.reduce((bi,x,i)=>Math.abs(x-entryMult)<Math.abs(sNVals[bi]-entryMult)?i:bi,0); sNVals[ni2]=entryMult;
+
 
       // ── Sensitivity helpers — exact replica of website calc() ──
       // Uses fcfDetailParams from s.inputs when in detail mode
-      const fdp = fcfDetailParams; // null in simple mode
+      const fdp = fcfDetailParams || null; // from s.inputs destructuring above
       const acqFnX = n => {
         if (!acqEnabled||acqEbitda===0) return 0;
         if (Math.abs(acqGrowth)<1e-9) return acqEbitda*n;
@@ -2774,9 +2767,27 @@
           }
         : (eVal) => eVal*fcfPct;
 
-      // Core loop — matches website drawSensitivity calc exactly
-      const runLoop = (en, g, ex, aqOverride) => {
-        const aq    = aqOverride !== undefined ? aqOverride : (acqEnabled ? acqEbitda : 0);
+      // Read step sizes from the website's own dropdowns (so Excel matches what user sees)
+      const gStep  = +(document.getElementById('sensGrowthStep')?.value   || 0.025);
+      const xStep  = +(document.getElementById('sensExitStep')?.value     || 0.5);
+      const mStep  = +(document.getElementById('sensMultStep')?.value      || 0.5);
+      const aqStep = +(document.getElementById('sensAcqStep')?.value       || 1);
+      const aqXStep= +(document.getElementById('sensAcqExitStep')?.value   || 0.5);
+
+      const snapG = v => Math.round(v/gStep)*gStep;
+      const snapX = v => Math.round(v/xStep)*xStep;
+      const snapM = v => Math.round(v/mStep)*mStep;
+
+      // Build sensitivity axes using same logic as drawSensitivity
+      let sGVals = [-3,-2,-1,0,1,2,3,4].map(d => snapG(growth)+d*gStep);
+      let sXVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapX(exitMult)+d*xStep,1));
+      let sNVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapM(entryMult)+d*mStep,1));
+      // Pin exact active values
+      const gi2=sGVals.reduce((bi,g,i)=>Math.abs(g-growth)<Math.abs(sGVals[bi]-growth)?i:bi,0); sGVals[gi2]=growth;
+      const xi2=sXVals.reduce((bi,x,i)=>Math.abs(x-exitMult)<Math.abs(sXVals[bi]-exitMult)?i:bi,0); sXVals[xi2]=exitMult;
+      const ni2=sNVals.reduce((bi,x,i)=>Math.abs(x-entryMult)<Math.abs(sNVals[bi]-entryMult)?i:bi,0); sNVals[ni2]=entryMult;
+        const runLoop = (en, g, ex, aqOverride) => {
+          const aq    = aqOverride !== undefined ? aqOverride : (acqEnabled ? acqEbitda : 0);
         const d0    = ebitda*leverage;
         const eq0   = ebitda*en - d0 + ebitda*en*txCost;
         if (eq0<=0) return null;
