@@ -1162,11 +1162,14 @@
               <option value="0.010" selected>1.0%</option>
               <option value="0.025">2.5%</option>
               <option value="0.050">5.0%</option>
+              <option value="0.100">10.0%</option>
             </select>
             <select id="sensExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
               <option value="0.25">0.25x</option>
               <option value="0.5" selected>0.5x</option>
               <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
             </select>
           </div>
           <div class="toggle">
@@ -1191,6 +1194,8 @@
               <option value="0.25">0.25x</option>
               <option value="0.5" selected>0.5x</option>
               <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
             </select>
           </div>
           <div class="toggle">
@@ -1217,12 +1222,16 @@
               <option value="2">$2M</option>
               <option value="5">$5M</option>
               <option value="10">$10M</option>
+              <option value="25">$25M</option>
+              <option value="10">$10M</option>
             </select>
             <span>Exit Step:</span>
             <select id="sensAcqExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
               <option value="0.25">0.25x</option>
               <option value="0.5" selected>0.5x</option>
               <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
             </select>
           </div>
           <div class="toggle">
@@ -2530,7 +2539,7 @@
       inp('acqMult',   'Acquisition Multiple (x)',         mIn(acqMult));
       inp('acqGrowth', 'Acquired EBITDA Growth Rate',      pIn(acqGrowth));
       inp('sweep',     'Cash Sweep (1=ON, 0=OFF)',         nIn(cashSweep?1:0));
-      inp('mgmtPool',  'Mgmt Option Pool (% exit equity)',  pIn(mgmtPoolPct));
+      inp('mgmtPool',  'Mgmt Option Pool (% of equity gain)',  pIn(mgmtPoolPct));
       blank();
 
       // ════════════════════════════════════════
@@ -2724,7 +2733,7 @@
         [ENTRY, fx(netExitEq+(mgmtPayout||0), cRef(hold,R_eq))]]);
       const R_rMgmt = (mgmtPoolPct > 0)
         ? addRow([[1, nl('— Mgmt Option Pool ($M)')],
-            [ENTRY, f$(-(mgmtPayout||0), `-${cRef(0,R_rGross)}*${bRef(IR.mgmtPool)}`)]])
+            [ENTRY, f$(-(mgmtPayout||0), `-MAX(${cRef(0,R_rGross)}-${cRef(0,R_eq0)},0)*${bRef(IR.mgmtPool)}`)]])
         : null;
       const R_rEnt  = addRow([[1, nl('Entry Equity ($M)')],
         [ENTRY, fx(entryEquity, cRef(0,R_eq0))]]);
