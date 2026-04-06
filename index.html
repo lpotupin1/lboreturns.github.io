@@ -831,7 +831,7 @@
               <span class="slider-label">EBITDA Growth (CAGR)</span>
               <input class="slider-num-input" type="number" onfocus="this.select()" id="growthVal" value="10.0" min="-100" max="40" step="0.5" title="Type a value"/>
             </div>
-            <input type="range" id="growth" min="-20" max="40" step="0.5" value="10"/>
+            <input type="range" id="growth" min="-100" max="40" step="0.5" value="10"/>
           </div>
         </div>
 
@@ -842,7 +842,7 @@
               <span class="slider-label">Revenue Growth (CAGR)</span>
               <input class="slider-num-input" type="number" onfocus="this.select()" id="revGrowthVal" value="12.0" min="-100" max="50" step="0.5" title="Type a value"/>
             </div>
-            <input type="range" id="revGrowth" min="-20" max="50" step="0.5" value="12"/>
+            <input type="range" id="revGrowth" min="-100" max="50" step="0.5" value="12"/>
           </div>
           <div class="input-row">
             <div class="input-label">Entry EBITDA Margin<span class="input-hint">% of revenue at close</span></div>
@@ -1022,7 +1022,7 @@
               <span class="slider-label">Acquired EBITDA Growth Rate</span>
               <input class="slider-num-input" type="number" onfocus="this.select()" id="acqGrowthVal" value="10.0" min="-100" max="40" step="0.5" title="Annual growth on acquired EBITDA"/>
             </div>
-            <input type="range" id="acqGrowth" min="-20" max="40" step="0.5" value="10"/>
+            <input type="range" id="acqGrowth" min="-100" max="40" step="0.5" value="10"/>
           </div>
         </div>
       </div>
@@ -1040,7 +1040,7 @@
           <div class="input-row">
             <div class="input-label">
               Option Pool Size
-              <span class="input-hint">% of exit equity paid to management</span>
+              <span class="input-hint">% of equity gain paid to management</span>
             </div>
             <div class="input-field-wrap">
               <input class="num-input has-suffix" type="number" onfocus="this.select()" id="mgmtPool" value="10" min="0" max="30" step="0.5"/>
@@ -1361,12 +1361,12 @@
   <div class="footer-links">
     <a href="#about">About</a>
     <a href="#methodology">Methodology</a>
-    <a href="mailto:hello@lboreturns.com">Advertise</a>
+    <a href="/cdn-cgi/l/email-protection#472f222b2b28072b2528352233323529346924282a">Advertise</a>
     <a href="#privacy">Privacy</a>
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // ── CLOCK ──
   function updateClock_unused() {
     const now = new Date();
@@ -1436,13 +1436,6 @@
     document.getElementById('fcfModeDetail').classList.toggle('active', mode === 'detail');
     document.getElementById('fcfSimple').style.display = mode === 'simple' ? '' : 'none';
     document.getElementById('fcfDetail').style.display = mode === 'detail' ? '' : 'none';
-    calculate();
-  }
-
-  function setSweep(val) {
-    cashSweep = val;
-    document.getElementById('sweepOn').classList.toggle('active', val);
-    document.getElementById('sweepOff').classList.toggle('active', !val);
     calculate();
   }
 
@@ -1648,10 +1641,11 @@
     const totalAcqDebt       = acqEnabled ? acqEbitda * acqMult * hold : 0;
     const grossExitEq        = exitEV - exitFeeAmt - exitDebt + accruedCash;
 
-    // Management option pool: sponsor receives (1 - poolPct) of exit equity
-    const mgmtPoolPct = mgmtEnabled ? (+document.getElementById('mgmtPool').value / 100) : 0;
-    const mgmtPayout  = grossExitEq * mgmtPoolPct;          // $ to management
-    const netExitEq   = grossExitEq - mgmtPayout;           // sponsor equity after dilution
+    // Management option pool: % of equity gain (exit equity - entry equity)
+    const mgmtPoolPct  = mgmtEnabled ? (+document.getElementById('mgmtPool').value / 100) : 0;
+    const equityGain   = Math.max(grossExitEq - entryEquity, 0);   // gain available to pool
+    const mgmtPayout   = equityGain * mgmtPoolPct;                 // $ to management
+    const netExitEq    = grossExitEq - mgmtPayout;                 // sponsor equity after dilution
 
     const mom                = netExitEq / entryEquity;
     const irr                = Math.pow(Math.max(mom, 0), 1 / hold) - 1;
@@ -1683,8 +1677,8 @@
     }
 
     // KPIs
-    animateKPI('irr',    irr >= 0 ? (irr * 100).toFixed(1) + '%' : '—', irr >= 0.2 ? 'green' : irr >= 0.12 ? '' : 'red');
-    animateKPI('mom',    mom >= 0  ? mom.toFixed(2) + 'x' : '—',       mom >= 2   ? 'green' : mom >= 1.5  ? '' : 'red');
+    animateKPI('irr',    irr >= 0 ? (irr*100).toFixed(1)+'%' : '('+(Math.abs(irr)*100).toFixed(1)+'%)', irr >= 0.2 ? 'green' : irr >= 0.12 ? '' : 'red');
+    animateKPI('mom',    mom >= 0 ? mom.toFixed(2)+'x' : '('+Math.abs(mom).toFixed(2)+'x)', mom >= 2 ? 'green' : mom >= 1.5 ? '' : 'red');
     animateKPI('entryEq', fmtM(entryEquity), '');
     animateKPI('exitEq',  fmtM(Math.max(netExitEq, 0)), netExitEq > entryEquity ? 'green' : 'red');
 
@@ -1727,7 +1721,7 @@
         <td class="${isExit?'hi':''}">${fmtM(r.ebitda)}</td>
         ${showAcq ? `<td>${fmtM(r.organicEbitda)}</td><td class="pos">${fmtM(r.acqEbitdaYr)}</td>` : ''}
         <td class="${isExit?'neg':''}">${fmtM(r.debt)}</td>
-        <td class="neg">(${fmtM(r.intExp)})</td>
+        <td class="neg">${fmtM(-r.intExp)}</td>
         <td class="pos">${fmtM(r.fcf)}</td>
         <td class="${isExit?'pos hi':'pos'}">${fmtM(Math.max(r.equity,0))}</td>
       `;
@@ -1792,11 +1786,15 @@
   // fmtM: formats a value in $M → returns complete display string e.g. "$123M", "$1.5B", "$2.1T"
   function fmtM(n) {
     const abs = Math.abs(n);
-    const sign = n < 0 ? '-' : '';
-    if (abs >= 1e6)  return sign + '$' + (abs/1e6).toFixed(1) + 'T';
-    if (abs >= 1e3)  return sign + '$' + (abs/1e3).toFixed(1) + 'B';
-    if (abs < 10)    return sign + '$' + abs.toFixed(1) + 'M';
-    return sign + '$' + Math.round(abs).toLocaleString() + 'M';
+    const neg = n < 0;
+    const fmt = v => {
+      if (abs >= 1e6)  return '$' + (abs/1e6).toFixed(1) + 'T';
+      if (abs >= 1e3)  return '$' + (abs/1e3).toFixed(1) + 'B';
+      if (abs < 10)    return '$' + abs.toFixed(1) + 'M';
+      return '$' + Math.round(abs).toLocaleString() + 'M';
+    };
+    const s = fmt(abs);
+    return neg ? '(' + s + ')' : s;
   }
 
   // ── WATERFALL ──
@@ -1808,10 +1806,10 @@
     // In MoM mode, express everything as a contribution to MoM (divided by entryEq)
     const scale = (wfMode === 'moic' && entryEq > 0) ? (1 / entryEq) : 1;
     const fmt   = wfMode === 'moic'
-      ? v => (v >= 0 ? '+' : '') + v.toFixed(2) + 'x'
-      : v => (v >= 0 ? '+' : '-') + fmtM(Math.abs(v));
+      ? v => v >= 0 ? '+'+v.toFixed(2)+'x' : '('+Math.abs(v).toFixed(2)+'x)'
+      : v => (v >= 0 ? '+' : '') + fmtM(v);
     const fmtAbs = wfMode === 'moic'
-      ? v => v.toFixed(2) + 'x'
+      ? v => v >= 0 ? v.toFixed(2)+'x' : '('+Math.abs(v).toFixed(2)+'x)'
       : v => fmtM(v);
 
     const runBase4 = entryEq + ebitdaG + multExp + debtPay + acqContrib;
@@ -1978,7 +1976,7 @@
         else cash+=Math.max(fcfAbs-intExp,0);
       }
       const grossExit=(ebitda*Math.pow(1+g,hold)+acqFn(hold))*ex;
-      const exitE=(grossExit*(1-exitFee)-debt+cash)*(1-mgmtPoolPct);
+      const grossEq=grossExit*(1-exitFee)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -1995,7 +1993,7 @@
         const isActive=g===activeGrowth && ex===activeExit;
         if (!res||res.mom<=0){htmlStr+=`<td style="background:#fcc8c3" class="${isActive?'active-cell':''}">N/A</td>`;return;}
         const bg=showMom?heatColorMom(res.mom):heatColorIRR(res.irr);
-        const lbl=showMom?res.mom.toFixed(2)+'x':res.irr.toFixed(1)+'%';
+        const lbl=showMom?(res.mom>=0?res.mom.toFixed(2)+'x':'('+Math.abs(res.mom).toFixed(2)+'x)'):(res.irr>=0?res.irr.toFixed(1)+'%':'('+Math.abs(res.irr).toFixed(1)+'%)');
         htmlStr+=`<td style="background:${bg}" class="${isActive?'active-cell':''}">${lbl}</td>`;
       });
       htmlStr+='</tr>';
@@ -2048,7 +2046,7 @@
         else cash+=Math.max(fcfAbs-intExp,0);
       }
       const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFn(hold))*ex;
-      const exitE=(grossExit*(1-exitFee)-debt+cash)*(1-mgmtPoolPct);
+      const grossEq=grossExit*(1-exitFee)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -2065,7 +2063,7 @@
         const isActive=en===activeEntry && ex===activeExit;
         if (!res||res.mom<=0){htmlStr+=`<td style="background:#fcc8c3" class="${isActive?'active-cell':''}">N/A</td>`;return;}
         const bg=showMom?heatColorMom(res.mom):heatColorIRR(res.irr);
-        const lbl=showMom?res.mom.toFixed(2)+'x':res.irr.toFixed(1)+'%';
+        const lbl=showMom?(res.mom>=0?res.mom.toFixed(2)+'x':'('+Math.abs(res.mom).toFixed(2)+'x)'):(res.irr>=0?res.irr.toFixed(1)+'%':'('+Math.abs(res.irr).toFixed(1)+'%)');
         htmlStr+=`<td style="background:${bg}" class="${isActive?'active-cell':''}">${lbl}</td>`;
       });
       htmlStr+='</tr>';
@@ -2121,7 +2119,7 @@
         else cash+=Math.max(fcfAbs-intExp,0);
       }
       const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFnFor(aq,hold))*ex;
-      const exitE=(grossExit*(1-exitFee)-debt+cash)*(1-mgmtPoolPct);
+      const grossEq=grossExit*(1-exitFee)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -2138,7 +2136,7 @@
         const isActive=Math.abs(aq-acqEbitda)<0.05 && ex===activeExit;
         if (!res||res.mom<=0){htmlStr+=`<td style="background:#fcc8c3" class="${isActive?'active-cell':''}">N/A</td>`;return;}
         const bg  = showMom ? heatColorMom(res.mom) : heatColorIRR(res.irr);
-        const lbl = showMom ? res.mom.toFixed(2)+'x' : res.irr.toFixed(1)+'%';
+        const lbl = showMom ? (res.mom>=0?res.mom.toFixed(2)+'x':'('+Math.abs(res.mom).toFixed(2)+'x)') : (res.irr>=0?res.irr.toFixed(1)+'%':'('+Math.abs(res.irr).toFixed(1)+'%)');
         htmlStr+=`<td style="background:${bg}" class="${isActive?'active-cell':''}">${lbl}</td>`;
       });
       htmlStr+='</tr>';
@@ -2211,10 +2209,10 @@
     const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <numFmts count="5">
-    <numFmt numFmtId="164" formatCode="$#,##0.0"/>
-    <numFmt numFmtId="165" formatCode="0.0%"/>
+    <numFmt numFmtId="164" formatCode="$#,##0.0_);($#,##0.0)"/>
+    <numFmt numFmtId="165" formatCode="0.0%_);(0.0%)"/>
     <numFmt numFmtId="167" formatCode='0.0&quot;x&quot;'/>
-    <numFmt numFmtId="168" formatCode='+0.0%;-0.0%;0.0%'/>
+    <numFmt numFmtId="168" formatCode='+0.0%;(0.0%);0.0%'/>
     <numFmt numFmtId="169" formatCode='0.0&quot;x&quot;'/>
   </numFmts>
   <fonts count="9">
@@ -2525,7 +2523,7 @@
       inp('acqMult',   'Acquisition Multiple (x)',         mIn(acqMult));
       inp('acqGrowth', 'Acquired EBITDA Growth Rate',      pIn(acqGrowth));
       inp('sweep',     'Cash Sweep (1=ON, 0=OFF)',         nIn(cashSweep?1:0));
-      inp('mgmtPool',  'Mgmt Option Pool (% exit equity)', pIn(mgmtPoolPct));
+      inp('mgmtPool',  'Mgmt Option Pool (% equity gain)', pIn(mgmtPoolPct));
       blank();
 
       // ════════════════════════════════════════
@@ -2755,31 +2753,63 @@
         const ev0=ebitda*en,d0=ebitda*leverage,eq0=ev0-d0+ev0*txCost; if(eq0<=0)return null;
         let debt=d0,cash=0;
         for(let yr=1;yr<=hold;yr++){debt+=acqEnabled?acqEbitda*acqMult:0;const e2=ebitda*Math.pow(1+g,yr)+acqFnX(yr);const ie=debt*interest,fc=e2*fcfPct;if(cashSweep){const av=Math.max(fc-ie,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}else cash+=Math.max(fc-ie,0);}
-        const exitEVs=(ebitda*Math.pow(1+g,hold)+acqFnX(hold))*ex;
-        const grossExit=exitEVs*(1-(exitFee||0))-debt+cash;
-        const mom2=Math.max(grossExit*(1-mgmtPoolPct)/eq0,0); return {irr:(Math.pow(mom2,1/hold)-1),mom:mom2};
+        const grossEq=(ebitda*Math.pow(1+g,hold)+acqFnX(hold))*ex*(1-(exitFee||0))-debt+cash;
+        const net=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
+        const mom2=Math.max(net/eq0,0); return {irr:(Math.pow(mom2,1/hold)-1),mom:mom2};
       };
       const hS=iv=>iv>=0.25?S.HG1:iv>=0.20?S.HG2:iv>=0.10?S.HY:iv>=0.05?S.HA:S.HR;
 
-      // Build dynamic LET formula for IRR — gRef=growth cell, exRef=exit cell, enRef=entry mult cell
-      // Unrolled loop for hold periods 1-10; uses named LET vars so formula recalculates on input change
-
+      // Build dynamic LET formula for IRR — fully self-contained, recalculates on any input change
+      const buildIrrLet = (gRef, exRef, enRef) => {
+        const v = [];
+        const lv = (n,val) => v.push(n, val);
+        lv('xe',bRef(IR.ebitda)); lv('xen',enRef); lv('xlev',bRef(IR.leverage));
+        lv('xri',bRef(IR.interest)); lv('xfp',bRef(IR.fcfPct)); lv('xh',bRef(IR.hold));
+        lv('xtx',bRef(IR.txCost)); lv('xaq',bRef(IR.acqEbitda)); lv('xam',bRef(IR.acqMult));
+        lv('xag',bRef(IR.acqGrowth)); lv('xsw',bRef(IR.sweep)); lv('xmp',bRef(IR.mgmtPool));
+        lv('xef',bRef(IR.exitFee||'$B$1')); // exit fee ref (0 if none)
+        lv('xg',gRef); lv('xex',exRef);
+        lv('xd0','xe*xlev'); lv('xeq0','xe*xen-xd0+xe*xen*xtx');
+        for(let k=1;k<=10;k++){
+          const pd=k===1?'xd0':`xd${k-1}`, pc=k===1?'0':`xc${k-1}`;
+          const af=`IF(xaq=0,0,IF(ABS(xag)<1E-5,xaq*${k},xaq*(POWER(1+xag,${k})-1)/xag))`;
+          lv(`xda${k}`,`${pd}+xaq*xam`);
+          lv(`xf${k}`,`(xe*POWER(1+xg,${k})+${af})*xfp`);
+          lv(`xi${k}`,`xda${k}*xri`);
+          lv(`xn${k}`,`MAX(xf${k}-xi${k},0)`);
+          lv(`xp${k}`,`IF(xsw=1,MIN(xn${k},xda${k}),0)`);
+          lv(`xd${k}`,`MAX(xda${k}-xp${k},0)`);
+          lv(`xc${k}`,`${pc}+IF(xsw=1,MAX(xn${k}-xp${k},0),MAX(xf${k}-xi${k},0))`);
+        }
+        const dh=`CHOOSE(xh,${Array.from({length:10},(_,i)=>`xd${i+1}`).join(',')})`;
+        const ch=`CHOOSE(xh,${Array.from({length:10},(_,i)=>`xc${i+1}`).join(',')})`;
+        const afH=`IF(xaq=0,0,IF(ABS(xag)<1E-5,xaq*xh,xaq*(POWER(1+xag,xh)-1)/xag))`;
+        lv('xdh',dh); lv('xch',ch);
+        lv('xgE',`(xe*POWER(1+xg,xh)+${afH})*xex*(1-xef)-xdh+xch`);
+        lv('xnE',`xgE-MAX(xgE-xeq0,0)*xmp`); // mgmt = % of equity gain
+        const pairs=[];for(let i=0;i<v.length;i+=2)pairs.push(`${v[i]},${v[i+1]}`);
+        return `LET(${pairs.join(',')},IFERROR(POWER(MAX(xnE/xeq0,0),1/xh)-1,0))`;
+      };
 
       // Sensitivity 1: Exit Multiple vs EBITDA Growth
       sect('SENSITIVITY 1 — IRR: Exit Multiple vs. EBITDA Growth CAGR');
-      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
+      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%  (formulas update when inputs change)`)]]);
       {
-        const hdr=[nl('Exit ↓ / Growth →',S.HDR)];
-        sGVals.forEach(g=>hdr.push(nl(`${g>=0?'+':''}${(g*100).toFixed(1)}%`,S.HDR)));
-        addRow(hdr.map((c,ci)=>[ci+1,c]));
+        const hdr=[[1,nl('Exit ↓ / Growth →',S.HDR)]];
+        sGVals.forEach((g,gi3)=>hdr.push([2+gi3,{v:g,s:S.HDR_PCT}]));
+        addRow(hdr);
       }
+      const R_s1_hdr = rn;
       sXVals.forEach(ex=>{
-        const r=[[1,n$(ex,S.HDR)]];
+        const thisRow=rn+1;
+        const exColRef=`$A$${thisRow}`;
+        const r=[[1,{v:ex,s:S.HDR_MULT}]];
         sGVals.forEach((g,gi3)=>{
+          const gColRef=`$${colLtr(2+gi3)}$${R_s1_hdr}`;
           const res=sensCalc(entryMult,g,ex);
           const isAct=g===growth&&ex===exitMult;
           const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
-          r.push([2+gi3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
+          r.push([2+gi3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR),f:buildIrrLet(gColRef,exColRef,bRef(IR.entryMult))}]);
         });
         addRow(r);
       });
@@ -2787,19 +2817,23 @@
 
       // Sensitivity 2: Entry Multiple vs Exit Multiple
       sect('SENSITIVITY 2 — IRR: Entry Multiple vs. Exit Multiple');
-      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%`)]]);
+      addRow([[1,nl(`Base: Entry ${entryMult}x | Exit ${exitMult}x | Growth ${(growth*100).toFixed(1)}% → IRR ${(irr*100).toFixed(1)}%  (formulas update when inputs change)`)]]);
       {
-        const hdr=[nl('Entry ↓ / Exit →',S.HDR)];
-        sXVals.forEach(ex=>hdr.push(nl(`${ex.toFixed(1)}x`,S.HDR)));
-        addRow(hdr.map((c,ci)=>[ci+1,c]));
+        const hdr=[[1,nl('Entry ↓ / Exit →',S.HDR)]];
+        sXVals.forEach((ex,ei3)=>hdr.push([2+ei3,{v:ex,s:S.HDR_MULT}]));
+        addRow(hdr);
       }
+      const R_s2_hdr=rn;
       sNVals.forEach(en=>{
-        const r=[[1,n$(en,S.HDR)]];
+        const thisRow=rn+1;
+        const enColRef=`$A$${thisRow}`;
+        const r=[[1,{v:en,s:S.HDR_MULT}]];
         sXVals.forEach((ex,ei3)=>{
+          const exColRef=`$${colLtr(2+ei3)}$${R_s2_hdr}`;
           const res=sensCalc(en,growth,ex);
           const isAct=en===entryMult&&ex===exitMult;
           const irrV=res&&res.irr>0?Math.round(res.irr*1000)/1000:0;
-          r.push([2+ei3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR)}]);
+          r.push([2+ei3,{v:irrV,s:isAct?S.HACT:(irrV>0?hS(irrV):S.HR),f:buildIrrLet(bRef(IR.growth),exColRef,enColRef)}]);
         });
         addRow(r);
       });
@@ -2964,8 +2998,26 @@
     const numInput = document.getElementById(s.disp);
     if (slider && numInput) numInput.value = s.fmt(+slider.value);
   });
-  const loadedFromUrl = loadFromHash();
-  calculate();
+
+  // Wire num-inputs → recalculate on change
+  document.querySelectorAll('.num-input, .slider-num-input').forEach(inp => {
+    inp.addEventListener('change', calculate);
+    inp.addEventListener('input', () => {
+      // sync paired slider if any
+      const paired = inp.dataset.slider;
+      if (paired) {
+        const sl = document.getElementById(paired);
+        if (sl) { sl.value = inp.value; }
+      }
+      calculate();
+    });
+    inp.addEventListener('focus', function(){ this.select(); });
+  });
+
+  // Load URL hash state then run first calculation
+  const loaded = loadFromHash();
+  if (!loaded) calculate();
+
 </script>
 </body>
 </html>
