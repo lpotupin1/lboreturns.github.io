@@ -418,7 +418,7 @@
       background: #fff;
       border: 1px solid #c3e0d8;
       border-radius: 4px;
-      padding: 0.6rem 0.75rem;
+      padding: 0.7rem 0.85rem;
       margin-top: 0.6rem;
       display: none;
     }
@@ -427,14 +427,37 @@
       font-size: 0.78rem;
       font-weight: 700;
       color: var(--text);
-      margin-bottom: 0.4rem;
-      line-height: 1.3;
+      margin-bottom: 0.6rem;
+      line-height: 1.4;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.45rem;
     }
-    .ticker-loaded-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.3rem 0.5rem;
+    .ticker-math-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0.65rem;
+      font-family: var(--sans);
     }
+    .ticker-math-table td { font-size: 0.72rem; padding: 0.18rem 0.25rem; vertical-align: middle; }
+    .ticker-math-table tr.math-section td {
+      font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); font-weight: 600; padding-top: 0.55rem;
+    }
+    .ticker-math-table tr.math-total td {
+      font-weight: 700; color: var(--green);
+      border-top: 1px solid #c3e0d8; padding-top: 0.25rem;
+    }
+    .ticker-math-lbl { color: var(--muted); }
+    .ticker-math-val { text-align: right; font-weight: 600; color: var(--text); white-space: nowrap; padding-left: 0.5rem; }
+    .ticker-math-op  { color: var(--muted); text-align: center; width: 14px; }
+    .ticker-kpi-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .ticker-kpi-chip {
+      flex: 1 1 calc(33% - 0.4rem); min-width: 72px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      padding: 0.3rem 0.45rem; font-family: var(--sans);
+    }
+    .ticker-kpi-chip strong { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text); }
+    .ticker-kpi-chip span { font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .ticker-optional-badge {
       display: inline-block;
       margin-left: 0.5rem;
@@ -1021,12 +1044,11 @@
           <!-- One-time API key setup -->
           <div class="ticker-key-wrap" id="tickerKeyWrap">
             <div class="ticker-key-label">
-              Free API key required —
-              <a class="ticker-key-link" href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener">get yours free at alphavantage.co</a>
-              (30 sec, no credit card)
+              Requires a free Alpha Vantage API key — takes 30 seconds, no credit card.<br>
+              <a class="ticker-key-link" href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener">👉 Click here to get your free key</a>, paste it below, then Save. Your key is stored only in your browser.
             </div>
             <div class="ticker-key-row">
-              <input class="ticker-key-input" type="password" id="avApiKey"
+              <input class="ticker-key-input" type="text" id="avApiKey"
                 placeholder="Paste API key here…" autocomplete="off"/>
               <button class="btn-save-key" onclick="saveApiKey()">Save</button>
             </div>
@@ -1055,7 +1077,8 @@
             <div class="ticker-status" id="tickerStatus">Select a company from the dropdown, then click Load.</div>
             <div class="ticker-loaded-card" id="tickerCard">
               <div class="ticker-loaded-name" id="tickerCompanyName"></div>
-              <div class="ticker-loaded-grid" id="tickerMetrics"></div>
+              <table class="ticker-math-table" id="tickerMathTable"></table>
+              <div class="ticker-kpi-row" id="tickerKpiRow"></div>
             </div>
           </div>
         </div>
@@ -1821,19 +1844,45 @@
       if (entMargin > 0) { set('entryMargin', entMargin.toFixed(1)); set('exitMargin', (entMargin*1.1).toFixed(1)); }
 
       document.getElementById('tickerCompanyName').textContent =
-        `${ov.Name||ticker} (${ticker}) · $${price.toFixed(2)} → $${acqPx.toFixed(2)} at ${(premium*100).toFixed(0)}% premium`;
-      document.getElementById('tickerMetrics').innerHTML = [
-        { label:'LTM EBITDA',     value:`$${Math.round(ltmEb)}M`     },
-        { label:'Acq. EV',        value:`$${Math.round(acqEVM)}M`     },
-        { label:'Entry Multiple', value:`${entMult.toFixed(1)}x`      },
-        { label:'Net Debt',       value:`$${Math.round(netDebtM)}M`   },
-        { label:'Leverage',       value:`${lev.toFixed(1)}x EBITDA`   },
-        { label:'Rev Growth YoY', value:`${fwdGrowth.toFixed(1)}%`    },
-      ].map(m=>`<div class="ticker-metric"><strong>${m.value}</strong>${m.label}</div>`).join('');
+        `${ov.Name||ticker} (${ticker}) · ${ov.Exchange||''} · ${ov.Sector||''}`;
+
+      // ── Math breakdown table ──
+      const fmt$ = v => `$${Math.round(v).toLocaleString()}M`;
+      const fmtP = v => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
+      const acqEqM = acqEVM - netDebtM;
+
+      document.getElementById('tickerMathTable').innerHTML = `
+        <tr class="math-section"><td colspan="3">Acquisition Price</td></tr>
+        <tr><td class="ticker-math-lbl">Current share price</td><td class="ticker-math-op"></td><td class="ticker-math-val">$${price.toFixed(2)}</td></tr>
+        <tr><td class="ticker-math-lbl">Control premium (${(premium*100).toFixed(0)}%)</td><td class="ticker-math-op">+</td><td class="ticker-math-val">$${(price*premium).toFixed(2)}</td></tr>
+        <tr class="math-total"><td class="ticker-math-lbl">Acquisition price per share</td><td class="ticker-math-op">=</td><td class="ticker-math-val">$${acqPx.toFixed(2)}</td></tr>
+
+        <tr class="math-section"><td colspan="3">Acquisition EV</td></tr>
+        <tr><td class="ticker-math-lbl">Acq. price × shares out (${((shares*1e6)/1e6).toFixed(0)}M)</td><td class="ticker-math-op"></td><td class="ticker-math-val">${fmt$(acqEqM)}</td></tr>
+        <tr><td class="ticker-math-lbl">+ Net debt (total debt − cash)</td><td class="ticker-math-op">+</td><td class="ticker-math-val">${fmt$(netDebtM)}</td></tr>
+        <tr class="math-total"><td class="ticker-math-lbl">Acquisition Enterprise Value</td><td class="ticker-math-op">=</td><td class="ticker-math-val">${fmt$(acqEVM)}</td></tr>
+
+        <tr class="math-section"><td colspan="3">Entry Multiple</td></tr>
+        <tr><td class="ticker-math-lbl">Acq. EV</td><td class="ticker-math-op"></td><td class="ticker-math-val">${fmt$(acqEVM)}</td></tr>
+        <tr><td class="ticker-math-lbl">÷ LTM EBITDA</td><td class="ticker-math-op">÷</td><td class="ticker-math-val">${fmt$(ltmEb)}</td></tr>
+        <tr class="math-total"><td class="ticker-math-lbl">Entry EV/EBITDA</td><td class="ticker-math-op">=</td><td class="ticker-math-val">${entMult.toFixed(1)}x</td></tr>
+      `;
+
+      document.getElementById('tickerKpiRow').innerHTML = [
+        { label:'Leverage',      value:`${lev.toFixed(1)}x EBITDA` },
+        { label:'EBITDA Margin', value: entMargin > 0 ? `${entMargin.toFixed(1)}%` : 'N/A' },
+        { label:'Rev Growth',    value:`${fwdGrowth.toFixed(1)}%`  },
+      ].map(m=>`<div class="ticker-kpi-chip"><strong>${m.value}</strong><span>${m.label}</span></div>`).join('');
 
       card.classList.add('show');
       status.className  = 'ticker-status ok';
-      status.textContent = `✓ ${ticker} loaded — review and adjust inputs as needed.`;
+      status.textContent = `✓ ${ticker} loaded — inputs auto-populated. Review and adjust as needed.`;
+
+      // Store for Excel export
+      window._tickerState = { ticker, name: ov.Name||ticker, price, acqPx, premium, shares: shares/1e6,
+        ltmEb, netDebtM, acqEVM, acqEqM, entMult, lev, entMargin, fwdGrowth,
+        exchange: ov.Exchange||'', sector: ov.Sector||'' };
+
       calculate();
 
     } catch(err) {
@@ -3404,7 +3453,54 @@
 
       // ── Build & download ──
       const colWidths = [40, ...Array(hold+1).fill(14)];
-      const buf = XLSX.build([{name:'LBO Model', rows, colWidths, freezeRow:3, freezeCol:1}]);
+
+      // Add ticker assumptions sheet if a ticker was loaded
+      const sheets = [{name:'LBO Model', rows, colWidths, freezeRow:3, freezeCol:1}];
+
+      const ts = window._tickerState;
+      if (ts) {
+        const tRows = [];
+        const ta = r => tRows.push(r);
+        const tN  = (v,s) => ({v, s:s??S.NUM});
+        const tT  = (v,s) => ({v:String(v), s:s??S.LBL});
+        const tF$ = v => `$${Math.round(v).toLocaleString()}M`;
+        const tFx = v => `${v.toFixed(1)}x`;
+        const tFp = v => `${v.toFixed(1)}%`;
+
+        ta([tT(`TAKE-PRIVATE ANALYSIS — ${ts.ticker} (${ts.name})`, S.HDR)]);
+        ta([tT(`Generated: ${new Date().toLocaleDateString('en-US')} via lboreturns.com`)]);
+        ta([tT(`Exchange: ${ts.exchange}  |  Sector: ${ts.sector}`)]);
+        ta([]);
+
+        ta([tT('ACQUISITION PRICING', S.SECT)]);
+        ta([tT('Current share price'),        tN(ts.price,         S.INPUT), tT('USD per share')]);
+        ta([tT(`Control premium (${(ts.premium*100).toFixed(0)}%)`), tN(ts.price * ts.premium, S.FML), tT('= price × premium')]);
+        ta([tT('Acquisition price per share'), tN(ts.acqPx,        S.CROSS), tT('= current price + premium')]);
+        ta([tT('Shares outstanding'),          tN(ts.shares,       S.INPUT), tT('millions')]);
+        ta([]);
+
+        ta([tT('ACQUISITION EV BRIDGE', S.SECT)]);
+        ta([tT('Acquisition equity value'),    tN(ts.acqEqM,       S.FML),   tT('= acq. price × shares')]);
+        ta([tT('+ Net debt (debt − cash)'),    tN(ts.netDebtM,     S.FML),   tT('from public balance sheet')]);
+        ta([tT('= Acquisition EV'),            tN(ts.acqEVM,       S.CROSS), tT('equity + net debt')]);
+        ta([]);
+
+        ta([tT('DEAL METRICS', S.SECT)]);
+        ta([tT('LTM EBITDA'),                  tN(ts.ltmEb,        S.INPUT), tT('$M trailing twelve months')]);
+        ta([tT('Entry EV/EBITDA multiple'),     tN(ts.entMult,      S.CROSS), tT('= acq. EV ÷ LTM EBITDA → linked to model')]);
+        ta([tT('Net debt / EBITDA (leverage)'), tN(ts.lev,          S.FML),   tT('x — used as opening leverage')]);
+        ta([tT('EBITDA margin'),                tN(ts.entMargin/100,S.INPUT_PCT),   tT('% of revenue')]);
+        ta([tT('Revenue growth YoY'),           tN(ts.fwdGrowth/100,S.INPUT_PCT),   tT('used as EBITDA growth seed')]);
+        ta([]);
+
+        ta([tT('NOTE', S.SECT)]);
+        ta([tT('All figures sourced from Alpha Vantage / public filings. LTM EBITDA and net debt')]);
+        ta([tT('are as of last reported quarter. Entry multiple and leverage are linked to the LBO Model tab.')]);
+
+        sheets.unshift({name:'Ticker Assumptions', rows:tRows, colWidths:[38,16,36]});
+      }
+
+      const buf = XLSX.build(sheets);
       const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
