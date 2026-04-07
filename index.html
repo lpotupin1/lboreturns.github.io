@@ -449,19 +449,47 @@
       font-family: var(--sans);
       vertical-align: middle;
     }
-    .ticker-chevron {
-      font-size: 0.65rem;
-      color: var(--muted);
-      transition: transform 0.2s;
-    }
+    .ticker-chevron { font-size: 0.65rem; color: var(--muted); transition: transform 0.2s; }
     .ticker-chevron.open { transform: rotate(180deg); }
     .ticker-hint-text {
-      font-size: 0.72rem;
-      color: var(--muted);
-      font-family: var(--sans);
-      line-height: 1.5;
-      margin: 0 0 0.75rem 0;
+      font-size: 0.72rem; color: var(--muted); font-family: var(--sans);
+      line-height: 1.5; margin: 0 0 0.75rem 0;
     }
+    /* API key setup */
+    .ticker-key-wrap { margin-bottom: 0.65rem; }
+    .ticker-key-label {
+      font-size: 0.7rem; color: var(--muted); font-family: var(--sans);
+      margin-bottom: 0.4rem; line-height: 1.4;
+    }
+    .ticker-key-link { color: var(--green); text-decoration: underline; }
+    .ticker-key-row { display: flex; gap: 0.4rem; align-items: center; }
+    .ticker-key-input {
+      flex: 1; font-family: var(--sans); font-size: 0.82rem;
+      background: #fff; border: 1px solid var(--border); border-radius: 4px;
+      padding: 0.38rem 0.65rem; outline: none; min-width: 0;
+      transition: border-color 0.15s;
+    }
+    .ticker-key-input:focus { border-color: var(--green); }
+    .btn-save-key {
+      background: var(--green); color: #fff; border: none; border-radius: 4px;
+      font-family: var(--sans); font-size: 0.75rem; font-weight: 700;
+      padding: 0.38rem 0.85rem; cursor: pointer; white-space: nowrap;
+    }
+    .btn-save-key:hover { background: var(--green-dk); }
+    .ticker-key-status { font-size: 0.68rem; font-family: var(--sans); color: var(--muted); margin-top: 0.3rem; min-height: 0.9rem; }
+    .ticker-key-status.ok  { color: var(--green); }
+    .ticker-key-status.err { color: #c0392b; }
+    /* Saved state */
+    .ticker-key-saved-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.6rem;
+    }
+    .ticker-key-saved-label { font-size: 0.7rem; color: var(--green); font-family: var(--sans); font-weight: 600; }
+    .ticker-key-change-btn {
+      font-size: 0.65rem; color: var(--muted); background: none; border: none;
+      cursor: pointer; font-family: var(--sans); text-decoration: underline; padding: 0;
+    }
+    .ticker-key-change-btn:hover { color: var(--text); }
       margin-top: 1.25rem;
       padding-top: 1.25rem;
       border-top: 1px solid var(--border);
@@ -988,29 +1016,47 @@
           <span class="ticker-chevron" id="tickerChevron">▼</span>
         </div>
         <div id="tickerBody" style="display:none;">
-          <p class="ticker-hint-text">For take-private modeling — search a listed company and we'll auto-fill deal inputs based on public financials and a control premium. Skip this if you're entering terms manually.</p>
+          <p class="ticker-hint-text">For take-private modeling — search a US-listed company to auto-fill deal inputs from public financials. Skip this section to enter terms manually.</p>
 
-          <!-- Search with autocomplete dropdown -->
-          <div class="ticker-search-wrap">
-            <input class="ticker-input" type="text" id="tickerInput"
-              placeholder="Search ticker or company name…"
-              autocomplete="off" autocorrect="off" spellcheck="false"/>
-            <div class="ticker-dropdown" id="tickerDropdown"></div>
+          <!-- One-time API key setup -->
+          <div class="ticker-key-wrap" id="tickerKeyWrap">
+            <div class="ticker-key-label">
+              Free API key required —
+              <a class="ticker-key-link" href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener">get yours free at alphavantage.co</a>
+              (30 sec, no credit card)
+            </div>
+            <div class="ticker-key-row">
+              <input class="ticker-key-input" type="password" id="avApiKey"
+                placeholder="Paste API key here…" autocomplete="off"/>
+              <button class="btn-save-key" onclick="saveApiKey()">Save</button>
+            </div>
+            <div class="ticker-key-status" id="avKeyStatus"></div>
           </div>
 
-          <!-- Control premium + Load -->
-          <div class="ticker-controls-row">
-            <span class="ticker-premium-label">Control premium</span>
-            <input type="number" class="ticker-premium-input" id="controlPremium"
-              value="30" min="0" max="100" step="1"/>
-            <span class="ticker-pct-label">%</span>
-            <button class="btn-load" id="loadTickerBtn" onclick="loadTicker()">Load</button>
-          </div>
-
-          <div class="ticker-status" id="tickerStatus">Select a company from the dropdown, then click Load.</div>
-          <div class="ticker-loaded-card" id="tickerCard">
-            <div class="ticker-loaded-name" id="tickerCompanyName"></div>
-            <div class="ticker-loaded-grid" id="tickerMetrics"></div>
+          <!-- Search + Load (shown only when key is saved) -->
+          <div id="tickerSearchSection" style="display:none;">
+            <div class="ticker-key-saved-row">
+              <span class="ticker-key-saved-label" id="avKeySavedLabel">✓ API key saved</span>
+              <button class="ticker-key-change-btn" onclick="changeApiKey()">Change key</button>
+            </div>
+            <div class="ticker-search-wrap">
+              <input class="ticker-input" type="text" id="tickerInput"
+                placeholder="Search ticker or company name…"
+                autocomplete="off" autocorrect="off" spellcheck="false"/>
+              <div class="ticker-dropdown" id="tickerDropdown"></div>
+            </div>
+            <div class="ticker-controls-row">
+              <span class="ticker-premium-label">Control premium</span>
+              <input type="number" class="ticker-premium-input" id="controlPremium"
+                value="30" min="0" max="100" step="1"/>
+              <span class="ticker-pct-label">%</span>
+              <button class="btn-load" id="loadTickerBtn" onclick="loadTicker()">Load</button>
+            </div>
+            <div class="ticker-status" id="tickerStatus">Select a company from the dropdown, then click Load.</div>
+            <div class="ticker-loaded-card" id="tickerCard">
+              <div class="ticker-loaded-name" id="tickerCompanyName"></div>
+              <div class="ticker-loaded-grid" id="tickerMetrics"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1619,38 +1665,72 @@
       now.toLocaleTimeString('en-US', { hour12: false }) + ' EST';
   }
 
-  // ── TICKER AUTOCOMPLETE & LOAD (Yahoo Finance, no API key required) ──
+  // ── TICKER LOOKUP — Alpha Vantage (free, CORS-enabled) ──
   let _selectedSymbol = '';
   let _searchTimer    = null;
 
+  function _avKey() {
+    return localStorage.getItem('avApiKey') || '';
+  }
+
+  function saveApiKey() {
+    const key = (document.getElementById('avApiKey').value || '').trim();
+    const st  = document.getElementById('avKeyStatus');
+    if (!key) { st.className='ticker-key-status err'; st.textContent='Paste your key first.'; return; }
+    localStorage.setItem('avApiKey', key);
+    st.className = 'ticker-key-status ok';
+    st.textContent = '✓ Saved to your browser.';
+    initTickerUI();
+  }
+
+  function changeApiKey() {
+    document.getElementById('tickerSearchSection').style.display = 'none';
+    document.getElementById('tickerKeyWrap').style.display = 'block';
+    document.getElementById('avApiKey').value = _avKey();
+    document.getElementById('avKeyStatus').textContent = '';
+  }
+
+  function initTickerUI() {
+    const key = _avKey();
+    if (key) {
+      document.getElementById('tickerKeyWrap').style.display = 'none';
+      document.getElementById('tickerSearchSection').style.display = 'block';
+      document.getElementById('avKeySavedLabel').textContent = '✓ API key saved';
+    } else {
+      document.getElementById('tickerKeyWrap').style.display = 'block';
+      document.getElementById('tickerSearchSection').style.display = 'none';
+    }
+  }
+
+  // ── SEARCH AUTOCOMPLETE (Alpha Vantage SYMBOL_SEARCH) ──
   function onTickerType() {
     const q = document.getElementById('tickerInput').value.trim();
     _selectedSymbol = '';
     clearTimeout(_searchTimer);
     if (q.length < 1) { closeDropdown(); return; }
-    _searchTimer = setTimeout(() => fetchSuggestions(q), 280);
+    _searchTimer = setTimeout(() => fetchSuggestions(q), 350);
   }
 
   async function fetchSuggestions(query) {
+    const key = _avKey();
+    if (!key) return;
     const dd = document.getElementById('tickerDropdown');
     try {
       const res  = await fetch(
-        `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=8&newsCount=0&enableFuzzyQuery=false`,
-        { headers: { Accept: 'application/json' } }
+        `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${key}`
       );
       const data = await res.json();
-      const quotes = (data.quotes || [])
-        .filter(q => q.quoteType === 'EQUITY' && q.symbol)
+      const matches = (data.bestMatches || [])
+        .filter(m => m['3. type'] === 'Equity' && m['4. region'] === 'United States')
         .slice(0, 7);
-      if (!quotes.length) { closeDropdown(); return; }
-      dd.innerHTML = quotes.map(r => {
-        const sym  = (r.symbol||'').replace(/'/g,"\\'");
-        const name = (r.shortname || r.longname || '').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-        const exch = (r.exchDisp || '').replace(/'/g,"\\'");
-        return `<div class="ticker-option" onmousedown="selectTicker('${sym}','${name}','${exch}')">
-          <span class="ticker-opt-symbol">${r.symbol}</span>
-          <span class="ticker-opt-name">${r.shortname||r.longname||''}</span>
-          <span class="ticker-opt-exchange">${r.exchDisp||''}</span>
+      if (!matches.length) { closeDropdown(); return; }
+      dd.innerHTML = matches.map(m => {
+        const sym  = (m['1. symbol']||'').replace(/'/g,"\\'");
+        const name = (m['2. name']||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        return `<div class="ticker-option" onmousedown="selectTicker('${sym}','${name}','US')">
+          <span class="ticker-opt-symbol">${m['1. symbol']}</span>
+          <span class="ticker-opt-name">${m['2. name']||''}</span>
+          <span class="ticker-opt-exchange">US</span>
         </div>`;
       }).join('');
       dd.style.display = 'block';
@@ -1668,77 +1748,68 @@
     if (dd) dd.style.display = 'none';
   }
 
+  // ── LOAD TICKER (Alpha Vantage OVERVIEW + GLOBAL_QUOTE) ──
   async function loadTicker() {
     const raw    = document.getElementById('tickerInput').value.trim();
     const ticker = (_selectedSymbol || raw.split(/[\s—\-]/)[0]).toUpperCase();
     if (!ticker) return;
+
+    const key     = _avKey();
+    if (!key) { alert('Save your API key first.'); return; }
 
     const premium = +document.getElementById('controlPremium').value / 100;
     const btn     = document.getElementById('loadTickerBtn');
     const status  = document.getElementById('tickerStatus');
     const card    = document.getElementById('tickerCard');
 
-    btn.disabled    = true;
-    btn.textContent = 'Loading…';
-    status.className = 'ticker-status';
-    status.textContent = `Fetching ${ticker}…`;
+    btn.disabled = true; btn.textContent = 'Loading…';
+    status.className = 'ticker-status'; status.textContent = `Fetching ${ticker}…`;
     card.classList.remove('show');
 
+    const base = 'https://www.alphavantage.co/query';
+
     try {
-      // Yahoo Finance quoteSummary — no API key needed
-      // modules: financialData (EBITDA, debt, cash, price), defaultKeyStatistics (EV, shares)
-      const res  = await fetch(
-        `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=financialData,defaultKeyStatistics,summaryDetail`,
-        { headers: { Accept: 'application/json' } }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status} — ${ticker} not found or data unavailable.`);
-      const json = await res.json();
+      // Fetch overview (EBITDA, market cap, revenue, shares, EV/EBITDA) + quote (price) in parallel
+      const [ovRes, qRes] = await Promise.all([
+        fetch(`${base}?function=OVERVIEW&symbol=${ticker}&apikey=${key}`),
+        fetch(`${base}?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${key}`),
+      ]);
+      const [ov, qData] = await Promise.all([ovRes.json(), qRes.json()]);
 
-      const err = json?.quoteSummary?.error;
-      if (err) throw new Error(err.description || `No data for ${ticker}.`);
+      // Alpha Vantage rate-limit message
+      if (ov.Note || ov.Information) throw new Error('API rate limit hit — wait 60s and try again (free tier: 5 calls/min).');
+      if (!ov.Symbol) throw new Error(`"${ticker}" not found. Select from the dropdown suggestions.`);
 
-      const result = json?.quoteSummary?.result?.[0];
-      if (!result) throw new Error(`No data returned for ${ticker}.`);
+      const price  = parseFloat(qData['Global Quote']?.['05. price'] || 0);
+      const ebitda = parseFloat(ov.EBITDA || 0);
+      const mktCap = parseFloat(ov.MarketCapitalization || 0);
+      const shares = parseFloat(ov.SharesOutstanding || 0);
+      const evToEb = parseFloat(ov.EVToEBITDA || 0);
+      const revTTM = parseFloat(ov.RevenueTTM  || 0);
 
-      const fd = result.financialData        || {};
-      const ks = result.defaultKeyStatistics || {};
-      const sd = result.summaryDetail        || {};
+      if (ebitda <= 0) throw new Error(`EBITDA ≤ 0 for ${ticker} — may not be an EBITDA-positive company.`);
+      if (price  <= 0) throw new Error(`Could not get current price for ${ticker}.`);
 
-      // Core financials — Yahoo returns raw values in $
-      const ebitdaRaw  = fd.ebitda?.raw        || 0;
-      const debtRaw    = fd.totalDebt?.raw      || 0;
-      const cashRaw    = fd.totalCash?.raw      || 0;
-      const priceRaw   = fd.currentPrice?.raw   || sd.regularMarketPrice?.raw || sd.previousClose?.raw || 0;
-      const sharesRaw  = ks.sharesOutstanding?.raw || (sd.marketCap?.raw / priceRaw) || 0;
-      const evRaw      = ks.enterpriseValue?.raw || 0;
-      const mktCapRaw  = sd.marketCap?.raw       || (priceRaw * sharesRaw) || 0;
+      // Derive values
+      const ev       = evToEb > 0 ? ebitda * evToEb : mktCap;  // fallback to mktCap if no EV/EBITDA
+      const netDebt  = Math.max(ev - mktCap, 0);
+      const ltmEb    = ebitda / 1e6;    // → $M
+      const netDebtM = netDebt   / 1e6;
+      const ltmRevM  = revTTM    / 1e6;
+      const acqPx    = price * (1 + premium);
+      const acqEVraw = (acqPx * shares) + netDebt;   // in $
+      const acqEVM   = acqEVraw / 1e6;               // → $M
+      const entMult  = acqEVM / ltmEb;
+      const lev      = Math.min(netDebtM / ltmEb, 8);
+      const entMargin = ltmRevM > 0 ? (ltmEb / ltmRevM) * 100 : 0;
 
-      if (ebitdaRaw <= 0) throw new Error(`LTM EBITDA ≤ 0 for ${ticker} — may not be EBITDA-positive.`);
+      // Growth: use YoY revenue growth as EBITDA growth proxy
+      const rawGrowth = parseFloat(ov.QuarterlyRevenueGrowthYOY || 0.10);
+      const fwdGrowth = Math.max(-10, Math.min(40, rawGrowth * 100));
 
-      // Convert to $M
-      const ltmEbitda = ebitdaRaw / 1e6;
-      const netDebt   = Math.max((debtRaw - cashRaw) / 1e6, 0);
-      const price     = priceRaw;
-      const shares    = sharesRaw / 1e6;  // millions of shares
-
-      // Acquisition math
-      const acqPx  = price * (1 + premium);
-      const acqEV  = (acqPx * shares) + netDebt;
-      const entMult = acqEV / ltmEbitda;
-      const lev     = Math.min(netDebt / ltmEbitda, 8);
-
-      // EBITDA margin (revenue = ev / evToRevenue, or derive from revenuePerShare)
-      const revRaw    = fd.totalRevenue?.raw || 0;
-      const ltmRev    = revRaw > 0 ? revRaw / 1e6 : 0;
-      const entMargin = ltmRev > 0 ? (ltmEbitda / ltmRev) * 100 : 0;
-
-      // Forward growth: use revenueGrowth as EBITDA growth proxy
-      const rawRevGrowth = fd.revenueGrowth?.raw || 0.10;
-      const fwdGrowth    = Math.max(-10, Math.min(40, rawRevGrowth * 100));
-
-      // Populate all inputs
-      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-      set('ebitda',       Math.round(ltmEbitda));
+      // Populate inputs
+      const set = (id, v) => { const el=document.getElementById(id); if(el) el.value=v; };
+      set('ebitda',       Math.round(ltmEb));
       set('entryMultVal', entMult.toFixed(1));
       set('entryMult',    Math.min(entMult, 25).toFixed(1));
       set('leverageVal',  lev.toFixed(1));
@@ -1747,40 +1818,29 @@
       set('growth',       Math.max(-10, Math.min(40, fwdGrowth)).toFixed(1));
       set('exitMultVal',  entMult.toFixed(1));
       set('exitMult',     Math.min(entMult, 25).toFixed(1));
-      if (entMargin > 0) {
-        set('entryMargin', entMargin.toFixed(1));
-        set('exitMargin',  (entMargin * 1.1).toFixed(1));
-      }
-
-      // Resolve company name from search result or fallback
-      const companyName = fd.companyName || result.price?.longName || ticker;
+      if (entMargin > 0) { set('entryMargin', entMargin.toFixed(1)); set('exitMargin', (entMargin*1.1).toFixed(1)); }
 
       document.getElementById('tickerCompanyName').textContent =
-        `${companyName} (${ticker}) · $${price.toFixed(2)} → $${acqPx.toFixed(2)} at ${(premium*100).toFixed(0)}% premium`;
+        `${ov.Name||ticker} (${ticker}) · $${price.toFixed(2)} → $${acqPx.toFixed(2)} at ${(premium*100).toFixed(0)}% premium`;
       document.getElementById('tickerMetrics').innerHTML = [
-        { label: 'LTM EBITDA',     value: `$${Math.round(ltmEbitda)}M`  },
-        { label: 'Acq. EV',        value: `$${Math.round(acqEV)}M`       },
-        { label: 'Entry Multiple', value: `${entMult.toFixed(1)}x`       },
-        { label: 'Net Debt',       value: `$${Math.round(netDebt)}M`     },
-        { label: 'Leverage',       value: `${lev.toFixed(1)}x EBITDA`    },
-        { label: 'Rev Growth',     value: `${fwdGrowth.toFixed(1)}%`     },
-      ].map(m => `<div class="ticker-metric"><strong>${m.value}</strong>${m.label}</div>`).join('');
+        { label:'LTM EBITDA',     value:`$${Math.round(ltmEb)}M`     },
+        { label:'Acq. EV',        value:`$${Math.round(acqEVM)}M`     },
+        { label:'Entry Multiple', value:`${entMult.toFixed(1)}x`      },
+        { label:'Net Debt',       value:`$${Math.round(netDebtM)}M`   },
+        { label:'Leverage',       value:`${lev.toFixed(1)}x EBITDA`   },
+        { label:'Rev Growth YoY', value:`${fwdGrowth.toFixed(1)}%`    },
+      ].map(m=>`<div class="ticker-metric"><strong>${m.value}</strong>${m.label}</div>`).join('');
 
       card.classList.add('show');
-      status.className   = 'ticker-status ok';
-      status.textContent = `✓ ${ticker} loaded — inputs auto-populated. Review and adjust as needed.`;
+      status.className  = 'ticker-status ok';
+      status.textContent = `✓ ${ticker} loaded — review and adjust inputs as needed.`;
       calculate();
 
     } catch(err) {
-      status.className   = 'ticker-status err';
-      // Give a helpful message if CORS is the issue (file:// protocol)
-      const msg = err.message.includes('Failed to fetch') || err.message.includes('NetworkError')
-        ? `Network error — if opening this file locally, try deploying to lboreturns.com or a web server. (${err.message})`
-        : err.message;
-      status.textContent = `✗ ${msg}`;
+      status.className  = 'ticker-status err';
+      status.textContent = `✗ ${err.message}`;
     } finally {
-      btn.disabled    = false;
-      btn.textContent = 'Load';
+      btn.disabled = false; btn.textContent = 'Load';
     }
   }
 
@@ -1793,11 +1853,17 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Restore API key state
+    initTickerUI();
+    // Wire enter key on API key input
+    const ki = document.getElementById('avApiKey');
+    if (ki) ki.addEventListener('keydown', e => { if (e.key === 'Enter') saveApiKey(); });
+    // Wire ticker search input
     const ti = document.getElementById('tickerInput');
     if (!ti) return;
     ti.addEventListener('input',   onTickerType);
     ti.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { closeDropdown(); loadTicker(); }
+      if (e.key === 'Enter')  { closeDropdown(); loadTicker(); }
       if (e.key === 'Escape') closeDropdown();
     });
     ti.addEventListener('blur', () => setTimeout(closeDropdown, 150));
