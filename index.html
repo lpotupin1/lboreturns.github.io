@@ -262,7 +262,206 @@
     /* ── INPUTS ── */
     .inputs-body { padding: 1.25rem; }
 
-    .input-section + .input-section {
+    /* ── TICKER LOOKUP ── */
+    .ticker-section {
+      background: linear-gradient(135deg, #f0f7f4 0%, #f4f6f9 100%);
+      border: 1px solid #c3e0d8;
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .ticker-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.65rem;
+    }
+    .ticker-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-family: var(--sans);
+    }
+    .ticker-powered {
+      font-size: 0.6rem;
+      color: var(--muted);
+      font-family: var(--sans);
+    }
+    /* Search row */
+    .ticker-search-wrap {
+      position: relative;
+      margin-bottom: 0.5rem;
+    }
+    .ticker-input {
+      width: 100%;
+      box-sizing: border-box;
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.45rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .ticker-input:focus { border-color: var(--green); box-shadow: 0 0 0 2px rgba(10,124,92,0.12); }
+    .ticker-input::placeholder { color: var(--muted); font-weight: 400; }
+    /* Dropdown */
+    .ticker-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0; right: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .ticker-option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      transition: background 0.1s;
+      border-bottom: 1px solid var(--border);
+    }
+    .ticker-option:last-child { border-bottom: none; }
+    .ticker-option:hover, .ticker-option.focused { background: #f0f7f4; }
+    .ticker-opt-symbol {
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--green);
+      min-width: 52px;
+    }
+    .ticker-opt-name {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ticker-opt-exchange {
+      font-size: 0.65rem;
+      color: var(--border);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    /* Premium + Load row */
+    .ticker-controls-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.55rem;
+    }
+    .ticker-premium-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: var(--sans);
+      white-space: nowrap;
+    }
+    .ticker-premium-input {
+      width: 56px;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.35rem 0.4rem;
+      text-align: center;
+      outline: none;
+    }
+    .ticker-pct-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: var(--sans);
+    }
+    .btn-load {
+      margin-left: auto;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.38rem 1.1rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .btn-load:hover { background: var(--green-dk); }
+    .btn-load:disabled { background: var(--muted); cursor: wait; }
+    .ticker-status {
+      font-size: 0.72rem;
+      font-family: var(--sans);
+      color: var(--muted);
+      min-height: 1rem;
+      line-height: 1.4;
+    }
+    .ticker-status.ok  { color: var(--green); }
+    .ticker-status.err { color: #c0392b; }
+    .ticker-loaded-card {
+      background: #fff;
+      border: 1px solid #c3e0d8;
+      border-radius: 4px;
+      padding: 0.6rem 0.75rem;
+      margin-top: 0.6rem;
+      display: none;
+    }
+    .ticker-loaded-card.show { display: block; }
+    .ticker-loaded-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+      line-height: 1.3;
+    }
+    .ticker-loaded-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.3rem 0.5rem;
+    }
+    .ticker-optional-badge {
+      display: inline-block;
+      margin-left: 0.5rem;
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #e6f4f0;
+      color: var(--green);
+      padding: 0.1rem 0.4rem;
+      border-radius: 20px;
+      font-family: var(--sans);
+      vertical-align: middle;
+    }
+    .ticker-chevron {
+      font-size: 0.65rem;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+    .ticker-chevron.open { transform: rotate(180deg); }
+    .ticker-hint-text {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: var(--sans);
+      line-height: 1.5;
+      margin: 0 0 0.75rem 0;
+    }
       margin-top: 1.25rem;
       padding-top: 1.25rem;
       border-top: 1px solid var(--border);
@@ -778,6 +977,43 @@
       <span class="panel-title">Model Inputs</span>
     </div>
     <div class="inputs-body">
+
+      <!-- TICKER LOOKUP -->
+      <div class="ticker-section">
+        <div class="ticker-header" onclick="toggleTickerSection()" style="cursor:pointer;user-select:none;">
+          <div>
+            <span class="ticker-title">📈 Auto-fill from public ticker</span>
+            <span class="ticker-optional-badge">Optional</span>
+          </div>
+          <span class="ticker-chevron" id="tickerChevron">▼</span>
+        </div>
+        <div id="tickerBody" style="display:none;">
+          <p class="ticker-hint-text">For take-private modeling — search a listed company and we'll auto-fill deal inputs based on public financials and a control premium. Skip this if you're entering terms manually.</p>
+
+          <!-- Search with autocomplete dropdown -->
+          <div class="ticker-search-wrap">
+            <input class="ticker-input" type="text" id="tickerInput"
+              placeholder="Search ticker or company name…"
+              autocomplete="off" autocorrect="off" spellcheck="false"/>
+            <div class="ticker-dropdown" id="tickerDropdown"></div>
+          </div>
+
+          <!-- Control premium + Load -->
+          <div class="ticker-controls-row">
+            <span class="ticker-premium-label">Control premium</span>
+            <input type="number" class="ticker-premium-input" id="controlPremium"
+              value="30" min="0" max="100" step="1"/>
+            <span class="ticker-pct-label">%</span>
+            <button class="btn-load" id="loadTickerBtn" onclick="loadTicker()">Load</button>
+          </div>
+
+          <div class="ticker-status" id="tickerStatus">Select a company from the dropdown, then click Load.</div>
+          <div class="ticker-loaded-card" id="tickerCard">
+            <div class="ticker-loaded-name" id="tickerCompanyName"></div>
+            <div class="ticker-loaded-grid" id="tickerMetrics"></div>
+          </div>
+        </div>
+      </div>
 
       <!-- DEAL ENTRY -->
       <div class="input-section">
@@ -1382,6 +1618,190 @@
     document.getElementById('clock').textContent =
       now.toLocaleTimeString('en-US', { hour12: false }) + ' EST';
   }
+
+  // ── TICKER AUTOCOMPLETE & LOAD (Yahoo Finance, no API key required) ──
+  let _selectedSymbol = '';
+  let _searchTimer    = null;
+
+  function onTickerType() {
+    const q = document.getElementById('tickerInput').value.trim();
+    _selectedSymbol = '';
+    clearTimeout(_searchTimer);
+    if (q.length < 1) { closeDropdown(); return; }
+    _searchTimer = setTimeout(() => fetchSuggestions(q), 280);
+  }
+
+  async function fetchSuggestions(query) {
+    const dd = document.getElementById('tickerDropdown');
+    try {
+      const res  = await fetch(
+        `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=8&newsCount=0&enableFuzzyQuery=false`,
+        { headers: { Accept: 'application/json' } }
+      );
+      const data = await res.json();
+      const quotes = (data.quotes || [])
+        .filter(q => q.quoteType === 'EQUITY' && q.symbol)
+        .slice(0, 7);
+      if (!quotes.length) { closeDropdown(); return; }
+      dd.innerHTML = quotes.map(r => {
+        const sym  = (r.symbol||'').replace(/'/g,"\\'");
+        const name = (r.shortname || r.longname || '').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const exch = (r.exchDisp || '').replace(/'/g,"\\'");
+        return `<div class="ticker-option" onmousedown="selectTicker('${sym}','${name}','${exch}')">
+          <span class="ticker-opt-symbol">${r.symbol}</span>
+          <span class="ticker-opt-name">${r.shortname||r.longname||''}</span>
+          <span class="ticker-opt-exchange">${r.exchDisp||''}</span>
+        </div>`;
+      }).join('');
+      dd.style.display = 'block';
+    } catch(e) { closeDropdown(); }
+  }
+
+  function selectTicker(symbol, name, exchange) {
+    _selectedSymbol = symbol;
+    document.getElementById('tickerInput').value = `${symbol}  —  ${name}`;
+    closeDropdown();
+  }
+
+  function closeDropdown() {
+    const dd = document.getElementById('tickerDropdown');
+    if (dd) dd.style.display = 'none';
+  }
+
+  async function loadTicker() {
+    const raw    = document.getElementById('tickerInput').value.trim();
+    const ticker = (_selectedSymbol || raw.split(/[\s—\-]/)[0]).toUpperCase();
+    if (!ticker) return;
+
+    const premium = +document.getElementById('controlPremium').value / 100;
+    const btn     = document.getElementById('loadTickerBtn');
+    const status  = document.getElementById('tickerStatus');
+    const card    = document.getElementById('tickerCard');
+
+    btn.disabled    = true;
+    btn.textContent = 'Loading…';
+    status.className = 'ticker-status';
+    status.textContent = `Fetching ${ticker}…`;
+    card.classList.remove('show');
+
+    try {
+      // Yahoo Finance quoteSummary — no API key needed
+      // modules: financialData (EBITDA, debt, cash, price), defaultKeyStatistics (EV, shares)
+      const res  = await fetch(
+        `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=financialData,defaultKeyStatistics,summaryDetail`,
+        { headers: { Accept: 'application/json' } }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${ticker} not found or data unavailable.`);
+      const json = await res.json();
+
+      const err = json?.quoteSummary?.error;
+      if (err) throw new Error(err.description || `No data for ${ticker}.`);
+
+      const result = json?.quoteSummary?.result?.[0];
+      if (!result) throw new Error(`No data returned for ${ticker}.`);
+
+      const fd = result.financialData        || {};
+      const ks = result.defaultKeyStatistics || {};
+      const sd = result.summaryDetail        || {};
+
+      // Core financials — Yahoo returns raw values in $
+      const ebitdaRaw  = fd.ebitda?.raw        || 0;
+      const debtRaw    = fd.totalDebt?.raw      || 0;
+      const cashRaw    = fd.totalCash?.raw      || 0;
+      const priceRaw   = fd.currentPrice?.raw   || sd.regularMarketPrice?.raw || sd.previousClose?.raw || 0;
+      const sharesRaw  = ks.sharesOutstanding?.raw || (sd.marketCap?.raw / priceRaw) || 0;
+      const evRaw      = ks.enterpriseValue?.raw || 0;
+      const mktCapRaw  = sd.marketCap?.raw       || (priceRaw * sharesRaw) || 0;
+
+      if (ebitdaRaw <= 0) throw new Error(`LTM EBITDA ≤ 0 for ${ticker} — may not be EBITDA-positive.`);
+
+      // Convert to $M
+      const ltmEbitda = ebitdaRaw / 1e6;
+      const netDebt   = Math.max((debtRaw - cashRaw) / 1e6, 0);
+      const price     = priceRaw;
+      const shares    = sharesRaw / 1e6;  // millions of shares
+
+      // Acquisition math
+      const acqPx  = price * (1 + premium);
+      const acqEV  = (acqPx * shares) + netDebt;
+      const entMult = acqEV / ltmEbitda;
+      const lev     = Math.min(netDebt / ltmEbitda, 8);
+
+      // EBITDA margin (revenue = ev / evToRevenue, or derive from revenuePerShare)
+      const revRaw    = fd.totalRevenue?.raw || 0;
+      const ltmRev    = revRaw > 0 ? revRaw / 1e6 : 0;
+      const entMargin = ltmRev > 0 ? (ltmEbitda / ltmRev) * 100 : 0;
+
+      // Forward growth: use revenueGrowth as EBITDA growth proxy
+      const rawRevGrowth = fd.revenueGrowth?.raw || 0.10;
+      const fwdGrowth    = Math.max(-10, Math.min(40, rawRevGrowth * 100));
+
+      // Populate all inputs
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+      set('ebitda',       Math.round(ltmEbitda));
+      set('entryMultVal', entMult.toFixed(1));
+      set('entryMult',    Math.min(entMult, 25).toFixed(1));
+      set('leverageVal',  lev.toFixed(1));
+      set('leverage',     Math.min(lev, 10).toFixed(1));
+      set('growthVal',    fwdGrowth.toFixed(1));
+      set('growth',       Math.max(-10, Math.min(40, fwdGrowth)).toFixed(1));
+      set('exitMultVal',  entMult.toFixed(1));
+      set('exitMult',     Math.min(entMult, 25).toFixed(1));
+      if (entMargin > 0) {
+        set('entryMargin', entMargin.toFixed(1));
+        set('exitMargin',  (entMargin * 1.1).toFixed(1));
+      }
+
+      // Resolve company name from search result or fallback
+      const companyName = fd.companyName || result.price?.longName || ticker;
+
+      document.getElementById('tickerCompanyName').textContent =
+        `${companyName} (${ticker}) · $${price.toFixed(2)} → $${acqPx.toFixed(2)} at ${(premium*100).toFixed(0)}% premium`;
+      document.getElementById('tickerMetrics').innerHTML = [
+        { label: 'LTM EBITDA',     value: `$${Math.round(ltmEbitda)}M`  },
+        { label: 'Acq. EV',        value: `$${Math.round(acqEV)}M`       },
+        { label: 'Entry Multiple', value: `${entMult.toFixed(1)}x`       },
+        { label: 'Net Debt',       value: `$${Math.round(netDebt)}M`     },
+        { label: 'Leverage',       value: `${lev.toFixed(1)}x EBITDA`    },
+        { label: 'Rev Growth',     value: `${fwdGrowth.toFixed(1)}%`     },
+      ].map(m => `<div class="ticker-metric"><strong>${m.value}</strong>${m.label}</div>`).join('');
+
+      card.classList.add('show');
+      status.className   = 'ticker-status ok';
+      status.textContent = `✓ ${ticker} loaded — inputs auto-populated. Review and adjust as needed.`;
+      calculate();
+
+    } catch(err) {
+      status.className   = 'ticker-status err';
+      // Give a helpful message if CORS is the issue (file:// protocol)
+      const msg = err.message.includes('Failed to fetch') || err.message.includes('NetworkError')
+        ? `Network error — if opening this file locally, try deploying to lboreturns.com or a web server. (${err.message})`
+        : err.message;
+      status.textContent = `✗ ${msg}`;
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Load';
+    }
+  }
+
+  function toggleTickerSection() {
+    const body    = document.getElementById('tickerBody');
+    const chevron = document.getElementById('tickerChevron');
+    const open    = body.style.display === 'none';
+    body.style.display = open ? 'block' : 'none';
+    chevron.classList.toggle('open', open);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const ti = document.getElementById('tickerInput');
+    if (!ti) return;
+    ti.addEventListener('input',   onTickerType);
+    ti.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { closeDropdown(); loadTicker(); }
+      if (e.key === 'Escape') closeDropdown();
+    });
+    ti.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+  });
 
   // ── STATE ──
   let cashSweep   = true;
