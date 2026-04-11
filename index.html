@@ -992,6 +992,106 @@
       .content-inner p  { font-size: 0.88rem; }
     }
 
+    /* ── EDUCATIONAL CONTENT ── */
+    .edu-section {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 4rem 2rem;
+    }
+    .edu-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .edu-hero {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .edu-hero h1 {
+      font-family: Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 1rem;
+      line-height: 1.3;
+    }
+    .edu-lead {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .edu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    .edu-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 1.75rem;
+      border-radius: 6px;
+    }
+    .edu-card h2 {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+      margin: 0 0 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--green-lt);
+    }
+    .edu-card p {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.75;
+      margin: 0 0 0.85rem;
+    }
+    .edu-card p:last-child { margin-bottom: 0; }
+    .edu-card strong { color: var(--text); font-weight: 600; }
+    .edu-faq {
+      border-top: 1px solid var(--border);
+      padding-top: 2.5rem;
+    }
+    .edu-faq h2 {
+      font-family: Georgia, serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 1.5rem;
+    }
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .faq-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      border-radius: 6px;
+    }
+    .faq-item h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 0.6rem;
+    }
+    .faq-item p {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.65;
+      margin: 0;
+    }
+    @media (max-width: 768px) {
+      .edu-section { padding: 2.5rem 1rem; }
+      .edu-hero h1 { font-size: 1.2rem; }
+      .edu-grid { grid-template-columns: 1fr; }
+      .faq-grid  { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1661,6 +1761,101 @@
   ]
 }
 </script>
+
+<!-- ── EDUCATIONAL CONTENT ── -->
+<section class="edu-section" id="about">
+  <div class="edu-inner">
+
+    <div class="edu-hero">
+      <h1>Free LBO Returns Calculator — Model Any Leveraged Buyout Instantly</h1>
+      <p class="edu-lead">LBOReturns.com is a free, browser-based leveraged buyout (LBO) returns calculator built for private equity professionals, investment banking analysts, MBA students, and anyone who needs to quickly model deal returns. No signup, no spreadsheet, no installation. Enter your deal parameters and instantly see IRR, money-on-money multiple (MoM), a full debt paydown schedule, and a value bridge attribution chart.</p>
+    </div>
+
+    <div class="edu-grid">
+
+      <article class="edu-card" id="what-is-lbo">
+        <h2>What Is a Leveraged Buyout (LBO)?</h2>
+        <p>A leveraged buyout is the acquisition of a company using a significant amount of borrowed capital — typically 50–70% of the purchase price — to fund the deal. The acquired company's cash flows are used to service the debt over the holding period, usually 3–7 years, before the private equity sponsor exits via a sale or IPO.</p>
+        <p>The appeal of the LBO structure is financial leverage: by using debt to amplify equity returns, a PE sponsor can earn a higher return on invested equity than they could by buying the same company with all cash. If a company purchased at 10× EBITDA grows in value and the debt is paid down over five years, the equity return can be multiples of the original investment — even if the underlying business only grew modestly.</p>
+        <p>Three drivers account for the vast majority of equity value creation in an LBO: EBITDA growth (organic expansion or bolt-on acquisitions), multiple expansion (selling at a higher valuation multiple than you paid), and debt paydown (reduction of net debt over the hold period). This calculator models all three and shows their individual contribution in the value bridge waterfall.</p>
+      </article>
+
+      <article class="edu-card" id="irr">
+        <h2>What Is IRR in Private Equity?</h2>
+        <p>Internal Rate of Return (IRR) is the primary return metric used in private equity. It measures the annualized rate of return on invested equity capital over the holding period. IRR accounts for the time value of money — meaning a faster return to equity is worth more than the same dollar return achieved more slowly.</p>
+        <p>Most institutional PE funds target a gross IRR of 20–25%+ on individual deals, and a net IRR of 15–20% to LPs after management fees and carried interest. Deals below 15% IRR are generally considered marginal; deals above 25% are considered strong. However, these thresholds vary by fund size, vintage year, and strategy — a lower-risk buyout of a stable cash-generative business may clear its hurdle at a lower IRR than a high-growth, high-risk deal.</p>
+        <p>Because IRR is sensitive to holding period, two deals with identical cash-on-cash returns can show very different IRRs if one exits in three years and the other in seven. This is why MoM (money-on-money multiple) is always tracked alongside IRR.</p>
+      </article>
+
+      <article class="edu-card" id="mom">
+        <h2>Money-on-Money Multiple (MoM / MOIC)</h2>
+        <p>The money-on-money multiple (MoM), also called the multiple on invested capital (MOIC), measures the total return on equity capital as a simple ratio: exit equity divided by entry equity. A 2.5× MoM means the sponsor returned $2.50 for every $1.00 invested, regardless of how long it took.</p>
+        <p>MoM and IRR tell different stories. A 3.0× MoM over seven years translates to approximately 17% IRR — respectable but not exceptional. That same 3.0× MoM over four years is a 32% IRR — a strong outcome. Conversely, a 2.0× MoM over three years is a 26% IRR, while over six years it's just 12%. LP capital allocation decisions typically weigh both metrics together.</p>
+        <p>In practice, most PE funds target a 2.0–3.0× MoM on individual investments. Deals returning below 1.5× are often described as "capital preservation" outcomes; anything below 1.0× represents a loss of capital.</p>
+      </article>
+
+      <article class="edu-card" id="inputs">
+        <h2>How to Use This LBO Calculator</h2>
+        <p><strong>Entry EBITDA</strong> is the company's trailing twelve-month EBITDA (earnings before interest, taxes, depreciation, and amortization) at acquisition close — the baseline from which all growth is measured. Use the most recent audited or management-adjusted LTM figure.</p>
+        <p><strong>Entry EV/EBITDA Multiple</strong> is the total enterprise value paid divided by entry EBITDA. For context, US middle-market buyouts typically trade at 8–12× EBITDA; large-cap and software deals often command 15–25×. Higher entry multiples compress returns and require more operational improvement or leverage to hit target IRR.</p>
+        <p><strong>Leverage (Debt/EBITDA)</strong> is the total debt raised at close as a multiple of EBITDA. Middle-market deals typically carry 4–6× leverage; covenant-lite, broadly syndicated deals can push 6–7×. Higher leverage amplifies equity returns when things go well — and amplifies losses when they don't.</p>
+        <p><strong>EBITDA Growth (CAGR)</strong> is the assumed annual growth rate of EBITDA over the holding period. Alternatively, toggle to "Rev + Margin" mode to model organic revenue growth and margin expansion separately, which the calculator will convert to an implied EBITDA CAGR automatically.</p>
+        <p><strong>Exit Multiple</strong> is the EV/EBITDA multiple at which you assume the company is sold. Assuming exit at the same multiple as entry (multiple neutrality) isolates the contribution of EBITDA growth and debt paydown. Expansion above entry multiple adds further value; compression below hurts returns.</p>
+        <p><strong>Cash Sweep</strong> determines whether the company uses all available free cash flow to repay debt each year (ON) or retains cash on the balance sheet (OFF). Most LBO debt structures include a cash sweep mechanism, but some sponsors prefer to retain cash for operational flexibility or add-on acquisitions.</p>
+        <p><strong>Bolt-on Acquisition</strong> models the impact of an incremental acquisition funded by debt. The acquired EBITDA is added to the platform immediately, the acquisition price is added to the debt stack, and the combined entity is valued at exit. This is a simplified single-acquisition model; real bolt-on programs often involve multiple smaller deals over the hold period.</p>
+      </article>
+
+      <article class="edu-card" id="methodology">
+        <h2>Methodology & Model Assumptions</h2>
+        <p>This calculator uses a simplified but structurally accurate LBO model. EBITDA grows at the specified CAGR from the entry year. Free cash flow is modeled as a fixed percentage of EBITDA — a proxy for (EBITDA − interest − taxes − capex − working capital changes). The cash sweep, if enabled, applies available FCF after interest expense to debt repayment each year. When the cash sweep is off, post-interest FCF accumulates as cash on the balance sheet and is credited to equity at exit.</p>
+        <p>Entry equity is calculated as Enterprise Value plus transaction costs minus debt. Exit equity is the exit enterprise value (exit EBITDA × exit multiple) minus remaining debt plus any accrued balance sheet cash. IRR is computed as the annualized rate of return from entry equity to exit equity over the holding period using the power function (MoM^(1/years) − 1), which is equivalent to the standard IRR formula for a single-period cash-in / cash-out investment.</p>
+        <p>The sensitivity table shows IRR across a range of EBITDA growth assumptions and exit multiples, with the exit multiple range dynamically centred around your current input. The value bridge waterfall decomposes exit equity into four components: EBITDA growth contribution (delta EBITDA × entry multiple), multiple expansion (exit EBITDA × delta multiple), debt paydown or cash build, and bolt-on value creation.</p>
+        <p>This is a simplified model. It does not account for taxes, PIK interest, revolving credit facilities, earn-outs, minority interests, management option pools, or other deal-specific structures. For a full LBO model with these features, use the Excel export as a starting point and build from there.</p>
+      </article>
+
+      <article class="edu-card" id="benchmarks">
+        <h2>LBO Return Benchmarks by Strategy</h2>
+        <p><strong>Large-cap buyouts ($1B+ EV)</strong> typically target 15–20% gross IRR and 2.0–2.5× MoM. These deals benefit from lower financing costs and institutional quality management, but entry multiples are higher and operational levers are fewer.</p>
+        <p><strong>Middle-market buyouts ($50M–$1B EV)</strong> are the core of the PE industry by deal count. Target returns are typically 20–25% gross IRR and 2.5–3.0× MoM. Operational value creation — professionalizing management, implementing reporting systems, pursuing bolt-ons — is a primary return driver alongside financial engineering.</p>
+        <p><strong>Lower middle market ($10M–$50M EV)</strong> deals often target 25%+ IRR. Entry multiples are lower (often 5–8×), leverage availability is more limited, and the GP takes on more platform-building risk in exchange for cheaper entry.</p>
+        <p><strong>Growth equity</strong> deals involve less leverage and more dependence on revenue growth. Target IRRs are similar to buyouts (20–25%) but the MoM target is often higher (3.0–5.0×) to compensate for longer hold periods and binary outcomes.</p>
+        <p><strong>Distressed / special situations</strong> strategies target 20–30%+ IRR on a smaller invested equity base, often with significant asymmetry between downside and upside scenarios.</p>
+      </article>
+
+    </div>
+
+    <div class="edu-faq" id="faq">
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>What FCF conversion rate should I use?</h3>
+          <p>FCF conversion (free cash flow as a percentage of EBITDA) typically ranges from 30–60% for middle-market businesses depending on tax rate, capex intensity, and working capital needs. A capital-light software business might convert at 60–70%; a manufacturing business with heavy capex might be 25–40%. 45% is a reasonable middle-market default.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Why does the sensitivity table range shift?</h3>
+          <p>The sensitivity table dynamically centres its exit multiple range around your current exit multiple input, so it always shows the scenarios most relevant to your deal. The EBITDA growth columns remain fixed at common benchmarks (-5% to +20%).</p>
+        </div>
+        <div class="faq-item">
+          <h3>How does the bolt-on acquisition work?</h3>
+          <p>The bolt-on is modelled as a debt-funded acquisition that closes at deal entry. The purchase price (acquired EBITDA × acquisition multiple) is added to the opening debt balance, and the acquired EBITDA is included in the combined company from Year 1. At exit, the combined EBITDA is valued at the exit multiple and the full remaining debt stack is paid off.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What is the difference between gross and net IRR?</h3>
+          <p>Gross IRR is the return at the fund level before management fees (typically 1.5–2% annually on committed capital) and carried interest (typically 20% of profits above the preferred return / hurdle rate, usually 8%). Net IRR is what LPs actually receive. A fund generating 22% gross IRR might deliver 16–18% net to LPs after fees and carry.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Can I share or save my model?</h3>
+          <p>Yes — use the Excel export button to download a fully formula-linked model with a debt schedule and IRR sensitivity table. The exported file uses cross-sheet references so you can modify assumptions and see returns update automatically in Excel or Google Sheets.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Is this calculator free?</h3>
+          <p>Yes, completely free. No account, no email, no paywall. LBOReturns.com is supported by advertising. All calculations run in your browser — no data is sent to any server.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
 <div id="privacy" style="background:#f4f6f9;border-top:1px solid #dde2ea;padding:2rem 1.5rem;max-width:900px;margin:0 auto;font-size:0.82rem;color:#6b7280;line-height:1.6;">
   <strong style="color:#1a2030;font-size:0.9rem;">Privacy Policy</strong><br/><br/>
