@@ -1234,9 +1234,9 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">EBITDA Growth (CAGR)</span>
-              <input class="slider-num-input" type="number" onfocus="this.select()" id="growthVal" value="10.0" min="-100" max="40" step="0.5" title="Type a value"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="growthVal" value="10.0" min="-100" max="40" step="0.5" title="Type a value (down to -100%)"/>
             </div>
-            <input type="range" id="growth" min="-100" max="40" step="0.5" value="10"/>
+            <input type="range" id="growth" min="-40" max="40" step="0.5" value="10"/>
           </div>
         </div>
 
@@ -1245,9 +1245,9 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">Revenue Growth (CAGR)</span>
-              <input class="slider-num-input" type="number" onfocus="this.select()" id="revGrowthVal" value="12.0" min="-100" max="50" step="0.5" title="Type a value"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="revGrowthVal" value="12.0" min="-100" max="50" step="0.5" title="Type a value (down to -100%)"/>
             </div>
-            <input type="range" id="revGrowth" min="-100" max="50" step="0.5" value="12"/>
+            <input type="range" id="revGrowth" min="-40" max="50" step="0.5" value="12"/>
           </div>
           <div class="input-row">
             <div class="input-label">Entry EBITDA Margin<span class="input-hint">% of revenue at close</span></div>
@@ -1425,9 +1425,9 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">Acquired EBITDA Growth Rate</span>
-              <input class="slider-num-input" type="number" onfocus="this.select()" id="acqGrowthVal" value="10.0" min="-100" max="40" step="0.5" title="Annual growth on acquired EBITDA"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="acqGrowthVal" value="10.0" min="-100" max="40" step="0.5" title="Annual growth on acquired EBITDA (down to -100%)"/>
             </div>
-            <input type="range" id="acqGrowth" min="-100" max="40" step="0.5" value="10"/>
+            <input type="range" id="acqGrowth" min="-40" max="40" step="0.5" value="10"/>
           </div>
         </div>
       </div>
@@ -3459,18 +3459,40 @@
       // RETURNS — formula-linked to model rows
       // ════════════════════════════════════════
       sect('RETURNS SUMMARY');
+
+      // Gross exit equity = EV - Debt + Cash  (before fees & mgmt pool)
       const R_rGross = addRow([[1, nl('Gross Exit Equity ($M)')],
-        [ENTRY, fx(netExitEq+(mgmtPayout||0), cRef(hold,R_eq))]]);
+        [ENTRY, fx(SR[hold-1].equity, cRef(hold, R_eq))]]);
+
+      // Exit fees row (only show if exitFee > 0, but always include for formula integrity)
+      const exitFeeAmt = s.results.exitFeeAmt || 0;
+      const R_rExitFee = addRow([[1, nl('— Exit Fees ($M)')],
+        [ENTRY, f$(-exitFeeAmt,
+          `-(${cRef(hold,R_EV)}*${bRef(IR.exitFee)})`)]]);
+
+      // Equity after fees (before mgmt pool)
+      const equityAfterFees = SR[hold-1].equity - exitFeeAmt;
+      const R_rAfterFees = addRow([[1, nl('Equity After Exit Fees ($M)')],
+        [ENTRY, f$(equityAfterFees,
+          `${cRef(0,R_rGross)}+${cRef(0,R_rExitFee)}`)]]);
+
+      // Management option pool (applied to gain after fees)
       const R_rMgmt = (mgmtPoolPct > 0)
         ? addRow([[1, nl('— Mgmt Option Pool ($M)')],
-            [ENTRY, f$(-(mgmtPayout||0), `-MAX(${cRef(0,R_rGross)}-${cRef(0,R_eq0)},0)*${bRef(IR.mgmtPool)}`)]])
+            [ENTRY, f$(-(mgmtPayout||0),
+              `-MAX(${cRef(0,R_rAfterFees)}-${cRef(0,R_eq0)},0)*${bRef(IR.mgmtPool)}`)]])
         : null;
+
       const R_rEnt  = addRow([[1, nl('Entry Equity ($M)')],
         [ENTRY, fx(entryEquity, cRef(0,R_eq0))]]);
+
+      const netExitFormula = R_rMgmt
+        ? `${cRef(0,R_rAfterFees)}+${cRef(0,R_rMgmt)}`
+        : cRef(0, R_rAfterFees);
+
       const R_rExit = addRow([[1, nl('Net Exit Equity ($M)', S.SECT)],
-        [ENTRY, fx(netExitEq, R_rMgmt
-          ? `${cRef(0,R_rGross)}+${cRef(0,R_rMgmt)}`
-          : cRef(hold,R_eq))]]);
+        [ENTRY, fx(netExitEq, netExitFormula)]]);
+
       addRow([[1, nl('Money-on-Money (MoM)', S.SECT)],
         [ENTRY, fM(mom, `${cRef(0,R_rExit)}/${cRef(0,R_rEnt)}`)]]);
       addRow([[1, nl('IRR (Equity)', S.SECT)],
