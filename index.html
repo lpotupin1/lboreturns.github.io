@@ -1345,9 +1345,9 @@
           <div class="slider-row">
             <div class="slider-header">
               <span class="slider-label">FCF Conversion (% of EBITDA)</span>
-              <input class="slider-num-input" type="number" onfocus="this.select()" id="fcfVal" value="45" min="0" max="100" step="1" title="Type a value"/>
+              <input class="slider-num-input" type="number" onfocus="this.select()" id="fcfVal" value="45" min="0" max="100" step="0.1" title="Type a value"/>
             </div>
-            <input type="range" id="fcf" min="0" max="100" step="1" value="45"/>
+            <input type="range" id="fcf" min="0" max="100" step="0.1" value="45"/>
           </div>
         </div>
 
@@ -2202,7 +2202,7 @@
     { id: 'entryMult', disp: 'entryMultVal', fmt: v => (+v).toFixed(1) },
     { id: 'leverage',  disp: 'leverageVal',  fmt: v => (+v).toFixed(1) },
     { id: 'interest',  disp: 'interestVal',  fmt: v => (+v).toFixed(2) },
-    { id: 'fcf',       disp: 'fcfVal',       fmt: v => (+v).toFixed(0) },
+    { id: 'fcf',       disp: 'fcfVal',       fmt: v => (+v).toFixed(1) },
     { id: 'growth',    disp: 'growthVal',    fmt: v => (+v).toFixed(1) },
     { id: 'exitMult',  disp: 'exitMultVal',  fmt: v => (+v).toFixed(1) },
     { id: 'hold',      disp: 'holdVal',      fmt: v => (+v).toFixed(0) },
@@ -3839,7 +3839,7 @@
     setSlider('entryMult', 'entryMultVal', params.em, v => (+v).toFixed(1));
     setSlider('leverage',  'leverageVal',  params.lv, v => (+v).toFixed(1));
     setSlider('interest',  'interestVal',  params.ri, v => (+v).toFixed(2));
-    setSlider('fcf',       'fcfVal',       params.fc, v => (+v).toFixed(0));
+    setSlider('fcf',       'fcfVal',       params.fc, v => (+v).toFixed(1));
     setSlider('growth',    'growthVal',    params.gr, v => (+v).toFixed(1));
     setSlider('exitMult',  'exitMultVal',  params.xm, v => (+v).toFixed(1));
     setSlider('hold',      'holdVal',      params.hp, v => (+v).toFixed(0));
