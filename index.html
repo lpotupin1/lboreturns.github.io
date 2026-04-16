@@ -2094,13 +2094,13 @@
     };
     let sY=R1Y+14;
     suSect('USES',sY); sY+=12;
-    suRow('Entry EV',         fM(entryEV), '100.0%', sY);      sY+=10;
-    suRow('+ Transaction Costs', fM(txA), fP(txCost), sY);     sY+=10;
-    suRow('= Total Uses',     fM(totU),   '',        sY, true); sY+=13;
+    suRow('Entry EV',            fM(entryEV),           fP(entryEV/totU),         sY); sY+=10;
+    suRow('+ Transaction Costs', fM(txA),               fP(txA/totU),             sY); sY+=10;
+    suRow('= Total Uses',        fM(totU),               '100.0%',                sY, true); sY+=13;
     suSect('SOURCES',sY); sY+=12;
-    suRow('Entry Debt',       fM(entD),         fP(entD/totU),         sY);      sY+=10;
-    suRow('Entry Equity',     fM(entryEquity),   fP(entryEquity/totU), sY);      sY+=10;
-    suRow('= Total Sources',  fM(entD+entryEquity), '100.0%',           sY, true);
+    suRow('Entry Debt',          fM(entD),              fP(entD/totU),            sY); sY+=10;
+    suRow('Entry Equity',        fM(entryEquity),       fP(entryEquity/totU),     sY); sY+=10;
+    suRow('= Total Sources',     fM(entD+entryEquity),  '100.0%',                 sY, true);
     if(acqEnabled&&acqEbitda>0){
       sY+=12;
       p.text('Bolt-on debt ('+hold+' yrs): '+fM(acqEbitda*acqMult*hold)+' [added post-close]',
@@ -2167,6 +2167,16 @@
 
     // ── Income section ──
     sectBar('INCOME');
+    // Revenue + Margin detail (matches website and Excel: Revenue = EBITDA / margin)
+    if (cagrMode === 'detail') {
+      const entMV2 = +document.getElementById('entryMargin')?.value / 100 || 0;
+      const exMV2  = +document.getElementById('exitMargin')?.value  / 100 || 0;
+      if (entMV2 > 0) {
+        const mgs = rows.map((_,i) => entMV2+(exMV2-entMV2)*(i+1)/hold);
+        projRow('Revenue', mkV(i=>fM(mgs[i]>0?rows[i].organicEbitda/mgs[i]:0)), {col:GREEN,bold:true});
+        projRow('EBITDA Margin', mkV(i=>(mgs[i]*100).toFixed(1)+'%'), {col:MUTED,indent:true});
+      }
+    }
     if(showAcqP){
       projRow('Platform EBITDA',  mkV(i=>fM(rows[i].organicEbitda)), {col:GREEN});
       projRow('+ Acquired EBITDA',mkV(i=>fM(rows[i].acqEbitdaYr)),  {col:GREEN,indent:true});
@@ -3219,12 +3229,11 @@
     html += sectHdr('Income Statement');
 
     if (showRev && entryRev !== null) {
-      // Revenue: entry rev grows at revGrowthPct each year
-      const revVals = rows.map((_,i) => entryRev * Math.pow(1 + revGrowthPct, i + 1));
-      html += dRow('Revenue', revVals, 'hi', true);
-
-      // EBITDA Margin: linearly interpolated entry→exit
+      // Margin: linearly interpolated entry→exit
       const margVals = rows.map((_,i) => entryMarginPct + (exitMarginPct - entryMarginPct) * (i + 1) / hold);
+      // Revenue = EBITDA / margin — ties exactly to model (Revenue × Margin = EBITDA every year)
+      const revVals = rows.map((r, i) => margVals[i] > 0 ? r.organicEbitda / margVals[i] : 0);
+      html += dRow('Revenue', revVals, 'hi', true);
       html += `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.35rem 0.75rem;">EBITDA Margin</td>` +
         rows.map((r,i) => `<td style="text-align:right;font-size:0.7rem;padding:0.35rem 0.5rem;${r.yr===hold?'background:var(--green-lt);':''}">${(margVals[i]*100).toFixed(1)}%</td>`).join('') + `</tr>`;
     }
@@ -3916,20 +3925,43 @@
       blank();
 
       // ════════════════════════════════════════
-      // SOURCES & USES
+      // SOURCES & USES — % of Total Uses, x Entry EBITDA
+      // R_d0 / R_eq0 used throughout projection & returns — keep names
       // ════════════════════════════════════════
-      sect('SOURCES & USES');
-      const R_ev  = addRow([[1, nl('Entry EV ($M)')],
-        [ENTRY, f$(entryEV, `${bRef(IR.ebitda)}*${bRef(IR.entryMult)}`) ]]);
-      const R_tx  = addRow([[1, nl('+ Transaction Costs ($M)')],
-        [ENTRY, f$(txAmt,   `${cRef(0,R_ev)}*${bRef(IR.txCost)}`)       ]]);
-      // Total Uses — CROSS style so it's green, right-aligned $0.0
-      const R_uses= addRow([[1, nl('= Total Uses ($M)', S.SECT)],
-        [ENTRY, fx(entryEV+txAmt, `${cRef(0,R_ev)}+${cRef(0,R_tx)}`)   ]]);
-      const R_d0  = addRow([[1, nl('— Entry Debt ($M)')],
-        [ENTRY, f$(entryDebt, `${bRef(IR.ebitda)}*${bRef(IR.leverage)}`) ]]);
-      const R_eq0 = addRow([[1, nl('= Entry Equity ($M)', S.SECT)],
-        [ENTRY, fx(entryEquity, `${cRef(0,R_uses)}-${cRef(0,R_d0)}`)    ]]);
+      const Z1  = '#,##0.0';       // 1-dp $ format
+      const ZPT = '0.0%';          // % format
+      const ZX  = '0.0"x"';        // multiple format
+      const xE  = (v,f) => ({v:Math.round(v/ebitda*10)/10, s:S.FML, z:ZX, f});
+
+      addRow([[1,nl('ITEM',S.HDR)],[ENTRY,nl('$M',S.HDR)],[ENTRY+1,nl('% of Total',S.HDR)],[ENTRY+2,nl('x EBITDA',S.HDR)]]);
+
+      // Build $ columns first; patch % and x EBITDA after R_uses is known
+      const R_ev  = addRow([[1,nl('Entry EV')],       [ENTRY,{...f$(entryEV, `${bRef(IR.ebitda)}*${bRef(IR.entryMult)}`),z:Z1}]]);
+      const R_tx  = addRow([[1,nl('+ Transaction Costs')],[ENTRY,{...f$(txAmt, `B${R_ev}*${bRef(IR.txCost)}`),z:Z1}]]);
+      const R_uses= addRow([[1,nl('= Total Uses ($M)',S.SECT)],[ENTRY,{...fx(entryEV+txAmt,`B${R_ev}+B${R_tx}`),z:Z1}],
+        [ENTRY+1,{v:1,s:S.RET_PCT,z:ZPT,f:'1'}]]);
+
+      addRow([[1,nl('SOURCES',S.HDR)],[ENTRY,nl('$M',S.HDR)],[ENTRY+1,nl('% of Total',S.HDR)],[ENTRY+2,nl('x EBITDA',S.HDR)]]);
+      const R_d0  = addRow([[1,nl('Entry Debt')],     [ENTRY,{...f$(entryDebt,`${bRef(IR.ebitda)}*${bRef(IR.leverage)}`),z:Z1}]]);
+      const R_eq0 = addRow([[1,nl('Entry Equity')],   [ENTRY,{...fx(entryEquity,`B${R_uses}-B${R_d0}`),z:Z1}]]);
+      addRow([[1,nl('= Total Sources ($M)',S.SECT)],  [ENTRY,{...fx(entryDebt+entryEquity,`B${R_d0}+B${R_eq0}`),z:Z1}],
+        [ENTRY+1,{v:1,s:S.RET_PCT,z:ZPT,f:'1'}]]);
+      const R_src = rn;
+
+      // Patch % of Total (denominator = R_uses for both Uses and Sources)
+      rows[R_ev-1][ENTRY+1]  = {...fp(entryEV/totalUses,    `B${R_ev}/B${R_uses}`,  S.FML_PCT),z:ZPT};
+      rows[R_tx-1][ENTRY+1]  = {...fp(txAmt/totalUses,      `B${R_tx}/B${R_uses}`,  S.FML_PCT),z:ZPT};
+      rows[R_d0-1][ENTRY+1]  = {...fp(entryDebt/totalUses,  `B${R_d0}/B${R_uses}`,  S.FML_PCT),z:ZPT};
+      rows[R_eq0-1][ENTRY+1] = {...fp(entryEquity/totalUses,`B${R_eq0}/B${R_uses}`, S.FML_PCT),z:ZPT};
+      rows[R_src-1][ENTRY+1] = {v:1,s:S.RET_PCT,z:ZPT,f:'1'};
+
+      // x EBITDA
+      rows[R_ev-1][ENTRY+2]  = xE(entryEV,    `B${R_ev}/${bRef(IR.ebitda)}`);
+      rows[R_tx-1][ENTRY+2]  = xE(txAmt,      `B${R_tx}/${bRef(IR.ebitda)}`);
+      rows[R_uses-1][ENTRY+2]= xE(totalUses,  `B${R_uses}/${bRef(IR.ebitda)}`);
+      rows[R_d0-1][ENTRY+2]  = xE(entryDebt,  `B${R_d0}/${bRef(IR.ebitda)}`);
+      rows[R_eq0-1][ENTRY+2] = xE(entryEquity,`B${R_eq0}/${bRef(IR.ebitda)}`);
+      rows[R_src-1][ENTRY+2] = xE(totalUses,  `B${R_src}/${bRef(IR.ebitda)}`);
       blank();
 
       // ══════════════════════════════════════════════════════
@@ -3941,52 +3973,49 @@
 
       sect('PROJECTION ($M)'); yrHdr();
 
-      // ── Revenue (only in detail CAGR mode, when entryMargin input is present) ──
-      let R_rev = null;
+      // ── Revenue + Margin (detail mode) then Platform EBITDA ──
+      // Revenue = EBITDA / interpolated_margin → ensures Revenue × Margin = EBITDA (ties to model)
+      let R_rev = null, R_marg_row = null;
       if (cagrMode === 'detail' && IR.entryMargin && IR.revGrowth) {
         const entMV  = +document.getElementById('entryMargin').value / 100;
         const exMV   = +document.getElementById('exitMargin').value  / 100;
         const entRevV = entMV > 0 ? ebitda / entMV : ebitda;
-        const revG   = +document.getElementById('revGrowthVal').value / 100;
 
-        const revVals = [f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`, S.INPUT)];
-        revVals[0].z = N1;
-        for (let k=1; k<=hold; k++) {
-          const v = entRevV * Math.pow(1+revG, k);
-          revVals.push({...f$(v, `B${rn+1}*(1+${bRef(IR.revGrowth)})^${k}`), z:N1});
-        }
-        R_rev = dataRow('Revenue', revVals);
-        // Patch col B now we know R_rev
-        rows[R_rev-1][ENTRY] = {...f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1};
-        for (let k=1; k<=hold; k++)
-          rows[R_rev-1][ENTRY+k] = {...f$(entRevV*Math.pow(1+revG,k),
-            `B${R_rev}*(1+${bRef(IR.revGrowth)})^${k}`), z:N1};
+        // Revenue placeholder rows — patched after Platform EBITDA built
+        R_rev = dataRow('Revenue ($M)', [
+          {...f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1},
+          ...SR.map((_,k)=>({v:0, s:S.FML, z:N1, f:'0'}))
+        ]);
 
-        // EBITDA Margin row — linearly interpolated
-        const margRow = [{v:null,s:S.LBL}];
+        // Margin: linearly interpolated entry → exit
+        const margRow = [{v:entMV, s:S.INPUT_PCT, z:N1P}];
         for (let k=1; k<=hold; k++) {
           const mv = entMV + (exMV-entMV)*k/hold;
           margRow.push({...fp(mv,
             `${bRef(IR.entryMargin)}+(${bRef(IR.exitMargin)}-${bRef(IR.entryMargin)})*${k}/${bRef(IR.hold)}`),
             z:N1P});
         }
-        dataRow('EBITDA Margin %', margRow);
+        R_marg_row = dataRow('EBITDA Margin %', margRow);
       }
 
-      // ── Platform EBITDA ──
+      // ── Platform EBITDA — always from model formula ──
       const platVals = [{...fx(ebitda, bRef(IR.ebitda)), z:N1}];
-      for (let k=1; k<=hold; k++) {
-        let fml;
-        if (R_rev && IR.entryMargin && IR.exitMargin) {
-          // Revenue × interpolated margin
-          const margRowNum = rn - 1; // margin row is one above current rn
-          fml = `${cRef(k,R_rev)}*(${bRef(IR.entryMargin)}+(${bRef(IR.exitMargin)}-${bRef(IR.entryMargin)})*${k}/${bRef(IR.hold)})`;
-        } else {
-          fml = `${bRef(IR.ebitda)}*(1+${bRef(IR.growth)})^${k}`;
-        }
-        platVals.push({...f$(SR[k-1].organicEbitda, fml), z:N1});
-      }
+      for (let k=1; k<=hold; k++)
+        platVals.push({...f$(SR[k-1].organicEbitda, `${bRef(IR.ebitda)}*(1+${bRef(IR.growth)})^${k}`), z:N1});
       const R_plat = dataRow('Platform EBITDA', platVals);
+
+      // Patch Revenue = Platform EBITDA / Margin (now both rows exist → perfect tie)
+      if (R_rev && R_marg_row) {
+        const entMV  = +document.getElementById('entryMargin').value / 100;
+        const exMV   = +document.getElementById('exitMargin').value  / 100;
+        const entRevV = entMV > 0 ? ebitda / entMV : ebitda;
+        rows[R_rev-1][ENTRY] = {...f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1};
+        for (let k=1; k<=hold; k++) {
+          const mv = entMV + (exMV-entMV)*k/hold;
+          rows[R_rev-1][ENTRY+k] = {...f$(SR[k-1].organicEbitda/mv,
+            `${cRef(k,R_plat)}/${cRef(k,R_marg_row)}`), z:N1};
+        }
+      }
 
       // ── Bolt-on cohorts (if enabled) ──
       const R_cohorts = [];
@@ -4405,65 +4434,11 @@
       }
 
 
-      // ════════════════════════════════════════
-      // SOURCES & USES (inline, formula-linked)
-      // % of Total = % of Total Uses (same base for both sections)
-      // x EBITDA   = amount / entry EBITDA
-      // ════════════════════════════════════════
-      blank();
-      sect('SOURCES & USES');
-
-      // Helper: x EBITDA cell (formula-driven)
-      const xEbCell = (v, fml) => ({v:Math.round(v/ebitda*10)/10, s:S.FML, z:'0.0"x"', f:fml});
-
-      // ── USES — build $ first, patch % and xEb after R_su_uses is known ──
-      addRow([[1,nl('USES',S.HDR)],[ENTRY,nl('Amount ($M)',S.HDR)],[ENTRY+1,nl('% of Total',S.HDR)],[ENTRY+2,nl('x EBITDA',S.HDR)]]);
-      const R_su_ev = addRow([[1,nl('Entry EV')],
-        [ENTRY, {...f$(entryEV, `${bRef(IR.ebitda)}*${bRef(IR.entryMult)}`), z:N1}]]);
-      const R_su_tx = addRow([[1,nl('+ Transaction Costs')],
-        [ENTRY, {...f$(txAmt,   `B${R_su_ev}*${bRef(IR.txCost)}`), z:N1}]]);
-      const R_su_uses = addRow([[1,nl('= Total Uses ($M)',S.SECT)],
-        [ENTRY,   {...fx(entryEV+txAmt, `B${R_su_ev}+B${R_su_tx}`), z:N1}],
-        [ENTRY+1, {v:1, s:S.RET_PCT, z:'0.0%', f:'1'}]]);
-      // Patch xEb now that R_su_uses is assigned
-      rows[R_su_uses-1][ENTRY+2] = xEbCell(totalUses, `B${R_su_uses}/${bRef(IR.ebitda)}`);
-      // Patch % for each Uses item — all divided by R_su_uses
-      rows[R_su_ev-1][ENTRY+1] = {...fp(entryEV/totalUses, `B${R_su_ev}/B${R_su_uses}`, S.FML_PCT), z:'0.0%'};
-      rows[R_su_tx-1][ENTRY+1] = {...fp(txAmt/totalUses,   `B${R_su_tx}/B${R_su_uses}`, S.FML_PCT), z:'0.0%'};
-      // x EBITDA for Uses items
-      rows[R_su_ev-1][ENTRY+2] = xEbCell(entryEV, `B${R_su_ev}/${bRef(IR.ebitda)}`);
-      rows[R_su_tx-1][ENTRY+2] = xEbCell(txAmt,   `B${R_su_tx}/${bRef(IR.ebitda)}`);
-
-      // ── SOURCES — same post-build patching pattern ──
-      addRow([[1,nl('SOURCES',S.HDR)],[ENTRY,nl('Amount ($M)',S.HDR)],[ENTRY+1,nl('% of Total',S.HDR)],[ENTRY+2,nl('x EBITDA',S.HDR)]]);
-      const R_su_debt = addRow([[1,nl('Entry Debt')],
-        [ENTRY, {...f$(entryDebt, `${bRef(IR.ebitda)}*${bRef(IR.leverage)}`), z:N1}]]);
-      const R_su_eq2  = addRow([[1,nl('Entry Equity')],
-        [ENTRY, {...fx(entryEquity, `B${R_su_uses}-B${R_su_debt}`), z:N1}]]);
-      const R_su_src  = addRow([[1,nl('= Total Sources ($M)',S.SECT)],
-        [ENTRY,   {...fx(entryDebt+entryEquity, `B${R_su_debt}+B${R_su_eq2}`), z:N1}],
-        [ENTRY+1, {v:1, s:S.RET_PCT, z:'0.0%', f:'1'}]]);
-      // Patch xEb now that R_su_src is assigned
-      rows[R_su_src-1][ENTRY+2]  = xEbCell(totalUses, `B${R_su_src}/${bRef(IR.ebitda)}`);
-      // Patch % — denominator is R_su_uses (= Total Uses = Total Sources)
-      rows[R_su_debt-1][ENTRY+1] = {...fp(entryDebt/totalUses,   `B${R_su_debt}/B${R_su_uses}`, S.FML_PCT), z:'0.0%'};
-      rows[R_su_eq2-1][ENTRY+1]  = {...fp(entryEquity/totalUses, `B${R_su_eq2}/B${R_su_uses}`,  S.FML_PCT), z:'0.0%'};
-      // x EBITDA for Sources items
-      rows[R_su_debt-1][ENTRY+2] = xEbCell(entryDebt,   `B${R_su_debt}/${bRef(IR.ebitda)}`);
-      rows[R_su_eq2-1][ENTRY+2]  = xEbCell(entryEquity, `B${R_su_eq2}/${bRef(IR.ebitda)}`);
-
-      if (acqEnabled && acqEbitda > 0) {
-        const boltDebt = acqEbitda*acqMult*hold;
-        const boltFml  = `${bRef(IR.acqEbitda)}*${bRef(IR.acqMult)}*${bRef(IR.hold)}`;
-        addRow([[1,nl(`  Bolt-on debt (${hold} yrs, addl post-close)`)],
-          [ENTRY,   {...f$(boltDebt, boltFml, S.FML), z:N1}],
-          [ENTRY+1, {...fp(boltDebt/totalUses, `${boltFml}/B${R_su_uses}`, S.FML_PCT), z:'0.0%'}],
-          [ENTRY+2, xEbCell(boltDebt, `${boltFml}/${bRef(IR.ebitda)}`)]]);
-      }
       blank();
 
                         // ── Build & download ──
-      const colWidths = [40, ...Array(hold+1).fill(14), 28];
+      // Col A=labels, Col B=Entry/Amount, Cols C..B+hold = Year 1..hold, then % and x EBITDA
+      const colWidths = [40, ...Array(hold+1).fill(14), 12, 12];
 
       // Add ticker assumptions sheet if a ticker was loaded
       const sheets = [{name:'LBO Model', rows, colWidths, freezeRow:3, freezeCol:1}];
