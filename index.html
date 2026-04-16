@@ -1093,89 +1093,80 @@
       .faq-grid  { grid-template-columns: 1fr; }
     }
 
-    /* ── PRINT / PDF STYLES ── */
+    /* ── PRINT / PDF ── */
+    /* Screen: hide print view */
+    #print-view { display: none; }
+
     @media print {
-      /* Page setup */
-      @page {
-        size: A4 landscape;
-        margin: 12mm 14mm 12mm 14mm;
-      }
-      @page :first { margin-top: 8mm; }
+      @page { size: A4 landscape; margin: 10mm 12mm; }
 
-      /* Reset screen-only chrome */
-      body { background: #fff !important; color: #000 !important;
-             font-family: Arial, sans-serif !important; font-size: 9pt; }
+      /* Hide everything except the dedicated print view */
+      body > *:not(#print-view) { display: none !important; }
+      #print-view { display: block !important; font-family: Arial, Helvetica, sans-serif;
+                    font-size: 8.5pt; color: #000; background: #fff; }
 
-      /* Hide non-content elements */
-      header, nav, .export-strip, .ad-zone, .content-section,
-      .page-footer, .status-dot, #shareBtn, #pdfBtn, #exportBtn,
-      .btn-export, .toggle, .panel-badge, input[type="range"],
-      .slider-num-input, .num-input, .toggle-row,
-      [id^="sens"], .sensitivity-wrap, #sensAcqPanel,
-      .waterfall-wrap { display: none !important; }
+      /* Print-view layout */
+      .pv-header { display: flex; justify-content: space-between; align-items: flex-end;
+                   border-bottom: 2px solid #1f2937; padding-bottom: 4pt; margin-bottom: 8pt; }
+      .pv-header-title { font-size: 13pt; font-weight: 700; color: #1f2937; }
+      .pv-header-sub { font-size: 7.5pt; color: #555; }
+      .pv-header-meta { text-align: right; font-size: 7.5pt; color: #555; line-height: 1.6; }
+      .pv-header-meta strong { font-size: 9.5pt; color: #0a7c5c; }
 
-      /* Layout: single column, full width */
-      .app { display: block !important; padding: 0 !important; max-width: 100% !important; }
-      .bottom-grid { display: grid !important; grid-template-columns: 1fr 1fr !important;
-                     gap: 6mm !important; }
-      #newOutputsGrid { display: grid !important; grid-template-columns: 1fr 1fr !important;
-                        gap: 6mm !important; }
+      /* KPI row */
+      .pv-kpis { display: grid; grid-template-columns: repeat(4,1fr);
+                 border: 1px solid #ccc; margin-bottom: 7pt; }
+      .pv-kpi { padding: 5pt 7pt; border-right: 1px solid #ccc; }
+      .pv-kpi:last-child { border-right: none; }
+      .pv-kpi-lbl { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.08em;
+                    color: #777; margin-bottom: 2pt; }
+      .pv-kpi-val { font-size: 16pt; font-weight: 700; line-height: 1; }
+      .pv-kpi-val.green { color: #0a7c5c; }
+      .pv-kpi-val.red   { color: #c0392b; }
+      .pv-kpi-sub { font-size: 6.5pt; color: #777; margin-top: 1pt; }
 
-      /* Panels: flat white boxes */
-      .panel { border: 1px solid #ccc !important; box-shadow: none !important;
-               background: #fff !important; margin-bottom: 6mm;
-               page-break-inside: avoid; }
-      .panel-header { background: #1f2937 !important; color: #fff !important;
-                      padding: 3pt 6pt !important; -webkit-print-color-adjust: exact;
-                      print-color-adjust: exact; }
-      .panel-title { color: #fff !important; font-size: 8pt !important; }
+      /* Two-column grid */
+      .pv-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7pt; margin-bottom: 7pt; }
+      .pv-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7pt; margin-bottom: 7pt; }
+      .pv-full { margin-bottom: 7pt; }
 
-      /* KPIs */
-      .kpi-row { display: grid !important; grid-template-columns: repeat(4,1fr) !important; }
-      .kpi { padding: 6pt 8pt !important; border-right: 1px solid #ddd !important; }
-      .kpi::before { display: none !important; }
-      .kpi-value { font-size: 18pt !important; color: #000 !important; }
-      .kpi-value.green { color: #0a7c5c !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .kpi-value.red   { color: #c0392b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .kpi-label, .kpi-sub { color: #555 !important; }
+      /* Boxes */
+      .pv-box { border: 1px solid #ccc; break-inside: avoid; }
+      .pv-box-hdr { background: #1f2937; color: #fff; font-size: 7pt; font-weight: 700;
+                    text-transform: uppercase; letter-spacing: 0.1em;
+                    padding: 3pt 6pt;
+                    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pv-box-body { padding: 5pt 6pt; }
 
-      /* Verdict bar */
-      .verdict-bar { padding: 4pt 6pt !important; background: #f8f8f8 !important;
-                     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      /* Tables inside boxes */
+      .pv-tbl { width: 100%; border-collapse: collapse; }
+      .pv-tbl th { font-size: 6.5pt; text-transform: uppercase; letter-spacing: 0.06em;
+                   color: #777; padding: 2pt 4pt; text-align: right;
+                   border-bottom: 1px solid #ddd;
+                   -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pv-tbl th:first-child { text-align: left; }
+      .pv-tbl td { font-size: 7.5pt; padding: 2pt 4pt; text-align: right;
+                   border-bottom: 1px solid #f0f0f0; }
+      .pv-tbl td:first-child { text-align: left; color: #444; }
+      .pv-tbl tr:last-child td { border-bottom: none; }
+      .pv-tbl td.pos { color: #0a7c5c; }
+      .pv-tbl td.neg { color: #c0392b; }
+      .pv-tbl td.hi  { font-weight: 700; }
+      .pv-tbl .sect td { font-weight: 700; background: #f5f5f5;
+                         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pv-tbl .sub td:first-child { padding-left: 10pt; color: #666; }
+      .pv-tbl .hdr-row th { background: #f0f0f0;
+                             -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-      /* Tables */
-      .data-table, .sens-table { font-size: 7.5pt !important; width: 100% !important; }
-      .data-table th, .sens-table th { background: #f0f0f0 !important; padding: 2pt 4pt !important;
-                                       -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .data-table td, .sens-table td { padding: 2pt 4pt !important; }
-      .data-table tr:hover td { background: transparent !important; }
+      /* Assumptions 2-col key-value */
+      .pv-asm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10pt; }
+      .pv-asm-row { display: flex; justify-content: space-between; align-items: baseline;
+                    border-bottom: 1px solid #f0f0f0; padding: 2pt 0; font-size: 7.5pt; }
+      .pv-asm-lbl { color: #444; }
+      .pv-asm-val { font-weight: 700; color: #1f2937; }
 
-      /* Input panel: compact 2-col layout in print */
-      .inputs-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8mm; font-size: 8pt; }
-      .input-section { break-inside: avoid; }
-      .input-section + .input-section { border-top: none !important; margin-top: 2pt !important; padding-top: 2pt !important; }
-      .input-row { justify-content: space-between; }
-      .input-label { font-size: 7.5pt !important; }
-      .input-hint  { font-size: 6.5pt !important; }
-
-      /* Print header injected via JS */
-      .print-header { display: block !important; text-align: center;
-                      border-bottom: 2px solid #1f2937; padding-bottom: 4pt;
-                      margin-bottom: 6mm; }
-      .print-header h1 { font-size: 14pt; font-weight: 700; color: #1f2937; margin: 0 0 2pt; }
-      .print-header p  { font-size: 8pt; color: #555; margin: 0; }
-
-      /* Page breaks */
-      #suPanel, #exitPanel  { break-inside: avoid; }
-      #plPanel              { break-before: auto; break-inside: auto; }
-      .bottom-grid          { break-inside: avoid; }
-
-      /* Green highlights survive print */
-      .kpi-value.green, td.pos, .verdict-pill.strong { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-      /* Waterfall: show as SVG in print */
-      .waterfall-wrap { display: block !important; }
-      svg.waterfall { width: 100% !important; max-width: 280pt; }
+      .pv-footer { border-top: 1px solid #ccc; margin-top: 6pt; padding-top: 4pt;
+                   font-size: 6.5pt; color: #aaa; text-align: center; }
     }
   </style>
 </head>
@@ -1204,8 +1195,8 @@
   </div>
 </div>
 
-<!-- PRINT HEADER (hidden on screen, shown in PDF) -->
-<div id="_printHeader" class="print-header" style="display:none;"></div>
+<!-- DEDICATED PRINT VIEW (hidden on screen, shown when printing) -->
+<div id="print-view"></div>
 
 <!-- APP -->
 <div class="app">
@@ -2018,35 +2009,261 @@
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // ── PDF DOWNLOAD ──
   function downloadPDF() {
-    // Inject a print-only header showing deal summary
     const s = window._lboState;
-    const hdr = document.getElementById('_printHeader') || (() => {
-      const el = document.createElement('div');
-      el.id = '_printHeader';
-      el.className = 'print-header';
-      // Insert before .app
-      const app = document.querySelector('.app');
-      if (app) app.parentNode.insertBefore(el, app);
-      return el;
-    })();
+    if (!s) { alert('Run the model first.'); return; }
 
-    if (s) {
-      const { entryMult, exitMult, leverage, hold, growth } = s.inputs;
-      const { irr, mom } = s.results;
-      hdr.innerHTML = `
-        <h1>LBORETURNS.COM — LBO MODEL</h1>
-        <p>Entry ${entryMult}x &nbsp;|&nbsp; Exit ${exitMult}x &nbsp;|&nbsp; Leverage ${leverage}x &nbsp;|&nbsp;
-           Hold ${hold} yrs &nbsp;|&nbsp; EBITDA Growth ${(growth*100).toFixed(1)}% &nbsp;|&nbsp;
-           IRR <strong>${(irr*100).toFixed(1)}%</strong> &nbsp;|&nbsp;
-           MoM <strong>${mom.toFixed(2)}x</strong> &nbsp;|&nbsp;
-           ${new Date().toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'})}
-        </p>`;
+    const { ebitda, entryMult, leverage, interest, growth, exitMult, hold,
+            txCost, exitFee, fcfPct, acqEnabled, acqEbitda, acqMult, acqGrowth,
+            cashSweep, mgmtPoolPct, fcfDetailParams } = s.inputs;
+    const { irr, mom, entryEquity, netExitEq, entryEV,
+            exitEBITDA, exitEV, exitDebt, accruedCash,
+            exitFeeAmt, mgmtPayout } = s.results;
+    const rows = s.rows;
+
+    // ── Formatters ──
+    const fM  = v => { const a=Math.abs(v),n=v<0; const s=a>=1000?'$'+(a/1e3).toFixed(1)+'B':'$'+a.toFixed(1)+'M'; return n?'('+s+')':s; };
+    const fP  = v => (v*100).toFixed(1)+'%';
+    const fX  = v => v.toFixed(2)+'x';
+    const fX1 = v => v.toFixed(1)+'x';
+    const date= new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+
+    // ── Colours ──
+    const GRN='#0a7c5c', RED='#c0392b', AMB='#b45309', GRN_BG='#e8f5f0', GREY='#f5f5f5';
+    const irrCol = irr>=0.2?GRN:irr>=0.12?AMB:RED;
+    const momCol = mom>=2?GRN:mom>=1.5?AMB:RED;
+
+    // ── Shared cell style ──
+    const td  = (txt,extra='') => `<td style="padding:3px 6px;font-size:8pt;border-bottom:1px solid #eee;${extra}">${txt}</td>`;
+    const tdr = (txt,extra='') => td(txt,`text-align:right;${extra}`);
+    const tdh = (txt,cols=1) => `<td colspan="${cols}" style="padding:2px 6px;font-size:6.5pt;text-transform:uppercase;letter-spacing:0.08em;color:#777;border-top:1px solid #ddd;border-bottom:1px solid #ddd;background:#fafafa;">${txt}</td>`;
+    const tds = (txt,cols=1) => `<td colspan="${cols}" style="padding:3px 6px;font-size:8pt;font-weight:700;background:${GREY};border-bottom:1px solid #ddd;">${txt}</td>`;
+
+    // ── Computed values ──
+    const entryDebt = ebitda * leverage;
+    const txAmt     = entryEV * txCost;
+    const totalUses = entryEV + txAmt;
+    const grossEq   = exitEV - (exitFeeAmt||0) - exitDebt + (accruedCash||0);
+    const levFcf    = rows.map(r => r.fcf - r.intExp);
+    const dp        = rows.map((r,i) => {
+      const prev = i===0 ? r.debt+Math.max(levFcf[i],0) : rows[i-1].debt;
+      return Math.max(prev-r.debt,0);
+    });
+    const pct = (v,b) => b>0?(v/b*100).toFixed(1)+'%':'—';
+
+    // ── Box wrapper ──
+    const box = (title, body, extra='') =>
+      `<div style="border:1px solid #ccc;margin-bottom:8pt;${extra}">
+         <div style="background:#1f2937;color:#fff;font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:4px 8px;">${title}</div>
+         <div style="padding:6px;">${body}</div>
+       </div>`;
+
+    // ── Year column headers ──
+    const yrThs = rows.map(r =>
+      `<th style="padding:3px 6px;font-size:7.5pt;text-align:right;border-bottom:1px solid #ccc;${r.yr===hold?`background:${GRN_BG};color:${GRN};font-weight:700;`:''}">${r.yr===hold?'Exit':'Yr '+r.yr}</th>`
+    ).join('');
+    const yrTd = (v, i, cls='', bold=false, colour='') =>
+      `<td style="padding:3px 6px;font-size:8pt;text-align:right;border-bottom:1px solid #eee;${rows[i].yr===hold?`background:${GRN_BG};`:''}${bold?'font-weight:700;':''}${colour?`color:${colour};`:''}${cls==='pos'?`color:${GRN};`:cls==='neg'?`color:${RED};`:''}">${v}</td>`;
+
+    const projRow = (label, vals, cls='', bold=false, indent=false) =>
+      `<tr><td style="padding:3px 6px;font-size:8pt;border-bottom:1px solid #eee;${indent?'padding-left:14px;color:#555;':''}${bold?'font-weight:700;background:'+GREY+';':''}">${label}</td>`+
+      vals.map((v,i)=>yrTd(v,i,cls,bold))+`</tr>`;
+
+    const pctRow = (vals) =>
+      `<tr><td style="padding:1px 6px 3px;font-size:7pt;color:#777;border-bottom:1px solid #eee;"></td>`+
+      vals.map((v,i)=>`<td style="padding:1px 6px 3px;font-size:7pt;text-align:right;border-bottom:1px solid #eee;${rows[i].yr===hold?`background:${GRN_BG};`:''}color:${v===null?'#aaa':v>=0?GRN:RED};">${v===null?'—':(v>=0?'+':'')+v.toFixed(1)+'%'}</td>`).join('')+`</tr>`;
+
+    const sectRow = (label, cols) =>
+      `<tr><td colspan="${cols}" style="padding:2px 6px;font-size:6.5pt;text-transform:uppercase;letter-spacing:0.08em;color:#777;background:#fafafa;border-top:1px solid #ddd;border-bottom:1px solid #ddd;">${label}</td></tr>`;
+
+    // ════════════════
+    // BUILD DOCUMENT
+    // ════════════════
+    const cols = rows.length + 1;
+
+    // ── ASSUMPTIONS ──
+    const asmRows = [
+      ['Entry EBITDA',        fM(ebitda)],
+      ['Entry EV/EBITDA',     fX1(entryMult)],
+      ['Leverage (D/EBITDA)', fX1(leverage)],
+      ['All-in Interest',     fP(interest)],
+      ['EBITDA Growth CAGR',  fP(growth)],
+      ['FCF Conversion',      fP(fcfPct)],
+      ['Exit EV/EBITDA',      fX1(exitMult)],
+      ['Hold Period',         hold+' yrs'],
+      ['Transaction Costs',   fP(txCost)],
+      ['Exit Fees',           fP(exitFee||0)],
+      ['Cash Sweep',          cashSweep?'ON':'OFF'],
+      ['Mgmt Pool',           mgmtPoolPct>0?fP(mgmtPoolPct):'—'],
+      ...(acqEnabled&&acqEbitda>0?[
+        ['Bolt-on EBITDA/yr', fM(acqEbitda)],
+        ['Bolt-on Multiple',  fX1(acqMult)],
+      ]:[]),
+    ];
+
+    // Split into two columns
+    const half = Math.ceil(asmRows.length/2);
+    const col1 = asmRows.slice(0,half), col2 = asmRows.slice(half);
+    const asmBody = `<table style="width:100%;border-collapse:collapse;">
+      ${col1.map(([l,v],i)=>`<tr>
+        <td style="padding:2px 6px;font-size:8pt;color:#444;border-bottom:1px solid #f0f0f0;width:28%;">${l}</td>
+        <td style="padding:2px 6px;font-size:8pt;font-weight:700;text-align:right;border-bottom:1px solid #f0f0f0;width:22%;">${v}</td>
+        ${col2[i]?`<td style="padding:2px 6px;font-size:8pt;color:#444;border-bottom:1px solid #f0f0f0;width:28%;padding-left:14px;">${col2[i][0]}</td>
+        <td style="padding:2px 6px;font-size:8pt;font-weight:700;text-align:right;border-bottom:1px solid #f0f0f0;width:22%;">${col2[i][1]}</td>`:'<td></td><td></td>'}
+      </tr>`).join('')}
+    </table>`;
+
+    // ── SOURCES & USES ──
+    const suBody = `<table style="width:100%;border-collapse:collapse;">
+      <thead><tr><th style="text-align:left;padding:3px 6px;font-size:7.5pt;border-bottom:1px solid #ccc;">Item</th>
+      <th style="text-align:right;padding:3px 6px;font-size:7.5pt;border-bottom:1px solid #ccc;">$M</th>
+      <th style="text-align:right;padding:3px 6px;font-size:7.5pt;border-bottom:1px solid #ccc;">%</th></tr></thead>
+      <tbody>
+        <tr><td colspan="3" style="padding:2px 6px;font-size:6.5pt;text-transform:uppercase;color:#777;background:#fafafa;border-top:1px solid #ddd;border-bottom:1px solid #ddd;">Uses</td></tr>
+        <tr>${td('Entry EV')}${tdr(fM(entryEV))}${tdr('100.0%')}</tr>
+        <tr>${td('+ Transaction Costs')}${tdr(fM(txAmt))}${tdr(pct(txAmt,entryEV))}</tr>
+        <tr style="font-weight:700;background:${GREY};">${td('= Total Uses')}${tdr(fM(totalUses))}${tdr('100.0%')}</tr>
+        <tr><td colspan="3" style="padding:2px 6px;font-size:6.5pt;text-transform:uppercase;color:#777;background:#fafafa;border-top:1px solid #ddd;border-bottom:1px solid #ddd;">Sources</td></tr>
+        <tr>${td('Entry Debt')}${tdr(fM(entryDebt))}${tdr(pct(entryDebt,totalUses))}</tr>
+        <tr>${td('Entry Equity')}${tdr(fM(entryEquity))}${tdr(pct(entryEquity,totalUses))}</tr>
+        <tr style="font-weight:700;background:${GREY};">${td('= Total Sources')}${tdr(fM(entryDebt+entryEquity))}${tdr('100.0%')}</tr>
+        ${acqEnabled&&acqEbitda>0?`<tr style="color:${AMB};">${td('↳ Bolt-on Debt ('+hold+' yrs)')}${tdr(fM(acqEbitda*acqMult*hold),'color:'+AMB+';')}${tdr('')}</tr>`:''}
+      </tbody></table>`;
+
+    // ── PROJECTION TABLE ──
+    const showAcqP = acqEnabled && rows.some(r=>r.acqEbitdaYr>0);
+    const yoyG = rows.map((r,i)=>i===0?null:(r.ebitda-(i>0?rows[i-1].ebitda:ebitda))/Math.max(i>0?rows[i-1].ebitda:ebitda,0.01)*100);
+    const netLev= rows.map(r=>r.ebitda>0?r.debt/r.ebitda:null);
+    const cov   = rows.map(r=>r.intExp>0?r.ebitda/r.intExp:null);
+
+    let projTbl = `<table style="width:100%;border-collapse:collapse;">
+      <thead><tr>
+        <th style="text-align:left;padding:3px 6px;font-size:7.5pt;border-bottom:1px solid #ccc;min-width:110pt;">($M)</th>
+        ${yrThs}
+      </tr></thead><tbody>`;
+
+    projTbl += sectRow('Income Statement', cols);
+    if (showAcqP) {
+      projTbl += projRow('Platform EBITDA',     rows.map(r=>fM(r.organicEbitda)), 'pos');
+      projTbl += projRow('+ Acquired EBITDA',   rows.map(r=>fM(r.acqEbitdaYr)),  'pos', false, true);
+      projTbl += projRow('= Combined EBITDA',   rows.map(r=>fM(r.ebitda)),        '',    true);
+    } else {
+      projTbl += projRow('EBITDA',              rows.map(r=>fM(r.ebitda)),        '',    true);
     }
+    projTbl += pctRow(yoyG);
 
-    window.print();
+    projTbl += sectRow('Free Cash Flow Bridge', cols);
+    projTbl += projRow('Unlevered FCF',          rows.map(r=>fM(r.fcf)),           'pos');
+    projTbl += projRow('− Interest Expense',     rows.map(r=>fM(-r.intExp)),       'neg', false, true);
+    projTbl += projRow('= Levered FCF',          levFcf.map(v=>fM(v)),             '',    true);
+
+    projTbl += sectRow('Debt & Coverage', cols);
+    projTbl += projRow('− Debt Paydown',         dp.map(v=>fM(-v)),                'neg', false, true);
+    projTbl += projRow('Ending Debt',            rows.map(r=>fM(-r.debt)),         'neg');
+    projTbl += projRow('+ Accrued Cash',         rows.map(r=>fM(r.cash)),          'pos');
+    // Net leverage with colour
+    projTbl += `<tr><td style="padding:3px 6px;font-size:8pt;border-bottom:1px solid #eee;">Net Leverage</td>`+
+      rows.map((r,i)=>{const v=netLev[i];const col=v>6?RED:v>4?AMB:GRN;
+        return `<td style="padding:3px 6px;font-size:8pt;text-align:right;border-bottom:1px solid #eee;${rows[i].yr===hold?`background:${GRN_BG};`:''}color:${col};">${v?v.toFixed(1)+'x':'—'}</td>`;}).join('')+`</tr>`;
+    projTbl += `<tr><td style="padding:3px 6px;font-size:8pt;border-bottom:1px solid #eee;">Interest Coverage</td>`+
+      rows.map((r,i)=>{const v=cov[i];const col=v&&v<2?RED:v&&v<3?AMB:GRN;
+        return `<td style="padding:3px 6px;font-size:8pt;text-align:right;border-bottom:1px solid #eee;${rows[i].yr===hold?`background:${GRN_BG};`:''}color:${col};">${v?v.toFixed(1)+'x':'—'}</td>`;}).join('')+`</tr>`;
+
+    projTbl += '</tbody></table>';
+
+    // ── EXIT PROCEEDS ──
+    const exitBody = `<table style="width:100%;border-collapse:collapse;">
+      <tbody>
+        ${[
+          ['Exit EBITDA',           fM(exitEBITDA),  ''],
+          ['× Exit Multiple',       fX1(exitMult)+'', ''],
+        ].map(([l,v])=>`<tr>${td(l)}${tdr(v)}</tr>`).join('')}
+        <tr style="font-weight:700;background:${GREY};">${td('= Exit EV')}${tdr(fM(exitEV))}</tr>
+        ${exitFeeAmt>0?`<tr>${td('− Exit Fees')}${tdr(fM(-exitFeeAmt),'color:'+RED+';')}</tr>`:'' }
+        <tr>${td('− Debt at Exit')}${tdr(fM(-exitDebt),'color:'+RED+';')}</tr>
+        ${accruedCash>0?`<tr>${td('+ Accrued Cash')}${tdr(fM(accruedCash),'color:'+GRN+';')}</tr>`:''}
+        <tr style="font-weight:700;background:${GREY};">${td('= Gross Equity')}${tdr(fM(grossEq))}</tr>
+        ${mgmtPoolPct>0?`<tr>${td('− Mgmt Pool ('+fP(mgmtPoolPct)+')')}${tdr(fM(-mgmtPayout),'color:'+RED+';')}</tr>`:''}
+        <tr style="font-weight:700;background:${GRN_BG};">${td('= Net Equity (Sponsor)')}${tdr(fM(netExitEq),'color:'+GRN+';font-weight:700;')}</tr>
+        <tr>${td('− Entry Equity')}${tdr(fM(-entryEquity),'color:'+RED+';')}</tr>
+        <tr style="font-weight:700;background:${GRN_BG};">${td('= Equity Gain')}${tdr(fM(netExitEq-entryEquity),(netExitEq-entryEquity>=0?'color:'+GRN:('color:'+RED))+';font-weight:700;')}</tr>
+        <tr style="font-weight:700;">${td('<b>Money-on-Money</b>')}${tdr('<b style="color:'+momCol+';">'+fX(mom)+'</b>')}</tr>
+        <tr style="font-weight:700;">${td('<b>IRR (Equity)</b>')}${tdr('<b style="color:'+irrCol+';">'+fP(irr)+'</b>')}</tr>
+      </tbody></table>`;
+
+    // ── Waterfall SVG ──
+    const wfSvg = (document.getElementById('waterfall')?.outerHTML||'')
+      .replace(/width="[^"]*"/, 'width="100%"')
+      .replace(/height="[^"]*"/, '');
+
+    // ════════════════
+    // COMPOSE PAGE
+    // ════════════════
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>LBO Model — lboreturns.com</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt;
+             color: #111; background: #fff; }
+      @page { size: A4 landscape; margin: 10mm 12mm; }
+      @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      }
+    </style>
+    </head><body>
+
+    <!-- HEADER -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;
+                border-bottom:2px solid #1f2937;padding-bottom:5pt;margin-bottom:8pt;">
+      <div>
+        <div style="font-size:13pt;font-weight:700;color:#1f2937;margin-bottom:2pt;">
+          LBORETURNS.COM — LBO MODEL
+        </div>
+        <div style="font-size:7.5pt;color:#555;">
+          Entry ${fX1(entryMult)} &nbsp;·&nbsp; Exit ${fX1(exitMult)} &nbsp;·&nbsp;
+          ${fX1(leverage)} Leverage &nbsp;·&nbsp; ${hold}-Year Hold &nbsp;·&nbsp;
+          ${fP(growth)} EBITDA CAGR &nbsp;·&nbsp; Entry EBITDA ${fM(ebitda)}
+        </div>
+      </div>
+      <div style="text-align:right;font-size:7.5pt;color:#555;line-height:1.7;">
+        <div>${date}</div>
+        <div>IRR <b style="color:${irrCol};">${fP(irr)}</b> &nbsp;·&nbsp;
+             MoM <b style="color:${momCol};">${fX(mom)}</b> &nbsp;·&nbsp;
+             Entry Equity <b>${fM(entryEquity)}</b> &nbsp;·&nbsp;
+             Exit Equity <b>${fM(netExitEq)}</b></div>
+      </div>
+    </div>
+
+    <!-- ROW 1: Assumptions + S&U (side by side) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8pt;margin-bottom:8pt;">
+      ${box('Model Assumptions', asmBody)}
+      ${box('Sources &amp; Uses', suBody)}
+    </div>
+
+    <!-- ROW 2: Projection (full width) -->
+    ${box('Projection ($M) — Year-by-Year', projTbl)}
+
+    <!-- ROW 3: Exit Proceeds + Value Bridge -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8pt;margin-bottom:8pt;">
+      ${box('Exit Proceeds &amp; Returns', exitBody)}
+      ${box('Value Bridge', `<div style="padding:4pt 0;">${wfSvg}</div>`)}
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid #ccc;padding-top:4pt;font-size:6.5pt;color:#aaa;text-align:center;">
+      lboreturns.com &nbsp;·&nbsp; For illustrative purposes only. Not financial or investment advice. &nbsp;·&nbsp; ${date}
+    </div>
+
+    <script>window.onload=function(){window.print();};<\/script>
+    </body></html>`;
+
+    const w = window.open('','_blank','width=1000,height=700');
+    if (!w) { alert('Allow pop-ups for this site to download the PDF.'); return; }
+    w.document.write(html);
+    w.document.close();
   }
 
-  // ── CLOCK ──
+
+  // ── CLOCK ──  // ── CLOCK ──
   function updateClock_unused() {
     const now = new Date();
     document.getElementById('clock').textContent =
