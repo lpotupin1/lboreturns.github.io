@@ -1683,24 +1683,14 @@
 
     </div>
 
-    <!-- P&L + FCF BRIDGE: full-width -->
+    <!-- P&L + FCF BRIDGE: combined single table -->
     <div class="panel" id="plPanel">
       <div class="panel-header">
-        <span class="panel-title">Summary P&amp;L — Organic vs. M&amp;A</span>
+        <span class="panel-title">P&amp;L &amp; Free Cash Flow Walk</span>
         <span class="panel-badge" id="plBadge">By Year</span>
       </div>
       <div style="overflow-x:auto;">
         <table class="data-table sens-table" id="plTable" style="min-width:520px;"></table>
-      </div>
-    </div>
-
-    <div class="panel" id="fcfBridgePanel">
-      <div class="panel-header">
-        <span class="panel-title">EBITDA → Levered Free Cash Flow Bridge</span>
-        <span class="panel-badge" id="fcfBridgeBadge">By Year</span>
-      </div>
-      <div style="overflow-x:auto;">
-        <table class="data-table sens-table" id="fcfBridgeTable" style="min-width:520px;"></table>
       </div>
     </div>
 
@@ -2574,7 +2564,6 @@
     drawSU(_inp, _res);
     drawExitProceeds(_inp, _res);
     drawPL(_inp, rows);
-    drawFcfBridge(_inp, rows);
   }
 
   function animateKPI(id, val, cls) {
@@ -2803,123 +2792,135 @@
     document.getElementById('exitPanelBadge').textContent = `${exitMult}x Exit`;
   }
 
-  // ── SUMMARY P&L ──
+  // ── COMBINED P&L + FCF WALK ──
+  // Single table: Revenue (if detail mode) → EBITDA → FCF bridge → Levered FCF → Cash
   function drawPL(inputs, rows) {
-    const { acqEnabled, hold } = inputs;
-    const showAcq = acqEnabled && rows.some(r => r.acqEbitdaYr > 0);
+    const { acqEnabled, hold, fcfDetailParams, fcfPct, growth } = inputs;
+    const showAcq    = acqEnabled && rows.some(r => r.acqEbitdaYr > 0);
+    const isDetailFcf = !!fcfDetailParams;
+    // Revenue detail: cagrMode is a module-level var, read live inputs for rev/margin
+    const showRev = cagrMode === 'detail'
+      && +document.getElementById('entryMargin')?.value > 0
+      && +document.getElementById('revGrowthVal')?.value !== undefined;
 
+    const entryMarginPct = showRev ? +document.getElementById('entryMargin').value / 100 : 0;
+    const exitMarginPct  = showRev ? +document.getElementById('exitMargin').value  / 100 : 0;
+    const revGrowthPct   = showRev ? +document.getElementById('revGrowthVal').value / 100 : 0;
+    const entryEbitda    = rows[0] ? rows[0].organicEbitda / Math.pow(1 + (growth||0), 1) : inputs.ebitda;
+    // entry revenue = entry EBITDA / entry margin
+    const entryRev = showRev && entryMarginPct > 0 ? inputs.ebitda / entryMarginPct : null;
+
+    // Helpers
     const yearHdrs = rows.map(r =>
       `<th style="background:${r.yr===hold?'var(--green-lt)':'var(--bg)'};color:${r.yr===hold?'var(--green)':'var(--muted)'};font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;text-align:right;">${r.yr===hold?'Exit':'Yr '+r.yr}</th>`
     ).join('');
 
-    const dataRow = (label, vals, cls='', bold=false, indent=false) =>
-      `<tr><td style="${bold?'font-weight:700;':''}${indent?'padding-left:1.25rem;':''}font-size:0.7rem;color:var(--muted);padding:0.4rem 0.75rem;">${label}</td>` +
-      vals.map((v,i) => `<td style="text-align:right;font-size:0.72rem;padding:0.4rem 0.6rem;${bold?'font-weight:700;':''}${rows[i].yr===hold?'background:var(--green-lt);':''}" class="${cls}">${v===null?'—':fmtM(v)}</td>`).join('') +
-      `</tr>`;
-
-    const pctRow = (label, vals) =>
-      `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.4rem 0.75rem;">${label}</td>` +
-      vals.map((v,i) => `<td style="text-align:right;font-size:0.7rem;padding:0.4rem 0.6rem;color:${v>=0?'var(--green)':'var(--red)'};${rows[i].yr===hold?'background:var(--green-lt);':''}">${v===null?'—':(v>=0?'+':'')+v.toFixed(1)+'%'}</td>`).join('') +
-      `</tr>`;
-
-    let html = `<thead><tr>
+    const tblHdr = `<thead><tr>
       <th style="text-align:left;background:var(--bg);padding:0.4rem 0.75rem;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">($M)</th>
       ${yearHdrs}</tr></thead><tbody>`;
-
-    html += dataRow('Organic (Platform) EBITDA', rows.map(r=>r.organicEbitda), 'pos');
-    if (showAcq) {
-      html += dataRow('+ Acquired EBITDA (M&A)', rows.map(r=>r.acqEbitdaYr), 'pos', false, true);
-      html += dataRow('= Combined EBITDA', rows.map(r=>r.ebitda), 'hi', true);
-      html += `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.4rem 0.75rem;">M&A Contribution %</td>` +
-        rows.map((r,i) => `<td style="text-align:right;font-size:0.7rem;padding:0.4rem 0.6rem;${r.yr===hold?'background:var(--green-lt);':''}">${r.ebitda>0?(r.acqEbitdaYr/r.ebitda*100).toFixed(1):'0.0'}%</td>`).join('') + `</tr>`;
-    } else {
-      html += dataRow('= EBITDA', rows.map(r=>r.ebitda), 'hi', true);
-    }
-
-    // YoY growth rows
-    const yoyGrowth = rows.map((r,i) => {
-      if (i === 0) return null;
-      return (r.ebitda - rows[i-1].ebitda) / Math.max(rows[i-1].ebitda, 0.01) * 100;
-    });
-    html += pctRow('EBITDA Growth YoY', yoyGrowth);
-
-    // Debt & interest summary
-    html += `<tr style="background:var(--bg);"><td colspan="${rows.length+1}" style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 0.75rem 0.2rem;">Debt &amp; Coverage</td></tr>`;
-    html += dataRow('Ending Debt', rows.map(r=>r.debt), 'neg');
-    html += dataRow('Interest Expense', rows.map(r=>-r.intExp), 'neg');
-    html += `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.4rem 0.75rem;">Interest Coverage</td>` +
-      rows.map((r,i) => {
-        const cov = r.intExp > 0 ? r.ebitda / r.intExp : null;
-        return `<td style="text-align:right;font-size:0.72rem;padding:0.4rem 0.6rem;${r.yr===hold?'background:var(--green-lt);':''};color:${cov&&cov<2?'var(--red)':cov&&cov<3?'var(--amber)':'var(--green)'}">${cov?cov.toFixed(1)+'x':'—'}</td>`;
-      }).join('') + `</tr>`;
-
-    html += '</tbody>';
-    document.getElementById('plTable').innerHTML = html;
-    document.getElementById('plBadge').textContent = showAcq ? 'Organic + M&A' : 'Organic Only';
-  }
-
-  // ── EBITDA → LEVERED FCF BRIDGE ──
-  function drawFcfBridge(inputs, rows) {
-    const { hold, fcfDetailParams } = inputs;
-    const isDetail = !!fcfDetailParams;
-
-    const yearHdrs = rows.map(r =>
-      `<th style="background:${r.yr===hold?'var(--green-lt)':'var(--bg)'};color:${r.yr===hold?'var(--green)':'var(--muted)'};font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;text-align:right;">${r.yr===hold?'Exit':'Yr '+r.yr}</th>`
-    ).join('');
 
     const dRow = (label, vals, cls='', bold=false, indent=false) =>
-      `<tr><td style="${bold?'font-weight:700;':''}${indent?'padding-left:1.25rem;':''}font-size:0.7rem;color:var(--muted);padding:0.4rem 0.75rem;">${label}</td>` +
-      vals.map((v,i) => `<td style="text-align:right;font-size:0.72rem;padding:0.4rem 0.6rem;${bold?'font-weight:700;':''}${rows[i].yr===hold?'background:var(--green-lt);':''}" class="${cls}">${v===null?'—':fmtM(v)}</td>`).join('') +
+      `<tr><td style="${bold?'font-weight:700;':''}${indent?'padding-left:1.25rem;':''}font-size:0.7rem;color:var(--muted);padding:0.35rem 0.75rem;">${label}</td>` +
+      vals.map((v,i) => `<td style="text-align:right;font-size:0.72rem;padding:0.35rem 0.5rem;${bold?'font-weight:700;':''}${rows[i].yr===hold?'background:var(--green-lt);':''}" class="${cls}">${v===null?'—':fmtM(v)}</td>`).join('') +
       `</tr>`;
+
+    const pRow = (label, vals, colorFn=null) =>
+      `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.35rem 0.75rem;">${label}</td>` +
+      vals.map((v,i) => {
+        const col = colorFn ? colorFn(v) : (v >= 0 ? 'var(--green)' : 'var(--red)');
+        return `<td style="text-align:right;font-size:0.7rem;padding:0.35rem 0.5rem;color:${col};${rows[i].yr===hold?'background:var(--green-lt);':''}">${v===null?'—':(v>=0?'+':'')+v.toFixed(1)+'%'}</td>`;
+      }).join('') + `</tr>`;
+
     const sectHdr = label =>
-      `<tr style="background:var(--bg);"><td colspan="${rows.length+1}" style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 0.75rem 0.2rem;">${label}</td></tr>`;
+      `<tr style="background:var(--bg);"><td colspan="${rows.length+1}" style="font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.45rem 0.75rem 0.2rem;border-top:1px solid var(--border);">${label}</td></tr>`;
 
-    let html = `<thead><tr>
-      <th style="text-align:left;background:var(--bg);padding:0.4rem 0.75rem;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">($M)</th>
-      ${yearHdrs}</tr></thead><tbody>`;
+    let html = tblHdr;
 
-    html += sectHdr('Unlevered FCF Build');
-    html += dRow('EBITDA', rows.map(r=>r.ebitda), 'hi', true);
+    // ── P&L SECTION ──
+    html += sectHdr('Income Statement');
 
-    if (isDetail) {
+    if (showRev && entryRev !== null) {
+      // Revenue: entry rev grows at revGrowthPct each year
+      const revVals = rows.map((_,i) => entryRev * Math.pow(1 + revGrowthPct, i + 1));
+      html += dRow('Revenue', revVals, 'hi', true);
+
+      // EBITDA Margin: linearly interpolated entry→exit
+      const margVals = rows.map((_,i) => entryMarginPct + (exitMarginPct - entryMarginPct) * (i + 1) / hold);
+      html += `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.35rem 0.75rem;">EBITDA Margin</td>` +
+        rows.map((r,i) => `<td style="text-align:right;font-size:0.7rem;padding:0.35rem 0.5rem;${r.yr===hold?'background:var(--green-lt);':''}">${(margVals[i]*100).toFixed(1)}%</td>`).join('') + `</tr>`;
+    }
+
+    // Platform EBITDA
+    html += dRow('Platform EBITDA', rows.map(r => r.organicEbitda), 'pos', !showAcq);
+    if (showAcq) {
+      html += dRow('+ Acquired EBITDA (M&A)', rows.map(r => r.acqEbitdaYr), 'pos', false, true);
+      html += dRow('= Combined EBITDA', rows.map(r => r.ebitda), 'hi', true);
+      html += `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.35rem 0.75rem;padding-left:1.25rem;">M&A Mix %</td>` +
+        rows.map((r,i) => `<td style="text-align:right;font-size:0.7rem;padding:0.35rem 0.5rem;${r.yr===hold?'background:var(--green-lt);':''}">${r.ebitda>0?(r.acqEbitdaYr/r.ebitda*100).toFixed(1):'0.0'}%</td>`).join('') + `</tr>`;
+    } else if (!showRev) {
+      // simple: just show EBITDA bold
+    }
+
+    // YoY growth
+    html += pRow('EBITDA Growth YoY', rows.map((r,i) =>
+      i === 0 ? null : (r.ebitda - rows[i-1].ebitda) / Math.max(rows[i-1].ebitda, 0.01) * 100
+    ));
+
+    // ── FCF SECTION ──
+    html += sectHdr('Free Cash Flow Bridge');
+
+    if (isDetailFcf) {
       const { taxRate, daRate, capexRate, wcRate } = fcfDetailParams;
-      const prevEbitdas = rows.map((r,i) => i===0 ? rows[0].ebitda/(1+(inputs.growth||0.0001)) : rows[i-1].ebitda);
+      const prevEbitdas = rows.map((r,i) => i === 0 ? inputs.ebitda : rows[i-1].ebitda);
       const da    = rows.map(r => r.ebitda * daRate);
       const ebit  = rows.map(r => r.ebitda * (1 - daRate));
+      const tax   = rows.map(r => r.ebitda * (1 - daRate) * taxRate);
       const nopat = rows.map(r => r.ebitda * (1 - daRate) * (1 - taxRate));
       const capex = rows.map(r => r.ebitda * capexRate);
       const nwc   = rows.map((r,i) => Math.max(r.ebitda - prevEbitdas[i], 0) * wcRate);
 
-      html += dRow('− D&A', da.map(v=>-v), 'neg', false, true);
+      html += dRow('− D&A', da.map(v => -v), 'neg', false, true);
       html += dRow('= EBIT', ebit, '', true);
-      html += dRow('− Tax', nopat.map((v,i)=>v-ebit[i]), 'neg', false, true);
+      html += dRow('− Tax', tax.map(v => -v), 'neg', false, true);
       html += dRow('= NOPAT', nopat, '', true);
       html += dRow('+ D&A', da, 'pos', false, true);
-      html += dRow('− Capex', capex.map(v=>-v), 'neg', false, true);
-      html += dRow('− ΔNWC', nwc.map(v=>-v), 'neg', false, true);
+      html += dRow('− Capex', capex.map(v => -v), 'neg', false, true);
+      html += dRow('− ΔNWC', nwc.map(v => -v), 'neg', false, true);
     } else {
-      const fcfPct = inputs.fcfPct;
-      html += dRow(`× FCF Conv. (${(fcfPct*100).toFixed(1)}%)`, rows.map(r=>r.fcf-r.ebitda), 'neg', false, true);
+      html += dRow(`× FCF Conv. (${(fcfPct*100).toFixed(1)}%)`, rows.map(r => r.fcf - r.ebitda), 'neg', false, true);
     }
-    html += dRow('= Unlevered FCF', rows.map(r=>r.fcf), 'pos', true);
+    html += dRow('= Unlevered FCF', rows.map(r => r.fcf), 'pos', true);
 
-    html += sectHdr('Debt Service & Levered FCF');
-    html += dRow('− Interest Expense', rows.map(r=>-r.intExp), 'neg', false, true);
+    // ── DEBT SERVICE ──
+    html += sectHdr('Debt Service');
+    html += dRow('− Interest Expense', rows.map(r => -r.intExp), 'neg', false, true);
     const levFcf = rows.map(r => r.fcf - r.intExp);
     html += dRow('= Levered FCF', levFcf, 'hi', true);
 
-    html += sectHdr('Cash Deployment');
+    // Interest coverage (colour-coded)
+    html += `<tr><td style="font-size:0.7rem;color:var(--muted);padding:0.35rem 0.75rem;">Interest Coverage</td>` +
+      rows.map((r,i) => {
+        const cov = r.intExp > 0 ? r.ebitda / r.intExp : null;
+        const col = cov === null ? 'var(--muted)' : cov < 2 ? 'var(--red)' : cov < 3 ? 'var(--amber)' : 'var(--green)';
+        return `<td style="text-align:right;font-size:0.72rem;padding:0.35rem 0.5rem;color:${col};${r.yr===hold?'background:var(--green-lt);':''}">${cov ? cov.toFixed(1)+'x' : '—'}</td>`;
+      }).join('') + `</tr>`;
+
+    // ── CASH ──
+    html += sectHdr('Cash & Debt');
     const dp = rows.map((r,i) => {
-      const prevDebt = i===0 ? r.debt + (r.fcf - r.intExp > 0 ? Math.min(r.fcf-r.intExp,0) : 0) : rows[i-1].debt;
+      const prevDebt = i === 0 ? r.debt + Math.max(levFcf[i], 0) : rows[i-1].debt;
       return Math.max(prevDebt - r.debt, 0);
     });
-    html += dRow('− Debt Paydown', dp.map(v=>-v), 'neg', false, true);
-    html += dRow('= Net Cash to B/S', rows.map((r,i)=>Math.max(levFcf[i]-dp[i],0)), '', false, true);
-    html += dRow('Cumulative Cash', rows.map(r=>r.cash), 'pos');
+    html += dRow('− Debt Paydown', dp.map(v => -v), 'neg', false, true);
+    html += dRow('= Net Cash to B/S', rows.map((r,i) => Math.max(levFcf[i] - dp[i], 0)), '', false, true);
+    html += dRow('Ending Debt', rows.map(r => -r.debt), 'neg');
+    html += dRow('Cumulative Cash', rows.map(r => r.cash), 'pos');
 
     html += '</tbody>';
-    document.getElementById('fcfBridgeTable').innerHTML = html;
-    document.getElementById('fcfBridgeBadge').textContent = isDetail ? 'Detailed Build' : 'Simple FCF%';
+    document.getElementById('plTable').innerHTML = html;
+
+    const badge = showRev ? 'Rev + EBITDA Detail' : showAcq ? 'Organic + M&A' : isDetailFcf ? 'Detailed FCF' : 'Simple FCF%';
+    document.getElementById('plBadge').textContent = badge;
   }
 
   function drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, activeGrowth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
@@ -3927,68 +3928,134 @@
       // ════════════════════════════════════════
       blank();
       sect('SOURCES & USES');
-      addRow([[1,nl('USES ($M)',S.HDR)],[ENTRY,nl('Amount',S.HDR)],[ENTRY+1,nl('% of EV',S.HDR)]]);
-      const R_su_ev  = addRow([[1,nl('Entry EV ($M)')],
-        [ENTRY, f$(entryEV,   `${bRef(IR.ebitda)}*${bRef(IR.entryMult)}`)],
-        [ENTRY+1, fp(1,       `${cRef(0,''[0]||'B'+(rn))}/${cRef(0,''[0]||'B'+(rn))}`, S.FML_PCT)]]);
-      // Re-derive R_su_ev for % formulas — use rn after addRow
-      const _R_ev_row = rn;
-      // Patch % of EV for Entry EV = 100%
-      rows[rows.length-1][ENTRY] = fp(1, `${cRef(0,_R_ev_row)}/${cRef(0,_R_ev_row)}`, S.FML_PCT);
 
-      const R_su_tx  = addRow([[1,nl('+ Transaction Costs ($M)')],
-        [ENTRY,   f$(txAmt,       `B${_R_ev_row}*${bRef(IR.txCost)}`)],
-        [ENTRY+1, fp(txCost,      `B${rn}/B${_R_ev_row}`, S.FML_PCT)]]);
-      const R_su_uses= addRow([[1,nl('= Total Uses ($M)',S.SECT)],
-        [ENTRY,   fx(entryEV+txAmt, `B${_R_ev_row}+B${rn-1}`)],
+      // ── USES ──
+      addRow([[1,nl('USES',S.HDR)],[ENTRY,nl('Amount ($M)',S.HDR)],[ENTRY+1,nl('% of EV',S.HDR)]]);
+      const R_su_ev = addRow([[1,nl('Entry EV')],
+        [ENTRY,   f$(entryEV,       `${bRef(IR.ebitda)}*${bRef(IR.entryMult)}`)],
+        [ENTRY+1, fp(1,             `B${rn}*0+1`, S.FML_PCT)]]);
+      const R_su_tx = addRow([[1,nl('+ Transaction Costs')],
+        [ENTRY,   f$(txAmt,         `B${R_su_ev}*${bRef(IR.txCost)}`)],
+        [ENTRY+1, fp(txCost,        `B${rn}/B${R_su_ev}`, S.FML_PCT)]]);
+      const R_su_uses = addRow([[1,nl('= Total Uses ($M)',S.SECT)],
+        [ENTRY,   fx(entryEV+txAmt, `B${R_su_ev}+B${R_su_tx}`)],
         [ENTRY+1, fp(1,             `1`, S.FML_PCT)]]);
 
-      addRow([[1,nl('SOURCES ($M)',S.HDR)],[ENTRY,nl('Amount',S.HDR)],[ENTRY+1,nl('% of Uses',S.HDR)]]);
-      const R_su_d   = addRow([[1,nl('— Entry Debt ($M)')],
-        [ENTRY,   fx(entryDebt,    `${bRef(IR.ebitda)}*${bRef(IR.leverage)}`)],
+      // ── SOURCES ──
+      addRow([[1,nl('SOURCES',S.HDR)],[ENTRY,nl('Amount ($M)',S.HDR)],[ENTRY+1,nl('% of Uses',S.HDR)]]);
+      const R_su_debt = addRow([[1,nl('Entry Debt')],
+        [ENTRY,   f$(entryDebt,     `${bRef(IR.ebitda)}*${bRef(IR.leverage)}`)],
         [ENTRY+1, fp(entryDebt/(entryEV+txAmt), `B${rn}/B${R_su_uses}`, S.FML_PCT)]]);
-      const R_su_eq  = addRow([[1,nl('= Entry Equity ($M)',S.SECT)],
-        [ENTRY,   fx(entryEquity, `B${R_su_uses}-B${rn-1}`)],
+      const R_su_eq2 = addRow([[1,nl('Entry Equity')],
+        [ENTRY,   fx(entryEquity,   `B${R_su_uses}-B${R_su_debt}`)],
         [ENTRY+1, fp(entryEquity/(entryEV+txAmt), `B${rn}/B${R_su_uses}`, S.FML_PCT)]]);
+      addRow([[1,nl('= Total Sources ($M)',S.SECT)],
+        [ENTRY,   fx(entryDebt+entryEquity, `B${R_su_debt}+B${R_su_eq2}`)],
+        [ENTRY+1, fp(1,                     `B${rn}/B${R_su_uses}`, S.FML_PCT)]]);
       if (acqEnabled && acqEbitda>0)
-        addRow([[1,nl(`  ↳ Bolt-on debt (${hold} yrs, addl post-close)`)],
-          [ENTRY, f$(acqEbitda*acqMult*hold, `${bRef(IR.acqEbitda)}*${bRef(IR.acqMult)}*${bRef(IR.hold)}`, S.FML)]]);
+        addRow([[1,nl(`  Bolt-on debt (${hold} yrs, addl post-close)`)],
+          [ENTRY, f$(acqEbitda*acqMult*hold,
+            `${bRef(IR.acqEbitda)}*${bRef(IR.acqMult)}*${bRef(IR.hold)}`, S.FML)]]);
       blank();
 
       // ════════════════════════════════════════
-      // SUMMARY P&L (inline, formula-linked)
+      // SUMMARY P&L — expands to Rev+EBITDA in detail mode
       // ════════════════════════════════════════
       sect('SUMMARY P&L ($M)'); yrHdr();
-      const showAcqXL = acqEnabled && SR.some(r=>r.acqEbitdaYr>0);
+      const showAcqXL     = acqEnabled && SR.some(r=>r.acqEbitdaYr>0);
+      const showRevDetail = cagrMode === 'detail' && IR.entryMargin && IR.revGrowth;
 
-      // Platform EBITDA — already built above as R_plat, reference it
-      const R_pl_plat = addRow([[1,nl('Organic (Platform) EBITDA')],
-        ...SR.map((r,k)=>[ENTRY+k, fx(r.organicEbitda, `${cRef(k, R_plat)}`)])]);
+      // ── Revenue & Margin (detail mode only) ──
+      let R_pl_rev = null;
+      if (showRevDetail) {
+        const revGV = +document.getElementById('revGrowthVal').value / 100;
+        const entMV = +document.getElementById('entryMargin').value  / 100;
+        const exMV  = +document.getElementById('exitMargin').value   / 100;
+        const entRevV = entMV > 0 ? ebitda / entMV : ebitda;
 
+        // Revenue: entry = ebitda/entryMargin, grows at revGrowth each year
+        const revRow = [[1,nl('Revenue ($M)')],
+          [ENTRY, f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`) ]];
+        for (let k=1; k<=hold; k++)
+          revRow.push([ENTRY+k, f$(entRevV*Math.pow(1+revGV,k),
+            `B${rn+1}*(1+${bRef(IR.revGrowth)})^${k}`)]);
+        R_pl_rev = addRow(revRow);
+        // patch col B formula now we have row number
+        rows[R_pl_rev-1][ENTRY] = f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`);
+        for (let k=1; k<=hold; k++)
+          rows[R_pl_rev-1][ENTRY+k] = f$(entRevV*Math.pow(1+revGV,k),
+            `B${R_pl_rev}*(1+${bRef(IR.revGrowth)})^${k}`);
+
+        // EBITDA Margin: linearly interpolated entry→exit
+        const margRow = [[1,nl('EBITDA Margin %')],
+          [ENTRY, pIn(entMV)] ];
+        for (let k=1; k<=hold; k++)
+          margRow.push([ENTRY+k, fp(entMV+(exMV-entMV)*k/hold,
+            `${bRef(IR.entryMargin)}+(${bRef(IR.exitMargin)}-${bRef(IR.entryMargin)})*${k}/${bRef(IR.hold)}`,
+            S.FML_PCT)]);
+        const R_pl_marg = addRow(margRow);
+
+        // Platform EBITDA = Revenue * Margin
+        const platRow = [[1,nl('Platform EBITDA')],
+          [ENTRY, f$(ebitda, `B${R_pl_rev}*B${R_pl_marg}`)]];
+        for (let k=1; k<=hold; k++)
+          platRow.push([ENTRY+k, f$(SR[k-1].organicEbitda,
+            `${cRef(k,R_pl_rev)}*${cRef(k,R_pl_marg)}`)]);
+        var R_pl_plat = addRow(platRow);
+      } else {
+        // Simple mode: reference R_plat schedule directly
+        const platRow = [[1,nl('Platform EBITDA')],
+          [ENTRY, fx(ebitda, bRef(IR.ebitda))]];
+        for (let k=1; k<=hold; k++)
+          platRow.push([ENTRY+k, fx(SR[k-1].organicEbitda, cRef(k, R_plat))]);
+        var R_pl_plat = addRow(platRow);
+      }
+
+      // ── M&A EBITDA ──
       let R_pl_comb = R_pl_plat;
       if (showAcqXL && R_totAcq) {
-        const R_pl_acq = addRow([[1,nl('+ Acquired EBITDA (M&A)')],
-          ...SR.map((r,k)=>[ENTRY+k, fx(r.acqEbitdaYr, `${cRef(k, R_totAcq+1)}`)])]);
-        R_pl_comb = addRow([[1,nl('= Combined EBITDA',S.SECT)],
-          ...SR.map((r,k)=>[ENTRY+k, fx(r.ebitda, `${cRef(k,R_pl_plat)}+${cRef(k,R_pl_acq)}`)])]);
-        addRow([[1,nl('M&A Contribution %')],
-          ...SR.map((r,k)=>[ENTRY+k, fp(r.ebitda>0?r.acqEbitdaYr/r.ebitda:0,
-            `IF(${cRef(k,R_pl_comb)}>0,${cRef(k,R_pl_acq)}/${cRef(k,R_pl_comb)},0)`, S.FML_PCT)])]);
-      } else {
-        R_pl_comb = addRow([[1,nl('= EBITDA',S.SECT)],
-          ...SR.map((r,k)=>[ENTRY+k, fx(r.ebitda, `${cRef(k,R_plat)}`)])]);
-      }
-      // YoY growth — formula: current/prior-1
-      addRow([[1,nl('EBITDA Growth YoY')],
-        ...SR.map((r,k)=>[ENTRY+k, k===0
-          ? {v:null, s:S.LBL}
-          : fp((r.ebitda-SR[k-1].ebitda)/Math.max(SR[k-1].ebitda,0.01),
-              `${cRef(k,R_pl_comb)}/${cRef(k-1,R_pl_comb)}-1`, S.FML_PCT)])]);
+        const acqRow = [[1,nl('+ Acquired EBITDA (M&A)')],
+          [ENTRY, f$(0,'0')]];
+        for (let k=1; k<=hold; k++)
+          acqRow.push([ENTRY+k, fx(SR[k-1].acqEbitdaYr, cRef(k, R_totAcq+1))]);
+        const R_pl_acq = addRow(acqRow);
 
-      // Interest coverage: EBITDA / Interest Expense (reference existing schedule rows)
-      addRow([[1,nl('Interest Coverage (x)')],
-        ...SR.map((r,k)=>[ENTRY+k, fM(r.intExp>0?r.ebitda/r.intExp:null,
-          `IF(${cRef(k,R_int)}<0,${cRef(k,R_pl_comb)}/-${cRef(k,R_int)},"-")`, S.FML_MULT)])]);
+        const combRow = [[1,nl('= Combined EBITDA',S.SECT)],
+          [ENTRY, fx(ebitda, `B${R_pl_plat}`)]];
+        for (let k=1; k<=hold; k++)
+          combRow.push([ENTRY+k, fx(SR[k-1].ebitda,
+            `${cRef(k,R_pl_plat)}+${cRef(k,R_pl_acq)}`)]);
+        R_pl_comb = addRow(combRow);
+
+        const mixRow = [[1,nl('M&A Mix %')],[ENTRY,{v:null,s:S.LBL}]];
+        for (let k=1; k<=hold; k++)
+          mixRow.push([ENTRY+k, fp(SR[k-1].ebitda>0?SR[k-1].acqEbitdaYr/SR[k-1].ebitda:0,
+            `IF(${cRef(k,R_pl_comb)}>0,${cRef(k,R_pl_acq)}/${cRef(k,R_pl_comb)},0)`, S.FML_PCT)]);
+        addRow(mixRow);
+      } else {
+        // Wrap as combined row so cRef(k,R_pl_comb) covers col B..col B+hold
+        const combRow = [[1,nl('= EBITDA',S.SECT)],
+          [ENTRY, fx(ebitda, `B${R_pl_plat}`)]];
+        for (let k=1; k<=hold; k++)
+          combRow.push([ENTRY+k, fx(SR[k-1].ebitda, cRef(k,R_pl_plat))]);
+        R_pl_comb = addRow(combRow);
+      }
+
+      // ── YoY growth ──
+      const growthRow = [[1,nl('EBITDA Growth YoY')],[ENTRY,{v:null,s:S.LBL}]];
+      for (let k=1; k<=hold; k++) {
+        const g = (SR[k-1].ebitda - (k===1?ebitda:SR[k-2].ebitda))
+                / Math.max(k===1?ebitda:SR[k-2].ebitda, 0.01);
+        growthRow.push([ENTRY+k, fp(g, `${cRef(k,R_pl_comb)}/${cRef(k-1,R_pl_comb)}-1`, S.FML_PCT)]);
+      }
+      addRow(growthRow);
+
+      // ── Interest Coverage ──
+      const covRow = [[1,nl('Interest Coverage (x)')],[ENTRY,{v:null,s:S.LBL}]];
+      for (let k=1; k<=hold; k++)
+        covRow.push([ENTRY+k, fM(SR[k-1].intExp>0?SR[k-1].ebitda/SR[k-1].intExp:null,
+          `IF(${cRef(k,R_int)}<0,${cRef(k,R_pl_comb)}/-${cRef(k,R_int)},"n/a")`, S.FML_MULT)]);
+      addRow(covRow);
       blank();
 
       // ════════════════════════════════════════
@@ -3996,142 +4063,189 @@
       // ════════════════════════════════════════
       sect('EBITDA → LEVERED FREE CASH FLOW BRIDGE ($M)'); yrHdr();
 
-      // EBITDA — cross-ref the combined EBITDA row
-      addRow([[1,nl('EBITDA',S.SECT)],
-        ...SR.map((r,k)=>[ENTRY+k, fx(r.ebitda, cRef(k,R_pl_comb))])]);
+      // EBITDA row — references P&L combined EBITDA
+      const fcbRow = [[1,nl('EBITDA',S.SECT)],[ENTRY,fx(ebitda,`B${R_pl_comb}`)]];
+      for (let k=1; k<=hold; k++)
+        fcbRow.push([ENTRY+k, fx(SR[k-1].ebitda, cRef(k,R_pl_comb))]);
+      addRow(fcbRow);
+      const R_fcb_eb = rn;
 
       let R_unlev;
       if (fcfDetailParams) {
         const {taxRate,daRate,capexRate,wcRate} = fcfDetailParams;
-        const prevEbs = SR.map((r,i)=>i===0?ebitda:SR[i-1].ebitda);
-        const R_da   = addRow([[1,nl('− D&A')],
-          ...SR.map((r,k)=>[ENTRY+k, f$(-(r.ebitda*daRate),
-            `-${cRef(k,R_pl_comb)}*${bRef(IR.daRate)}`)])]);
-        const R_ebit = addRow([[1,nl('= EBIT',S.SECT)],
-          ...SR.map((r,k)=>[ENTRY+k, f$(r.ebitda*(1-daRate),
-            `${cRef(k,R_pl_comb)}+${cRef(k,R_da)}`)])]);
-        const R_tax  = addRow([[1,nl('− Tax on EBIT')],
-          ...SR.map((r,k)=>[ENTRY+k, f$(-(r.ebitda*(1-daRate)*taxRate),
-            `-${cRef(k,R_ebit)}*${bRef(IR.taxRate)}`)])]);
-        const R_nopat= addRow([[1,nl('= NOPAT',S.SECT)],
-          ...SR.map((r,k)=>[ENTRY+k, f$(r.ebitda*(1-daRate)*(1-taxRate),
-            `${cRef(k,R_ebit)}+${cRef(k,R_tax)}`)])]);
-        const R_dadd = addRow([[1,nl('+ D&A')],
-          ...SR.map((r,k)=>[ENTRY+k, f$(r.ebitda*daRate,
-            `-${cRef(k,R_da)}`)])]);
-        const R_capx = addRow([[1,nl('− Capex')],
-          ...SR.map((r,k)=>[ENTRY+k, f$(-(r.ebitda*capexRate),
-            `-${cRef(k,R_pl_comb)}*${bRef(IR.capexRate)}`)])]);
-        const R_nwc  = addRow([[1,nl('− ΔNWC')],
-          ...SR.map((r,k)=>[ENTRY+k, f$(-(Math.max(r.ebitda-prevEbs[k],0)*wcRate),
-            k===0 ? '0' : `-MAX(${cRef(k,R_pl_comb)}-${cRef(k-1,R_pl_comb)},0)*${bRef(IR.wcRate)}`)])]);
-        R_unlev = addRow([[1,nl('= Unlevered FCF',S.SECT)],
-          ...SR.map((r,k)=>[ENTRY+k, fx(r.fcf,
-            `${cRef(k,R_nopat)}-${cRef(k,R_dadd)}+${cRef(k,R_dadd)}+${cRef(k,R_capx)}+${cRef(k,R_nwc)}`)])]);
-        // Simpler formula: NOPAT + DA - capex - nwc
-        // patch with cleaner formula
-        SR.forEach((r,k)=>{
-          rows[R_unlev-1][ENTRY-1+k] = fx(r.fcf,
-            `${cRef(k,R_nopat)}+-${cRef(k,R_da)}+${cRef(k,R_capx)}+${cRef(k,R_nwc)}`);
-        });
+        const prevEbs = [ebitda, ...SR.slice(0,-1).map(r=>r.ebitda)];
+
+        const mkRow = (lbl, vals0, valsK) => {
+          const row = [[1,nl(lbl)],[ENTRY, vals0]];
+          for (let k=1; k<=hold; k++) row.push([ENTRY+k, valsK(k)]);
+          return addRow(row);
+        };
+
+        const R_da_b = mkRow('− D&A',
+          f$(-(ebitda*daRate),          `-B${R_fcb_eb}*${bRef(IR.daRate)}`),
+          k => f$(-(SR[k-1].ebitda*daRate), `-${cRef(k,R_fcb_eb)}*${bRef(IR.daRate)}`));
+        const R_ebit_b = mkRow('= EBIT',
+          f$(ebitda*(1-daRate),         `B${R_fcb_eb}+B${R_da_b}`),
+          k => f$(SR[k-1].ebitda*(1-daRate), `${cRef(k,R_fcb_eb)}+${cRef(k,R_da_b)}`));
+        const R_tax_b = mkRow('− Tax on EBIT',
+          f$(-(ebitda*(1-daRate)*taxRate), `-B${R_ebit_b}*${bRef(IR.taxRate)}`),
+          k => f$(-(SR[k-1].ebitda*(1-daRate)*taxRate), `-${cRef(k,R_ebit_b)}*${bRef(IR.taxRate)}`));
+        const R_nop_b = mkRow('= NOPAT',
+          f$(ebitda*(1-daRate)*(1-taxRate), `B${R_ebit_b}+B${R_tax_b}`),
+          k => f$(SR[k-1].ebitda*(1-daRate)*(1-taxRate), `${cRef(k,R_ebit_b)}+${cRef(k,R_tax_b)}`));
+        mkRow('+ D&A',
+          f$(ebitda*daRate,              `-B${R_da_b}`),
+          k => f$(SR[k-1].ebitda*daRate, `-${cRef(k,R_da_b)}`));
+        const R_daback = rn;
+        mkRow('− Capex',
+          f$(-(ebitda*capexRate),          `-B${R_fcb_eb}*${bRef(IR.capexRate)}`),
+          k => f$(-(SR[k-1].ebitda*capexRate), `-${cRef(k,R_fcb_eb)}*${bRef(IR.capexRate)}`));
+        const R_cap_b = rn;
+        mkRow('− ΔNWC',
+          f$(0, '0'),
+          k => f$(-(Math.max(SR[k-1].ebitda-prevEbs[k-1],0)*wcRate),
+            `-MAX(${cRef(k,R_fcb_eb)}-${cRef(k-1,R_fcb_eb)},0)*${bRef(IR.wcRate)}`));
+        const R_nwc_b = rn;
+        R_unlev = mkRow('= Unlevered FCF',
+          fx(ebitda*fcfPct, `B${R_nop_b}-B${R_da_b}+B${R_daback}+B${R_cap_b}+B${R_nwc_b}`),
+          k => fx(SR[k-1].fcf,
+            `${cRef(k,R_nop_b)}+${cRef(k,R_daback)}+${cRef(k,R_cap_b)}+${cRef(k,R_nwc_b)}`));
       } else {
-        const R_fcfConv = addRow([[1,nl(`× FCF Conversion (${(fcfPct*100).toFixed(1)}%)`)],
-          ...SR.map((r,k)=>[ENTRY+k, f$(r.fcf-r.ebitda,
-            `${cRef(k,R_pl_comb)}*(${bRef(IR.fcfPct)}-1)`)])]);
-        R_unlev = addRow([[1,nl('= Unlevered FCF',S.SECT)],
-          ...SR.map((r,k)=>[ENTRY+k, fx(r.fcf,
-            `${cRef(k,R_pl_comb)}*${bRef(IR.fcfPct)}`)])]);
+        const convRow = [[1,nl('× FCF Conversion')],
+          [ENTRY, pIn(fcfPct)]];
+        for (let k=1; k<=hold; k++)
+          convRow.push([ENTRY+k, fp(fcfPct, bRef(IR.fcfPct), S.FML_PCT)]);
+        addRow(convRow);
+        const R_conv = rn;
+        const ulevRow = [[1,nl('= Unlevered FCF',S.SECT)],
+          [ENTRY, fx(ebitda*fcfPct, `B${R_fcb_eb}*B${R_conv}`)]];
+        for (let k=1; k<=hold; k++)
+          ulevRow.push([ENTRY+k, fx(SR[k-1].fcf,
+            `${cRef(k,R_fcb_eb)}*${cRef(k,R_conv)}`)]);
+        R_unlev = addRow(ulevRow);
       }
 
-      // Interest — reference existing R_int row
-      addRow([[1,nl('− Interest Expense')],
-        ...SR.map((r,k)=>[ENTRY+k, fx(-r.intExp, cRef(k,R_int))])]);
-      const R_levFcf = addRow([[1,nl('= Levered FCF',S.SECT)],
-        ...SR.map((r,k)=>[ENTRY+k, fx(r.fcf-r.intExp,
-          `${cRef(k,R_unlev)}+${cRef(k,rn-1)}`)])]);
+      // Interest — reference the debt schedule R_int row
+      const intRow = [[1,nl('− Interest Expense')],[ENTRY,f$(0,'0')]];
+      for (let k=1; k<=hold; k++)
+        intRow.push([ENTRY+k, fx(-SR[k-1].intExp, cRef(k,R_int))]);
+      addRow(intRow);
+      const R_int_fcb = rn;
 
-      // Debt paydown — prev end debt minus current end debt (reference R_ed)
-      const dp = SR.map((r,i)=>{
-        const prevD = i===0?entryDebt+(acqEnabled?acqEbitda*acqMult:0):SR[i-1].debt+(acqEnabled?acqEbitda*acqMult:0);
-        return Math.max(prevD-r.debt,0);
+      const levRow = [[1,nl('= Levered FCF',S.SECT)],
+        [ENTRY, fx(0, `B${R_unlev}+B${R_int_fcb}`)]];
+      for (let k=1; k<=hold; k++)
+        levRow.push([ENTRY+k, fx(SR[k-1].fcf-SR[k-1].intExp,
+          `${cRef(k,R_unlev)}+${cRef(k,R_int_fcb)}`)]);
+      const R_levFcf = addRow(levRow);
+
+      // Debt paydown — prev ending debt minus current ending debt
+      const dpVals2 = SR.map((r,i)=>{
+        const prevD = i===0 ? entryDebt+(acqEnabled?acqEbitda*acqMult:0)
+                            : SR[i-1].debt+(acqEnabled?acqEbitda*acqMult:0);
+        return Math.max(prevD-r.debt, 0);
       });
-      addRow([[1,nl('− Debt Paydown')],
-        ...SR.map((r,k)=>[ENTRY+k, f$(-dp[k],
-          k===0
+      const dpRow = [[1,nl('− Debt Paydown')],[ENTRY,f$(0,'0')]];
+      for (let k=1; k<=hold; k++)
+        dpRow.push([ENTRY+k, f$(-dpVals2[k-1],
+          k===1
             ? `-(${bRef(IR.ebitda)}*${bRef(IR.leverage)}-${cRef(k,R_ed)})`
-            : `-(${cRef(k-1,R_ed)}-${cRef(k,R_ed)})` )])]);
-      addRow([[1,nl('= Net Cash Flow')],
-        ...SR.map((r,k)=>[ENTRY+k, f$(r.fcf-r.intExp-dp[k],
-          `${cRef(k,R_levFcf)}+${cRef(k,rn-1)}`)])]);
-      addRow([[1,nl('Cumulative Cash')],
-        ...SR.map((r,k)=>[ENTRY+k, f$(r.cash, `${cRef(k,R_cash)}`)])]);
+            : `-(${cRef(k-1,R_ed)}-${cRef(k,R_ed)})`)]);
+      addRow(dpRow);
+      const R_dp2 = rn;
+
+      const ncfRow = [[1,nl('= Net Cash Flow')],[ENTRY,f$(0,'0')]];
+      for (let k=1; k<=hold; k++)
+        ncfRow.push([ENTRY+k, f$(SR[k-1].fcf-SR[k-1].intExp-dpVals2[k-1],
+          `${cRef(k,R_levFcf)}+${cRef(k,R_dp2)}`)]);
+      addRow(ncfRow);
+
+      const cumRow = [[1,nl('Cumulative Cash')],[ENTRY,f$(0,'0')]];
+      for (let k=1; k<=hold; k++)
+        cumRow.push([ENTRY+k, fx(SR[k-1].cash, cRef(k,R_cash))]);
+      addRow(cumRow);
       blank();
 
       // ════════════════════════════════════════
-      // EXIT PROCEEDS (inline, formula-linked)
+      // EXIT PROCEEDS (inline — all refs to named rows, no fragile rn±N)
       // ════════════════════════════════════════
       sect('EXIT PROCEEDS — YEAR ' + hold);
       addRow([[1,nl('ITEM',S.HDR)],[ENTRY,nl('$M',S.HDR)],[ENTRY+1,nl('Note',S.HDR)]]);
-      const exitCol = ENTRY + hold; // column index of the exit year in schedule
-      const xC = colYr(hold);       // e.g. "G" for hold=5
-      addRow([[1,nl('Exit EBITDA ($M)')],
-        [ENTRY, fx(combinedExitEBITDA, `${xC}${R_pl_comb}`)],
-        [ENTRY+1, {v:'LTM at exit', s:S.LBL}]]);
-      const R_xEV_ep = addRow([[1,nl('× Exit Multiple')],
-        [ENTRY, fM(exitMult, bRef(IR.exitMult))],
-        [ENTRY+1,{v:'EV/EBITDA', s:S.LBL}]]);
-      const R_xEV_val = rn;
+
+      const xC = colYr(hold); // exit year column letter
+
+      const R_xEbitda = addRow([[1,nl('Exit EBITDA ($M)')],
+        [ENTRY,   fx(combinedExitEBITDA, `${xC}${R_pl_comb}`)],
+        [ENTRY+1, {v:'LTM EBITDA at exit', s:S.LBL}]]);
+
+      const R_xMult = addRow([[1,nl('× Exit Multiple (x)')],
+        [ENTRY,   fM(exitMult, bRef(IR.exitMult))],
+        [ENTRY+1, {v:'EV/EBITDA assumption', s:S.LBL}]]);
+
       const R_xEV = addRow([[1,nl('= Exit EV ($M)',S.SECT)],
-        [ENTRY, fx(exitEV, `B${rn-2}*B${rn-1}`)],
-        [ENTRY+1,{v:'= EBITDA × Multiple', s:S.LBL}]]);
+        [ENTRY,   fx(exitEV, `B${R_xEbitda}*B${R_xMult}`)],
+        [ENTRY+1, {v:'= EBITDA × Multiple', s:S.LBL}]]);
 
-      if ((exitFee||0)>0)
-        addRow([[1,nl('− Exit Fees ($M)')],
-          [ENTRY, f$(-exitFeeAmt, `-B${R_xEV}*${bRef(IR.exitFee)}`)],
-          [ENTRY+1,{v:'Advisory + closing', s:S.LBL}]]);
-      const R_xDebt = addRow([[1,nl('− Debt at Exit ($M)')],
-        [ENTRY, fx(-exitDebt, `-${xC}${R_ed}`)],
-        [ENTRY+1,{v:'Outstanding debt', s:S.LBL}]]);
-      if ((accruedCash||0)>0)
-        addRow([[1,nl('+ Accrued Cash ($M)')],
-          [ENTRY, fx(accruedCash, `${xC}${R_cash}`)],
-          [ENTRY+1,{v:'Swept cash balance', s:S.LBL}]]);
+      const R_xFee = (exitFee||0) > 0
+        ? addRow([[1,nl('− Exit Fees ($M)')],
+            [ENTRY,   f$(-exitFeeAmt, `-B${R_xEV}*${bRef(IR.exitFee)}`)],
+            [ENTRY+1, {v:'Advisory + closing fees', s:S.LBL}]])
+        : null;
 
+      const R_xDebt2 = addRow([[1,nl('− Debt at Exit ($M)')],
+        [ENTRY,   fx(-exitDebt, `-${xC}${R_ed}`)],
+        [ENTRY+1, {v:'Ending debt from schedule', s:S.LBL}]]);
+
+      const R_xCash2 = (accruedCash||0) > 0
+        ? addRow([[1,nl('+ Accrued Cash ($M)')],
+            [ENTRY,   fx(accruedCash, `${xC}${R_cash}`)],
+            [ENTRY+1, {v:'Cash swept to balance sheet', s:S.LBL}]])
+        : null;
+
+      // Gross equity = Exit EV + (optional deduction rows)
+      const gpParts = [R_xFee, R_xDebt2, R_xCash2].filter(Boolean)
+        .map(r=>`+B${r}`).join('');
       const grossEq = exitEV - (exitFeeAmt||0) - exitDebt + (accruedCash||0);
       const R_gross = addRow([[1,nl('= Gross Equity ($M)',S.SECT)],
-        [ENTRY, fx(grossEq, `SUM(B${R_xEV}:B${rn-1})`)],
-        [ENTRY+1,{v:'Before mgmt dilution', s:S.LBL}]]);
+        [ENTRY,   fx(grossEq, `B${R_xEV}${gpParts}`)],
+        [ENTRY+1, {v:'Before management dilution', s:S.LBL}]]);
 
-      if (mgmtPoolPct>0) {
-        const R_gain = addRow([[1,nl('Equity Gain (Gross − Entry)')],
-          [ENTRY, f$(Math.max(grossEq-entryEquity,0), `MAX(B${R_gross}-B${R_eq0},0)`)],
-          [ENTRY+1,{v:'Subject to option pool', s:S.LBL}]]);
-        addRow([[1,nl('× Mgmt Option Pool (%)')],
-          [ENTRY, pIn(mgmtPoolPct)],
-          [ENTRY+1,{v:'% of equity gain', s:S.LBL}]]);
-        addRow([[1,nl('= Mgmt Payout ($M)')],
-          [ENTRY, f$(-mgmtPayout, `-B${R_gain}*B${rn-1}`)],
-          [ENTRY+1,{v:'Paid to management', s:S.LBL}]]);
+      let R_mgmtPay = null;
+      if (mgmtPoolPct > 0) {
+        const R_gainRow = addRow([[1,nl('Equity Gain (Gross − Entry)')],
+          [ENTRY,   f$(Math.max(grossEq-entryEquity,0), `MAX(B${R_gross}-B${R_eq0},0)`)],
+          [ENTRY+1, {v:'Subject to option pool', s:S.LBL}]]);
+        const R_poolRow = addRow([[1,nl('× Mgmt Option Pool %')],
+          [ENTRY,   pIn(mgmtPoolPct)],
+          [ENTRY+1, {v:'% of equity gain', s:S.LBL}]]);
+        R_mgmtPay = addRow([[1,nl('= Mgmt Payout ($M)')],
+          [ENTRY,   f$(-mgmtPayout, `-B${R_gainRow}*B${R_poolRow}`)],
+          [ENTRY+1, {v:'Paid to management', s:S.LBL}]]);
       }
 
+      const netFormula = R_mgmtPay ? `B${R_gross}+B${R_mgmtPay}` : `B${R_gross}`;
       const R_netEq = addRow([[1,nl('= Net Equity to Sponsor ($M)',S.SECT)],
-        [ENTRY, fx(netExitEq, mgmtPoolPct>0 ? `B${R_gross}+B${rn-1}` : `B${R_gross}`)],
-        [ENTRY+1,{v:'After dilution', s:S.LBL}]]);
-      addRow([[1,nl('− Entry Equity ($M)')],
-        [ENTRY, fx(-entryEquity, `-B${R_eq0}`)],
-        [ENTRY+1,{v:'Capital invested at close', s:S.LBL}]]);
+        [ENTRY,   fx(netExitEq, netFormula)],
+        [ENTRY+1, {v:'After dilution', s:S.LBL}]]);
+
+      const R_entRef = addRow([[1,nl('− Entry Equity ($M)')],
+        [ENTRY,   fx(-entryEquity, `-B${R_eq0}`)],
+        [ENTRY+1, {v:'Capital invested at close', s:S.LBL}]]);
+
       addRow([[1,nl('= Equity Gain ($M)',S.SECT)],
-        [ENTRY, fx(netExitEq-entryEquity, `B${R_netEq}+B${rn-1}`)],
-        [ENTRY+1,{v:'Absolute $ gain', s:S.LBL}]]);
+        [ENTRY,   fx(netExitEq-entryEquity, `B${R_netEq}+B${R_entRef}`)],
+        [ENTRY+1, {v:'Absolute dollar gain', s:S.LBL}]]);
+
       addRow([[1,nl('Money-on-Money (MoM)',S.SECT)],
-        [ENTRY, fM(mom, `B${R_netEq}/B${R_eq0}`)],
-        [ENTRY+1,{v:'Net equity / entry equity', s:S.LBL}]]);
+        [ENTRY,   fM(mom, `B${R_netEq}/B${R_eq0}`)],
+        [ENTRY+1, {v:'Net equity / entry equity', s:S.LBL}]]);
+
       addRow([[1,nl('IRR (Equity)',S.SECT)],
-        [ENTRY, fp(irr, `POWER(MAX(B${rn-1},0),1/${bRef(IR.hold)})-1`, S.FML_PCT)],
-        [ENTRY+1,{v:'Annualised return', s:S.LBL}]]);
+        [ENTRY,   fp(irr, `POWER(MAX(B${R_netEq}/B${R_eq0},0),1/${bRef(IR.hold)})-1`, S.FML_PCT)],
+        [ENTRY+1, {v:'Annualised equity return', s:S.LBL}]]);
       blank();
 
-      // ── Build & download ──
+            // ── Build & download ──
       const colWidths = [40, ...Array(hold+1).fill(14), 28];
 
       // Add ticker assumptions sheet if a ticker was loaded
