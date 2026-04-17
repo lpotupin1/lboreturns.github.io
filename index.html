@@ -2016,7 +2016,7 @@
 
     // ── 3. ASSUMPTIONS + S&U ──
     const txA=entryEV*txCost,entD=ebitda*leverage,totU=entryEV+txA;
-    const R1Y=KY+KH+6,R1H=96;
+    const R1Y=KY+KH+6,R1H=106;
 
     // Left: Assumptions
     p.fillRect(LM,R1Y,HW,12,DARK);
@@ -2165,52 +2165,70 @@
     ];
 
     // Chart area inside the box
-    const cX=R2X+4, cW=HW-8, cY=EY+15, cH=EH-20;
-    const nBars=comps.length, barW=Math.min(cW/nBars-3, 38), gap=(cW-barW*nBars)/(nBars+1);
+    const cX=R2X+5, cW=HW-10, cY=EY+15, cH=EH-25;
+    const nBars=comps.length, barW=Math.min(Math.floor(cW/nBars)-4, 34);
+    const gap=(cW-barW*nBars)/(nBars+1);
 
-    // Determine y-axis range
-    // Track running cumulative to find min/max chart values
-    let run=0,minY=0,maxY=0;
-    comps.forEach((c,ci)=>{
-      const isAnchor=ci===0||ci===comps.length-1;
-      if(isAnchor){minY=Math.min(minY,0,c.v);maxY=Math.max(maxY,c.v);}
-      else{minY=Math.min(minY,run,run+c.v);maxY=Math.max(maxY,run,run+c.v);if(!isAnchor)run+=c.v;}
-    });
-    run=0;
+    // ── Pass 1: compute running cumulative to get y-axis range ──
+    // Anchors (first/last) draw from 0; floats draw from running base.
+    // After first anchor, base = its value so floats stack on top.
+    {
+      let run2=0, minV=0, maxV=0, firstAnchorDone=false;
+      comps.forEach((c,ci)=>{
+        const isAnchor=ci===0||ci===comps.length-1;
+        if(isAnchor){
+          minV=Math.min(minV,0,c.v); maxV=Math.max(maxV,0,c.v);
+          if(!firstAnchorDone){run2=c.v; firstAnchorDone=true;}
+        } else {
+          minV=Math.min(minV,run2,run2+c.v);
+          maxV=Math.max(maxV,run2,run2+c.v);
+          run2+=c.v;
+        }
+      });
+      var minY=minV, maxY=maxV;
+    }
     const range=Math.max(maxY-minY,1), scl=cH/range;
-    const yZero=cY+cH-(0-minY)*scl; // pixel y for value=0
+    const yZero=cY+cH+minY*scl; // pixel y for value=0
 
-    // Draw grid lines
-    p.hline(cX,cX+cW,yZero,'#cccccc',0.5); // zero line
-    p.hline(cX,cX+cW,cY+cH,'#eeeeee',0.3); // bottom
+    // Zero baseline
+    p.hline(cX,cX+cW,yZero,'#bbbbbb',0.6);
 
+    // ── Pass 2: draw bars ──
+    let run=0, firstAnchorDone=false;
     comps.forEach((c,ci)=>{
       const isAnchor=ci===0||ci===comps.length-1;
-      const bx=cX+gap+(ci*(barW+gap));
-      let barTop,barBot;
+      const bx=cX+gap+ci*(barW+gap);
+
+      let barBase, barTop;
       if(isAnchor){
-        // Anchors: from 0 to value
-        barBot=yZero;
+        // Anchors always from 0
+        barBase=yZero;
         barTop=yZero-c.v*scl;
-      }else{
-        // Floating: from run to run+v
-        barBot=yZero-run*scl;
-        barTop=yZero-(run+c.v)*scl;
+        if(!firstAnchorDone){run=c.v; firstAnchorDone=true;}
+      } else {
+        // Floats: from current run to run+v
+        barBase=yZero-run*scl;
+        barTop =yZero-(run+c.v)*scl;
+        run+=c.v;
       }
-      const bh=Math.abs(barBot-barTop),by=Math.min(barBot,barTop);
-      p.fillRect(bx,by,barW,Math.max(bh,1),c.c);
-      // Connector line to next bar (not for last)
+
+      const by=Math.min(barBase,barTop);
+      const bh=Math.max(Math.abs(barBase-barTop),2);
+      p.fillRect(bx,by,barW,bh,c.c);
+
+      // Thin connector to next bar at the "top" of current run
       if(ci<comps.length-1){
-        const nextRun=isAnchor?c.v:run+c.v;
-        const connY=yZero-nextRun*scl;
-        p.hline(bx+barW,bx+barW+gap,'#aaaaaa',0.5);
+        const connY=yZero-run*scl;
+        p.hline(bx+barW,bx+barW+gap+1,connY,'#888888',0.4);
       }
-      // Label below chart (rotated text not possible in basic PDF, just show value above bar)
-      const labelY=isAnchor||c.v>=0?by-2:by+bh+7;
-      p.text(fM(c.v),bx+barW/2,Math.min(Math.max(labelY,cY+2),cY+cH-2),{sz:5.2,col:c.c,align:'center'});
-      // Component name below chart area
-      p.text(c.l,bx+barW/2,cY+cH+9,{sz:5.2,col:DGREY,align:'center',max:barW+4});
-      if(!isAnchor)run+=c.v;
+
+      // Value label — above bar for positive, below for negative
+      const valStr=(c.v>=0&&!isAnchor?'+':'')+fM(c.v);
+      const labY=c.v>=0?by-5:by+bh+8;
+      p.text(valStr,bx+barW/2,Math.min(Math.max(labY,cY+4),cY+cH+2),{sz:5,col:c.c,align:'center'});
+
+      // Component name below chart
+      p.text(c.l,bx+barW/2,cY+cH+10,{sz:4.8,col:DGREY,align:'center',max:barW+6});
     });
 
     // ── FOOTER ──
