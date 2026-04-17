@@ -3982,21 +3982,26 @@
         const exMV   = +document.getElementById('exitMargin').value  / 100;
         const entRevV = entMV > 0 ? ebitda / entMV : ebitda;
 
-        // Revenue placeholder rows — patched after Platform EBITDA built
-        R_rev = dataRow('Revenue ($M)', [
+        // Build Revenue row with placeholder 0s for year cols (patched below)
+        // vals[0] = Entry col (ENTRY-1 in 0-based), vals[1..hold] = Year 1..hold
+        const revInitVals = [
           {...f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1},
-          ...SR.map((_,k)=>({v:0, s:S.FML, z:N1, f:'0'}))
-        ]);
+          ...Array.from({length:hold}, ()=>({v:0, s:S.FML, z:N1, f:'0'}))
+        ];
+        R_rev = dataRow('Revenue ($M)', revInitVals);
 
         // Margin: linearly interpolated entry → exit
-        const margRow = [{v:entMV, s:S.INPUT_PCT, z:N1P}];
-        for (let k=1; k<=hold; k++) {
-          const mv = entMV + (exMV-entMV)*k/hold;
-          margRow.push({...fp(mv,
-            `${bRef(IR.entryMargin)}+(${bRef(IR.exitMargin)}-${bRef(IR.entryMargin)})*${k}/${bRef(IR.hold)}`),
-            z:N1P});
-        }
-        R_marg_row = dataRow('EBITDA Margin %', margRow);
+        // vals[0] = Entry margin (blue input), vals[1..hold] = Year 1..hold formula
+        const margVals = [
+          {v: Math.round(entMV*1000)/1000, s:S.INPUT_PCT, z:N1P},
+          ...Array.from({length:hold}, (_,k)=>{
+            const mv = entMV + (exMV-entMV)*(k+1)/hold;
+            return {...fp(Math.round(mv*10000)/10000,
+              `${bRef(IR.entryMargin)}+(${bRef(IR.exitMargin)}-${bRef(IR.entryMargin)})*${k+1}/${bRef(IR.hold)}`),
+              z:N1P};
+          })
+        ];
+        R_marg_row = dataRow('EBITDA Margin %', margVals);
       }
 
       // ── Platform EBITDA — always from model formula ──
@@ -4005,15 +4010,18 @@
         platVals.push({...f$(SR[k-1].organicEbitda, `${bRef(IR.ebitda)}*(1+${bRef(IR.growth)})^${k}`), z:N1});
       const R_plat = dataRow('Platform EBITDA', platVals);
 
-      // Patch Revenue = Platform EBITDA / Margin (now both rows exist → perfect tie)
+      // Patch Revenue = Platform EBITDA / Margin
+      // CRITICAL: dataRow puts vals[k] at row[ENTRY-1+k] (0-based), so use ENTRY-1+k here
       if (R_rev && R_marg_row) {
         const entMV  = +document.getElementById('entryMargin').value / 100;
         const exMV   = +document.getElementById('exitMargin').value  / 100;
         const entRevV = entMV > 0 ? ebitda / entMV : ebitda;
-        rows[R_rev-1][ENTRY] = {...f$(entRevV, `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1};
+        // Entry col: index ENTRY-1
+        rows[R_rev-1][ENTRY-1] = {...f$(r1(entRevV), `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1};
+        // Year cols: index ENTRY-1+k for k=1..hold
         for (let k=1; k<=hold; k++) {
           const mv = entMV + (exMV-entMV)*k/hold;
-          rows[R_rev-1][ENTRY+k] = {...f$(SR[k-1].organicEbitda/mv,
+          rows[R_rev-1][ENTRY-1+k] = {...f$(r1(SR[k-1].organicEbitda/mv),
             `${cRef(k,R_plat)}/${cRef(k,R_marg_row)}`), z:N1};
         }
       }
