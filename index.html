@@ -1932,7 +1932,7 @@
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // ── MINIMAL INLINE PDF BUILDER ──
   class _PDF {
-    constructor(){this.W=595;this.H=842;this.pages=[];this.cur=[];}
+    constructor(){this.W=595;this.H=842;this.cur=[];this.pages=[];}
     _y(y){return(this.H-y).toFixed(2);}
     _e(v){return String(v).replace(/[—–]/g,'--').replace(/[·×]/g,' ')
       .replace(/−/g,'-').replace(/'/g,"'").replace(/\\/g,'\\\\')
@@ -1947,7 +1947,7 @@
     hline(x1,x2,y,col='#dddddd',lw=0.3){this._op(`${this._c(col)} RG ${lw} w ${x1.toFixed(1)} ${this._y(y)} m ${x2.toFixed(1)} ${this._y(y)} l S`);}
     text(str,x,y,{sz=8,bold=false,col='#000000',align='left',max=0}={}){
       let t=String(str);
-      if(max>0&&this._tw(t,sz)>max){while(t.length>1&&this._tw(t+'.',sz)>max)t=t.slice(0,-1);t+='..';}
+      if(max>0&&this._tw(t,sz)>max){while(t.length>1&&this._tw(t,sz)>max)t=t.slice(0,-1);}
       const px=align==='right'?x-this._tw(t,sz):align==='center'?x-this._tw(t,sz)/2:x;
       this._op(`BT ${bold?'/F2':'/F1'} ${sz} Tf ${this._c(col)} rg ${px.toFixed(1)} ${this._y(y)} Td (${this._e(t)}) Tj ET`);}
     download(name){
@@ -1991,44 +1991,43 @@
     const fYoY=(c,pr)=>pr>0.01?((c-pr)/pr*100>=0?'+':'')+((c-pr)/pr*100).toFixed(1)+'%':'--';
 
     const p=new _PDF();
-    const LM=26,CW=543,HW=(CW-5)/2;
+    // Layout constants — everything on one page
+    const LM=22,RM=22,CW=595-LM-RM;   // 551pt content width
+    const HW=(CW-5)/2;                  // half width
     const R2X=LM+HW+5;
     const GREEN='#0a7c5c',RED='#c0392b',AMB='#b45309';
     const DARK='#1f2937',MUTED='#6b7280',LGREY='#f3f4f6',DGREY='#374151';
     const irrCol=irr>=0.2?GREEN:irr>=0.12?AMB:RED;
     const momCol=mom>=2?GREEN:mom>=1.5?DARK:RED;
 
-    // ══════════════════════════════════════════
-    // PAGE 1 — Header, KPIs, Assumptions+S&U, Projection
-    // ══════════════════════════════════════════
+    // ── 1. HEADER (14→38) ──
+    p.fillRect(LM,14,CW,24,DARK);
+    p.text('LBORETURNS.COM  --  LBO MODEL',LM+7,26,{sz:9.5,bold:true,col:'#ffffff'});
+    // Fix: leverage already has 'x' from fX1, so no extra 'x' needed
+    p.text(`Entry ${fX1(entryMult)} | Exit ${fX1(exitMult)} | ${leverage.toFixed(1)}x Lev | ${hold}-yr Hold | ${fP(growth)} EBITDA Growth`,LM+7,35,{sz:6,col:'#9ca3af',max:CW*0.72});
+    p.text(date,LM+CW-4,35,{sz:6,col:'#9ca3af',align:'right'});
 
-    // ── Header ──
-    p.fillRect(LM,16,CW,26,DARK);
-    p.text('LBORETURNS.COM  --  LBO MODEL',LM+8,28,{sz:10,bold:true,col:'#ffffff'});
-    p.text(`Entry ${fX1(entryMult)} | Exit ${fX1(exitMult)} | ${fX1(leverage)}x Lev | ${hold}-yr Hold | ${fP(growth)} EBITDA Growth`,LM+8,38,{sz:6.5,col:'#9ca3af'});
-    p.text(date,LM+CW-6,38,{sz:6.5,col:'#9ca3af',align:'right'});
-
-    // ── KPIs ──
-    const KY=46,KH=36,KW=(CW-4)/4;
-    [{l:'IRR (Equity)',v:fP(irr),sub:'annualised return',c:irrCol},
-     {l:'Money-on-Money',v:fX(mom),sub:'total equity multiple',c:momCol},
+    // ── 2. KPIs (42→76) ──
+    const KY=42,KH=34,KW=(CW-4)/4;
+    [{l:'IRR (Equity)',v:fP(irr),sub:'annualised',c:irrCol},
+     {l:'Money-on-Money',v:fX(mom),sub:'total multiple',c:momCol},
      {l:'Entry Equity',v:fM(entryEquity),sub:'invested at close',c:DARK},
      {l:'Exit Equity',v:fM(netExitEq),sub:'sponsor return',c:netExitEq>entryEquity?GREEN:RED},
     ].forEach((k,i)=>{
       const kx=LM+i*(KW+1.3);
       p.strokeRect(kx,KY,KW,KH);
-      p.text(k.l,kx+5,KY+10,{sz:6,col:MUTED});
-      p.text(k.v,kx+5,KY+24,{sz:12,bold:true,col:k.c,max:KW-10});
-      p.text(k.sub,kx+5,KY+33,{sz:5.5,col:'#aaaaaa'});
+      p.text(k.l,kx+5,KY+10,{sz:5.8,col:MUTED});
+      p.text(k.v,kx+5,KY+23,{sz:11.5,bold:true,col:k.c,max:KW-10});
+      p.text(k.sub,kx+5,KY+31,{sz:5.2,col:'#aaaaaa'});
     });
 
-    // ── Assumptions (left) + S&U (right) ──
+    // ── 3. ASSUMPTIONS (left) + S&U (right) (80→186) ──
     const txA=entryEV*txCost,entD=ebitda*leverage,totU=entryEV+txA;
-    const R1Y=KY+KH+6,R1H=112;
+    const R1Y=80,R1H=106;
 
-    // Assumptions box
-    p.fillRect(LM,R1Y,HW,12,DARK);
-    p.text('ASSUMPTIONS',LM+5,R1Y+9,{sz:6,bold:true,col:'#ffffff'});
+    // Assumptions
+    p.fillRect(LM,R1Y,HW,11,DARK);
+    p.text('ASSUMPTIONS',LM+5,R1Y+8.5,{sz:5.8,bold:true,col:'#ffffff'});
     p.strokeRect(LM,R1Y,HW,R1H);
     const ai=[['Entry EBITDA',fM(ebitda)],['Entry Multiple',fX1(entryMult)],
       ['Leverage',fX1(leverage)],['Interest Rate',fP(interest)],
@@ -2038,66 +2037,65 @@
       ['Cash Sweep',cashSweep?'ON':'OFF'],['Mgmt Pool',mgmtPoolPct>0?fP(mgmtPoolPct):'N/A'],
       ...(acqEnabled&&acqEbitda>0?[['Bolt-on /yr',fM(acqEbitda)],['Bolt-on Mult.',fX1(acqMult)]]:[]),
     ];
-    const aC=Math.ceil(ai.length/2),aRH=(R1H-14)/aC;
+    const aC=Math.ceil(ai.length/2),aRH=(R1H-13)/aC;
     ai.forEach(([l,v],idx)=>{
       const col=idx<aC?0:1,row=idx<aC?idx:idx-aC;
-      const ax=LM+4+col*(HW/2),ay=R1Y+15+row*aRH+aRH*0.72;
-      p.text(l,ax,ay,{sz:6.5,col:DGREY,max:HW/2-40});
-      p.text(v,ax+HW/2-8,ay,{sz:6.5,bold:true,col:DARK,align:'right'});
-      if(row<aC-1)p.hline(ax,ax+HW/2-10,ay+aRH*0.32,'#eeeeee');
+      const ax=LM+4+col*(HW/2),ay=R1Y+14+row*aRH+aRH*0.72;
+      p.text(l,ax,ay,{sz:6.2,col:DGREY,max:HW/2-38});
+      p.text(v,ax+HW/2-7,ay,{sz:6.2,bold:true,col:DARK,align:'right'});
+      if(row<aC-1)p.hline(ax,ax+HW/2-9,ay+aRH*0.32,'#eeeeee');
     });
 
-    // S&U box — 3 data cols: $M | % of Total | x EBITDA
-    p.fillRect(R2X,R1Y,HW,12,DARK);
-    p.text('SOURCES & USES',R2X+5,R1Y+9,{sz:6,bold:true,col:'#ffffff'});
+    // S&U with 3 cols
+    p.fillRect(R2X,R1Y,HW,11,DARK);
+    p.text('SOURCES & USES',R2X+5,R1Y+8.5,{sz:5.8,bold:true,col:'#ffffff'});
     p.strokeRect(R2X,R1Y,HW,R1H);
-    // Column x positions (right-aligned)
-    const suV=R2X+HW*0.58, suP=R2X+HW*0.76, suX=R2X+HW-4;
-    const suSect=(l,sy)=>{p.fillRect(R2X+1,sy,HW-2,10,LGREY);p.text(l,R2X+5,sy+7.5,{sz:5.8,bold:true,col:MUTED});};
+    const suV=R2X+HW*0.54,suP=R2X+HW*0.73,suXe=R2X+HW-4;
+    const suSect=(l,sy)=>{p.fillRect(R2X+1,sy,HW-2,9.5,LGREY);p.text(l,R2X+5,sy+7,{sz:5.5,bold:true,col:MUTED});};
     const suRow=(l,v,$p,xe,sy,bold=false)=>{
-      p.text(l,R2X+5,sy,{sz:bold?7:6.5,bold,col:bold?DARK:DGREY,max:suV-R2X-8});
-      p.text(v,suV,sy,{sz:bold?7:6.5,bold,col:DARK,align:'right'});
-      p.text($p,suP,sy,{sz:6,col:MUTED,align:'right'});
-      p.text(xe,suX,sy,{sz:6,col:MUTED,align:'right'});
+      p.text(l,R2X+5,sy,{sz:bold?6.8:6.2,bold,col:bold?DARK:DGREY,max:suV-R2X-7});
+      p.text(v,suV,sy,{sz:bold?6.8:6.2,bold,col:DARK,align:'right'});
+      p.text($p,suP,sy,{sz:5.8,col:MUTED,align:'right'});
+      p.text(xe,suXe,sy,{sz:5.8,col:MUTED,align:'right'});
       p.hline(R2X+4,R2X+HW-4,sy+2.5,'#eeeeee');
     };
-    // Header row for S&U columns
-    let sY=R1Y+13;
-    p.text('$M',suV,sY,{sz:5.5,col:MUTED,bold:true,align:'right'});
-    p.text('% Total',suP,sY,{sz:5.5,col:MUTED,bold:true,align:'right'});
-    p.text('x EBITDA',suX,sY,{sz:5.5,col:MUTED,bold:true,align:'right'});
-    sY+=9;
-    suSect('USES',sY);sY+=11;
-    suRow('Entry EV',fM(entryEV),fP(entryEV/totU),fX1(entryEV/ebitda),sY);sY+=9;
-    suRow('+ Transaction Costs',fM(txA),fP(txA/totU),fX1(txA/ebitda),sY);sY+=9;
-    suRow('= Total Uses',fM(totU),'100.0%',fX1(totU/ebitda),sY,true);sY+=12;
-    suSect('SOURCES',sY);sY+=11;
-    suRow('Entry Debt',fM(entD),fP(entD/totU),fX1(leverage),sY);sY+=9;
-    suRow('Entry Equity',fM(entryEquity),fP(entryEquity/totU),fX1(entryEquity/ebitda),sY);sY+=9;
+    let sY=R1Y+12;
+    // Column mini-headers
+    p.text('$M',suV,sY,{sz:5.3,col:MUTED,bold:true,align:'right'});
+    p.text('% Total',suP,sY,{sz:5.3,col:MUTED,bold:true,align:'right'});
+    p.text('x EBITDA',suXe,sY,{sz:5.3,col:MUTED,bold:true,align:'right'});
+    sY+=8;
+    suSect('USES',sY);sY+=10;
+    suRow('Entry EV',fM(entryEV),fP(entryEV/totU),fX1(entryEV/ebitda),sY);sY+=8.5;
+    suRow('+ Transaction Costs',fM(txA),fP(txA/totU),fX1(txA/ebitda),sY);sY+=8.5;
+    suRow('= Total Uses',fM(totU),'100.0%',fX1(totU/ebitda),sY,true);sY+=11;
+    suSect('SOURCES',sY);sY+=10;
+    suRow('Entry Debt',fM(entD),fP(entD/totU),fX1(leverage),sY);sY+=8.5;
+    suRow('Entry Equity',fM(entryEquity),fP(entryEquity/totU),fX1(entryEquity/ebitda),sY);sY+=8.5;
     suRow('= Total Sources',fM(entD+entryEquity),'100.0%',fX1(totU/ebitda),sY,true);
 
-    // ── Projection table ──
-    const PY=R1Y+R1H+6;
+    // ── 4. PROJECTION TABLE (190→~390) ──
+    const PY=R1Y+R1H+4;
     const showAcqP=acqEnabled&&rows.some(r=>r.acqEbitdaYr>0);
-    const LABW=94,YRWI=(CW-LABW)/(hold+1),HDR=12,COL=11,RH=10;
+    const LABW=90,YRWI=(CW-LABW)/(hold+1),HDR=11,COL=10,RH=9.5;
 
     p.fillRect(LM,PY,CW,HDR,DARK);
-    p.text('PROJECTION  ($M)',LM+5,PY+9,{sz:6.5,bold:true,col:'#ffffff'});
+    p.text('PROJECTION  ($M)',LM+5,PY+8.5,{sz:6.2,bold:true,col:'#ffffff'});
     for(let k=0;k<=hold;k++){
       const hx=LM+LABW+k*YRWI,isX=k===hold;
       p.fillRect(hx,PY+HDR,YRWI-0.5,COL,isX?'#d1fae5':LGREY);
-      p.text(k===0?'Entry':isX?'Exit':'Y'+k,hx+YRWI-2,PY+HDR+COL*0.78,{sz:6,bold:isX,col:isX?GREEN:MUTED,align:'right'});
+      p.text(k===0?'Entry':isX?'Exit':'Y'+k,hx+YRWI-2,PY+HDR+COL*0.8,{sz:5.8,bold:isX,col:isX?GREEN:MUTED,align:'right'});
     }
     let pY=PY+HDR+COL;
-    const sBar=(l)=>{p.fillRect(LM,pY,CW,9,DARK);p.text(l,LM+4,pY+6.8,{sz:5.2,bold:true,col:'#9ca3af'});pY+=9;};
+    const sBar=(l)=>{p.fillRect(LM,pY,CW,8.5,DARK);p.text(l,LM+4,pY+6.5,{sz:5,bold:true,col:'#9ca3af'});pY+=8.5;};
     const pR=(l,vals,{bold=false,col=DGREY,ind=false,sect=false}={})=>{
       if(sect)p.fillRect(LM,pY,CW,RH,'#f9fafb');
-      p.text(l,LM+(ind?12:4),pY+RH*0.8,{sz:bold?7:6.5,bold,col:sect?DARK:col,max:LABW-(ind?16:8)});
+      p.text(l,LM+(ind?11:4),pY+RH*0.8,{sz:bold?6.5:6,bold,col:sect?DARK:col,max:LABW-(ind?15:7)});
       vals.forEach((v,i)=>{
         if(v==null)return;
         const vx=LM+LABW+(i+1)*YRWI-2;
         p.text(typeof v==='object'?v.txt:String(v),vx,pY+RH*0.8,
-          {sz:(bold||i===hold)?7:6.5,bold:bold||i===hold,col:typeof v==='object'?v.col:col,align:'right'});
+          {sz:(bold||i===hold)?6.5:6,bold:bold||i===hold,col:typeof v==='object'?v.col:col,align:'right'});
       });
       p.hline(LM,LM+CW,pY+RH,'#e5e7eb');pY+=RH;
     };
@@ -2133,27 +2131,13 @@
     pR('Net Leverage',mkV(i=>{const v=rows[i].ebitda>0?rows[i].debt/rows[i].ebitda:null;return v!=null?{txt:fX1(v),col:v>6?RED:v>4?AMB:GREEN}:null;},{txt:fX1(leverage),col:leverage>6?RED:leverage>4?AMB:GREEN}));
     pR('Int. Coverage',mkV(i=>{const v=rows[i].intExp>0?rows[i].ebitda/rows[i].intExp:null;return v!=null?{txt:fX1(v),col:v<2?RED:v<3?AMB:GREEN}:null;}));
 
-    // Page 1 footer line
-    p.hline(LM,LM+CW,pY+4,'#cccccc',0.3);
-    p.text('Page 1 of 2  |  lboreturns.com',LM+CW/2,pY+11,{sz:5.5,col:'#aaaaaa',align:'center'});
-
-    // ══════════════════════════════════════════
-    // PAGE 2 — Exit Proceeds, Waterfall (MoM), Sensitivity
-    // ══════════════════════════════════════════
-    p.newPage();
-
-    // Page 2 header
-    p.fillRect(LM,16,CW,20,DARK);
-    p.text('LBO MODEL  |  Page 2',LM+8,26,{sz:8,bold:true,col:'#ffffff'});
-    p.text(`IRR: ${fP(irr)}   MoM: ${fX(mom)}   Entry ${fX1(entryMult)}  Exit ${fX1(exitMult)}  ${fX1(leverage)}x Lev  ${hold}-yr  |  ${date}`,LM+8,33,{sz:6,col:'#9ca3af'});
-
-    // ── Exit Proceeds (left) + Value Bridge MoM (right) ──
-    const P2Y=40,P2H=178;
+    // ── 5. EXIT PROCEEDS (left) + VALUE BRIDGE MoM (right) ──
+    const EY=pY+4,EH=100;
 
     // Exit Proceeds
-    p.fillRect(LM,P2Y,HW,12,DARK);
-    p.text('EXIT PROCEEDS',LM+5,P2Y+9,{sz:6,bold:true,col:'#ffffff'});
-    p.strokeRect(LM,P2Y,HW,P2H);
+    p.fillRect(LM,EY,HW,11,DARK);
+    p.text('EXIT PROCEEDS',LM+5,EY+8.5,{sz:5.8,bold:true,col:'#ffffff'});
+    p.strokeRect(LM,EY,HW,EH);
     const gross=exitEV-(exitFeeAmt||0)-exitDebt+(accruedCash||0);
     const exRows=[
       ['Exit EBITDA',fM(s.results.exitEBITDA||rows[rows.length-1].ebitda),DGREY,false],
@@ -2164,84 +2148,66 @@
       ...(accruedCash>0?[['+ Accrued Cash',fM(accruedCash),GREEN,false]]:[]),
       ['= Gross Equity',fM(gross),DARK,true],
       ...(mgmtPoolPct>0?[['- Mgmt Pool ('+fP(mgmtPoolPct)+')',fM(-mgmtPayout),RED,false]]:[]),
-      ['= Net Equity (Sponsor)',fM(netExitEq),GREEN,true],
-      ['','','',false],
-      ['Entry Equity Invested',fM(entryEquity),DGREY,false],
-      ['Equity Gain',fM(netExitEq-entryEquity),(netExitEq>entryEquity?GREEN:RED),false],
-      ['','','',false],
-      ['Money-on-Money',fX(mom),momCol,true],
-      ['IRR (Equity)',fP(irr),irrCol,true],
+      ['= Net Equity',fM(netExitEq),GREEN,true],
+      ['MoM / IRR',fX(mom)+'  |  '+fP(irr),irrCol,true],
     ];
-    let eY2=P2Y+14;
+    let eY2=EY+13;
     exRows.forEach(([l,v,vc,bold])=>{
-      if(!l){eY2+=3;return;}
-      p.text(l,LM+5,eY2,{sz:bold?7.5:6.8,bold,col:bold?vc:DGREY,max:HW*0.58});
-      p.text(v,LM+HW-5,eY2,{sz:bold?7.5:6.8,bold,col:vc,align:'right'});
-      p.hline(LM+4,LM+HW-4,eY2+3,'#eeeeee');
-      eY2+=bold?11:10;
+      p.text(l,LM+5,eY2,{sz:bold?6.8:6.2,bold,col:bold?vc:DGREY,max:HW*0.57});
+      p.text(v,LM+HW-5,eY2,{sz:bold?6.8:6.2,bold,col:vc,align:'right'});
+      p.hline(LM+4,LM+HW-4,eY2+2.8,'#eeeeee');
+      eY2+=bold?9.5:8.5;
     });
 
-    // Value Bridge — MoM (all values as multiples of entry equity)
-    p.fillRect(R2X,P2Y,HW,12,DARK);
-    p.text('VALUE BRIDGE  (x Entry Equity)',R2X+5,P2Y+9,{sz:6,bold:true,col:'#ffffff'});
-    p.strokeRect(R2X,P2Y,HW,P2H);
-
-    // Convert bridge components to MoM (divide by entryEquity)
+    // Value Bridge (MoM)
+    p.fillRect(R2X,EY,HW,11,DARK);
+    p.text('VALUE BRIDGE  (x Entry Equity)',R2X+5,EY+8.5,{sz:5.8,bold:true,col:'#ffffff'});
+    p.strokeRect(R2X,EY,HW,EH);
     const comps=[
-      {l:'Entry Equity',v:1.00,                              c:'#4b5563'},
-      {l:'EBITDA Growth',v:ebitdaGrowthContrib/entryEquity,  c:ebitdaGrowthContrib>=0?GREEN:RED},
-      {l:'Multiple Exp.',v:multipleExpansion/entryEquity,     c:multipleExpansion>=0?GREEN:RED},
-      {l:'Debt Paydown', v:debtPaydown/entryEquity,           c:debtPaydown>=0?GREEN:RED},
+      {l:'Entry Equity',v:1.00,c:'#4b5563'},
+      {l:'EBITDA Growth',v:ebitdaGrowthContrib/entryEquity,c:ebitdaGrowthContrib>=0?GREEN:RED},
+      {l:'Multiple Exp.',v:multipleExpansion/entryEquity,c:multipleExpansion>=0?GREEN:RED},
+      {l:'Debt Paydown',v:debtPaydown/entryEquity,c:debtPaydown>=0?GREEN:RED},
       ...(Math.abs(acqContrib||0)/entryEquity>0.005?[{l:'Bolt-on',v:acqContrib/entryEquity,c:(acqContrib||0)>=0?GREEN:RED}]:[]),
       ...(mgmtPoolPct>0&&mgmtPayout>0?[{l:'Mgmt Pool',v:-mgmtPayout/entryEquity,c:RED}]:[]),
-      {l:'Exit Equity',  v:mom,                               c:'#1f2937'},
+      {l:'Exit Equity',v:mom,c:'#1f2937'},
     ];
     const fMoM=v=>(v>=0?'+':'')+v.toFixed(2)+'x';
-
-    const cX=R2X+5,cW=HW-10,cY=P2Y+15,cH=P2H-32;
-    const nB=comps.length,bW=Math.min(Math.floor(cW/nB)-3,36);
-    const gp=(cW-bW*nB)/(nB+1);
-
-    // Range pass — with correct first-anchor seeding
-    let run2=0,firstDone=false,minV=0,maxV=0;
+    // Range
+    let run2=0,firstD=false,minV=0,maxV=0;
     comps.forEach((c,ci)=>{
       const isA=ci===0||ci===comps.length-1;
-      if(isA){minV=Math.min(minV,0,c.v);maxV=Math.max(maxV,0,c.v);if(!firstDone){run2=c.v;firstDone=true;}}
+      if(isA){minV=Math.min(minV,0,c.v);maxV=Math.max(maxV,0,c.v);if(!firstD){run2=c.v;firstD=true;}}
       else{minV=Math.min(minV,run2,run2+c.v);maxV=Math.max(maxV,run2,run2+c.v);run2+=c.v;}
     });
+    const cX=R2X+5,cW=HW-10,cY=EY+13,cH=EH-22;
+    const nB=comps.length,bW=Math.min(Math.floor(cW/nB)-3,32);
+    const gp=(cW-bW*nB)/(nB+1);
     const rng=Math.max(maxV-minV,0.1),scl=cH/rng;
     const yZ=cY+cH+minV*scl;
-
-    // Zero line
     p.hline(cX,cX+cW,yZ,'#bbbbbb',0.5);
-
-    // Draw pass
-    let run=0,firstDone2=false;
+    let run=0,firstD2=false;
     comps.forEach((c,ci)=>{
       const isA=ci===0||ci===comps.length-1;
       const bx=cX+gp+ci*(bW+gp);
       let bBase,bTop;
-      if(isA){bBase=yZ;bTop=yZ-c.v*scl;if(!firstDone2){run=c.v;firstDone2=true;}}
+      if(isA){bBase=yZ;bTop=yZ-c.v*scl;if(!firstD2){run=c.v;firstD2=true;}}
       else{bBase=yZ-run*scl;bTop=yZ-(run+c.v)*scl;run+=c.v;}
       const by=Math.min(bBase,bTop),bh=Math.max(Math.abs(bBase-bTop),2);
       p.fillRect(bx,by,bW,bh,c.c);
       if(ci<comps.length-1)p.hline(bx+bW,bx+bW+gp+1,yZ-run*scl,'#888888',0.4);
-      // Value label
       const lv=isA?fX(c.v):fMoM(c.v);
-      const labY=c.v>=0?by-5:by+bh+8;
-      p.text(lv,bx+bW/2,Math.min(Math.max(labY,cY+3),cY+cH),{sz:5.2,col:c.c,align:'center'});
-      // Component name
-      p.text(c.l,bx+bW/2,cY+cH+9,{sz:4.8,col:DGREY,align:'center',max:bW+8});
+      const labY=c.v>=0?by-4:by+bh+7;
+      p.text(lv,bx+bW/2,Math.min(Math.max(labY,cY+3),cY+cH),{sz:4.8,col:c.c,align:'center'});
+      p.text(c.l,bx+bW/2,cY+cH+8,{sz:4.5,col:DGREY,align:'center',max:bW+8});
     });
 
-    // ── IRR Sensitivity: Exit Multiple × EBITDA Growth ──
-    const SY=P2Y+P2H+10;
-    p.fillRect(LM,SY,CW,12,DARK);
-    p.text('IRR SENSITIVITY  --  Exit Multiple vs. EBITDA Growth  (base scenario highlighted)',LM+5,SY+9,{sz:6.5,bold:true,col:'#ffffff'});
-
+    // ── 6. SENSITIVITY TABLE (full width) ──
+    const SY=EY+EH+4;
+    p.fillRect(LM,SY,CW,11,DARK);
+    p.text('IRR SENSITIVITY  --  Exit Multiple vs. EBITDA Growth',LM+5,SY+8.5,{sz:6,bold:true,col:'#ffffff'});
     const gSteps=[-0.10,-0.05,0,0.05,0.10,0.15,0.20];
     const xSteps=[exitMult-2,exitMult-1,exitMult,exitMult+1,exitMult+2];
-    // Snap current growth/exit to nearest step
     const calcIRR2=(g,xm)=>{
       const eq0=ebitda*entryMult-ebitda*leverage+ebitda*entryMult*txCost;
       if(eq0<=0)return null;
@@ -2255,43 +2221,38 @@
         debt=Math.max(debt-dp,0);
         cash+=Math.max(net-dp,0);
       }
-      const exitEb=ebitda*Math.pow(1+g,hold);
-      const ev=exitEb*xm;
-      const gross=ev-debt+cash-(ev*exitFee);
-      const pool=Math.max(gross-eq0,0)*mgmtPoolPct;
-      const mm=(gross-pool)/eq0;
+      const ev=ebitda*Math.pow(1+g,hold)*xm;
+      const gr=ev-debt+cash-(ev*(exitFee||0));
+      const pool=Math.max(gr-eq0,0)*mgmtPoolPct;
+      const mm=(gr-pool)/eq0;
       return Math.pow(Math.max(mm,0),1/hold)-1;
     };
-
-    const LABW2=44, CW2=(CW-LABW2)/xSteps.length;
-    let sy=SY+12;
-    // Column headers
-    p.fillRect(LM,sy,CW,11,LGREY);
-    p.text('Growth \\ Exit',LM+3,sy+8,{sz:6,bold:true,col:MUTED});
-    xSteps.forEach((xm,i)=>p.text(fX1(xm),LM+LABW2+(i+0.5)*CW2,sy+8,{sz:6.5,bold:true,col:DARK,align:'center'}));
-    sy+=11;
-
+    const LABW2=40,CW2=(CW-LABW2)/xSteps.length;
+    let sy=SY+11;
+    p.fillRect(LM,sy,CW,10,LGREY);
+    p.text('Growth \\ Exit',LM+3,sy+7.5,{sz:5.8,bold:true,col:MUTED});
+    xSteps.forEach((xm,i)=>p.text(fX1(xm),LM+LABW2+(i+0.5)*CW2,sy+7.5,{sz:6,bold:true,col:DARK,align:'center'}));
+    sy+=10;
     gSteps.forEach(g=>{
-      const rH=11;
+      const rH=10;
       p.hline(LM,LM+CW,sy,'#eeeeee');
-      p.text(fP(g),LM+3,sy+rH*0.8,{sz:6.5,col:DGREY});
+      p.text(fP(g),LM+3,sy+rH*0.8,{sz:6,col:DGREY});
       xSteps.forEach((xm,i)=>{
         const irr2=calcIRR2(g,xm);
         const v=irr2!=null?fP(irr2):'--';
         const col=irr2==null?MUTED:irr2>=0.2?GREEN:irr2>=0.12?AMB:RED;
         const isCur=Math.abs(g-growth)<0.005&&Math.abs(xm-exitMult)<0.1;
-        const cx=LM+LABW2+i*CW2, cy=sy;
-        if(isCur){p.fillRect(cx,cy,CW2,rH,'#d1fae5');}
-        p.text(v,LM+LABW2+(i+0.5)*CW2,sy+rH*0.8,{sz:6.5,bold:isCur,col,align:'center'});
+        if(isCur)p.fillRect(LM+LABW2+i*CW2,sy,CW2,rH,'#d1fae5');
+        p.text(v,LM+LABW2+(i+0.5)*CW2,sy+rH*0.8,{sz:6,bold:isCur,col,align:'center'});
       });
       sy+=rH;
     });
-    p.strokeRect(LM,SY+12,CW,sy-(SY+12),'#cccccc',0.3);
+    p.strokeRect(LM,SY+11,CW,sy-(SY+11),'#cccccc',0.3);
 
-    // Page 2 footer
-    p.hline(LM,LM+CW,sy+6,'#cccccc',0.4);
-    p.text('For illustrative purposes only. Not investment advice.   lboreturns.com   |   Page 2 of 2',
-           LM+CW/2,sy+14,{sz:6,col:'#aaaaaa',align:'center'});
+    // Footer
+    p.hline(LM,LM+CW,sy+5,'#cccccc',0.4);
+    p.text('For illustrative purposes only. Not investment advice.   lboreturns.com',
+           LM+CW/2,sy+12,{sz:5.5,col:'#aaaaaa',align:'center'});
 
     p.download('LBOReturns_'+date.replace(/[, ]+/g,'_')+'.pdf');
   }
