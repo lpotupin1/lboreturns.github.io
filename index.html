@@ -2052,7 +2052,7 @@
 
     // ── 3. ASSUMPTIONS + S&U ──
     const txA=entryEV*txCost,entD=ebitda*leverage,totU=entryEV+txA;
-    const R1Y=80,R1H=108;
+    const R1Y=80,R1H=116;
 
     // Assumptions (left)
     p.fillRect(LM,R1Y,HW,12,DARK);
@@ -2097,11 +2097,11 @@
       p.hline(R2X+4,R2X+HW-4,sy+2.5,'#eeeeee');
     };
     let sY=R1Y+14;   // start rows right below dark header
-    suSect('USES',sY);sY+=10;
+    suSect('USES',sY);sY+=13;  // section bar is 9.5pt tall; need 13pt gap so row text clears it
     suRow('Entry EV',         fM(entryEV),    fP(entryEV/totU),    fX1(entryEV/ebitda),    sY);sY+=9;
     suRow('+ Transaction Costs',fM(txA),      fP(txA/totU),        fX1(txA/ebitda),        sY);sY+=9;
-    suRow('= Total Uses',     fM(totU),       '100.0%',            fX1(totU/ebitda),        sY,true);sY+=12;
-    suSect('SOURCES',sY);sY+=10;
+    suRow('= Total Uses',     fM(totU),       '100.0%',            fX1(totU/ebitda),        sY,true);sY+=14;
+    suSect('SOURCES',sY);sY+=13;  // same fix for sources section
     suRow('Entry Debt',       fM(entD),       fP(entD/totU),       fX1(leverage),           sY);sY+=9;
     suRow('Entry Equity',     fM(entryEquity),fP(entryEquity/totU),fX1(entryEquity/ebitda), sY);sY+=9;
     suRow('= Total Sources',  fM(entD+entryEquity),'100.0%',       fX1(totU/ebitda),        sY,true);
@@ -2191,7 +2191,7 @@
       ['= Net Equity',   fM(netExitEq),  GREEN,true],
       ['MoM / IRR',      fX(mom)+'  |  '+fP(irr), momCol, true],
     ];
-    let eY2=EY+15;   // start 3pt below header bottom (header ends at EY+12)
+    let eY2=EY+18;   // header bar is 12pt; text ascender ~5pt, so baseline needs ≥17pt from top
     exRows.forEach(([l,v,vc,bold])=>{
       p.text(l,LM+5,eY2,{sz:bold?6.8:6.2,bold,col:bold?vc:DGREY,max:HW*0.57});
       p.text(v,LM+HW-5,eY2,{sz:bold?6.8:6.2,bold,col:vc,align:'right'});
