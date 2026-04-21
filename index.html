@@ -2052,7 +2052,7 @@
 
     // ── 3. ASSUMPTIONS + S&U ──
     const txA=entryEV*txCost,entD=ebitda*leverage,totU=entryEV+txA;
-    const R1Y=80,R1H=116;
+    const R1Y=80,R1H=124;
 
     // Assumptions (left)
     p.fillRect(LM,R1Y,HW,12,DARK);
@@ -2097,11 +2097,11 @@
       p.hline(R2X+4,R2X+HW-4,sy+2.5,'#eeeeee');
     };
     let sY=R1Y+14;   // start rows right below dark header
-    suSect('USES',sY);sY+=13;  // section bar is 9.5pt tall; need 13pt gap so row text clears it
+    suSect('USES',sY);sY+=16;  // bar=9.5pt, row text needs 16pt gap to clear fully
     suRow('Entry EV',         fM(entryEV),    fP(entryEV/totU),    fX1(entryEV/ebitda),    sY);sY+=9;
     suRow('+ Transaction Costs',fM(txA),      fP(txA/totU),        fX1(txA/ebitda),        sY);sY+=9;
-    suRow('= Total Uses',     fM(totU),       '100.0%',            fX1(totU/ebitda),        sY,true);sY+=14;
-    suSect('SOURCES',sY);sY+=13;  // same fix for sources section
+    suRow('= Total Uses',     fM(totU),       '100.0%',            fX1(totU/ebitda),        sY,true);sY+=16;
+    suSect('SOURCES',sY);sY+=16;  // same
     suRow('Entry Debt',       fM(entD),       fP(entD/totU),       fX1(leverage),           sY);sY+=9;
     suRow('Entry Equity',     fM(entryEquity),fP(entryEquity/totU),fX1(entryEquity/ebitda), sY);sY+=9;
     suRow('= Total Sources',  fM(entD+entryEquity),'100.0%',       fX1(totU/ebitda),        sY,true);
@@ -2220,7 +2220,7 @@
       if(isA){minV2=Math.min(minV2,0,c.v);maxV2=Math.max(maxV2,0,c.v);if(!fD){run2=c.v;fD=true;}}
       else{minV2=Math.min(minV2,run2,run2+c.v);maxV2=Math.max(maxV2,run2,run2+c.v);run2+=c.v;}
     });
-    const cX=R2X+4,cWb=HW-8,cYb=EY+15,cHb=EH-24;
+    const cX=R2X+4,cWb=HW-8,cYb=EY+20,cHb=EH-30;  // start chart lower, shrink height to give top labels room
     const nB=comps.length,bW=Math.min(Math.floor(cWb/nB)-3,30);
     const gpB=(cWb-bW*nB)/(nB+1);
     const rng=Math.max(maxV2-minV2,0.1),sclB=cHb/rng;
@@ -2237,9 +2237,11 @@
       p.fillRect(bx,by,bW,bh,c.c);
       if(ci<comps.length-1)p.hline(bx+bW,bx+bW+gpB+1,yZB-runB*sclB,'#888888',0.4);
       const lv=isA?fX(c.v):fMoMv(c.v);
-      const labY=c.v>=0?by-4:by+bh+7;
-      p.text(lv,bx+bW/2,Math.min(Math.max(labY,cYb+3),cYb+cHb+1),{sz:4.8,col:c.c,align:'center'});
-      p.text(c.l,bx+bW/2,cYb+cHb+9,{sz:4.5,col:DGREY,align:'center',max:bW+8});
+      // Label: above bar for positive, below for negative; clamp strictly inside chart+label zone
+      const labY=c.v>=0?by-6:by+bh+7;
+      const clampedY=Math.min(Math.max(labY,cYb+5),cYb+cHb-2);
+      p.text(lv,bx+bW/2,clampedY,{sz:4.8,col:c.c,align:'center'});
+      p.text(c.l,bx+bW/2,cYb+cHb+10,{sz:4.5,col:DGREY,align:'center',max:bW+8});
     });
 
     // ── 6. SENSITIVITY TABLES (MoM) ──
