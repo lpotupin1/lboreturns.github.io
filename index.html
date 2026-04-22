@@ -1919,10 +1919,93 @@
   </div>
 </section>
 
-<div id="privacy" style="background:#f4f6f9;border-top:1px solid #dde2ea;padding:2rem 1.5rem;max-width:900px;margin:0 auto;font-size:0.82rem;color:#6b7280;line-height:1.6;">
-  <strong style="color:#1a2030;font-size:0.9rem;">Privacy Policy</strong><br/><br/>
-  LBOReturns.com does not collect, store, or sell any personal data. All calculations run entirely in your browser — no data is sent to any server. We use Google AdSense to display advertisements, which may use cookies to show relevant ads. You can opt out of personalised ads via <a href="https://www.google.com/settings/ads" style="color:var(--green);">Google Ad Settings</a>. By using this site you accept these terms.
-</div>
+<!-- ── ABOUT SECTION ── -->
+<section id="about" style="background:#fff;border-top:2px solid var(--border);padding:3.5rem 2rem;">
+  <div style="max-width:900px;margin:0 auto;font-family:var(--sans);color:var(--text);line-height:1.8;">
+    <h2 style="font-size:1.5rem;font-weight:700;margin:0 0 1rem;">About LBOReturns.com</h2>
+    <p>LBOReturns.com is a free, browser-based leveraged buyout returns calculator built for private equity professionals, investment banking analysts, finance students, and anyone who wants to model deal economics without opening Excel. The tool runs entirely in your browser — no data leaves your device, no account is required, and there is no paywall.</p>
+    <p>The calculator was built out of frustration with the alternatives: most LBO model templates are either locked behind expensive courses, buried in cluttered Excel files, or designed for teaching rather than quick deal analysis. LBOReturns.com aims to be the fastest way to stress-test a deal thesis — enter a few assumptions and immediately see IRR, MoM, the full debt paydown schedule, value bridge attribution, and IRR sensitivity across exit multiple and EBITDA growth scenarios.</p>
+    <p>The model is deliberately simplified but structurally correct. It captures the three primary drivers of private equity returns — EBITDA growth, multiple expansion or compression, and debt paydown — and decomposes them in the value bridge waterfall so you can see exactly where the return is coming from. Advanced features include detailed FCF modelling (D&A, tax, capex, working capital), revenue and margin disaggregation, bolt-on acquisition modelling, management option pool dilution, and a fully formula-linked Excel export.</p>
+    <p>If you have feedback, feature requests, or want to advertise to an audience of finance professionals, contact us at <a href="mailto:hello@lboreturns.com" style="color:var(--green);">hello@lboreturns.com</a>.</p>
+
+    <h3 style="font-size:1.1rem;font-weight:700;margin:2rem 0 0.75rem;color:var(--green);">LBO Return Drivers — A Deeper Dive</h3>
+    <p>Understanding what actually drives returns in a leveraged buyout is essential for evaluating whether a deal thesis is credible. The three primary drivers are worth examining in detail:</p>
+    <p><strong>EBITDA Growth</strong> is the most durable and value-creating driver. An EBITDA that grows from $50M to $100M over five years at the same exit multiple doubles the enterprise value independently of leverage. Growth can come from organic revenue expansion, margin improvement through operational efficiency, or inorganic bolt-on acquisitions. Sponsors typically model 10–20% EBITDA CAGR as a target, but actual outcomes vary dramatically by sector and macro environment.</p>
+    <p><strong>Multiple Expansion</strong> — selling at a higher EV/EBITDA multiple than entry — is a return contributor that many deals benefit from in bull markets but that sophisticated investors model at zero (entry multiple = exit multiple). Relying on multiple expansion to hit return targets is considered speculative; the best deal theses generate strong returns even with modest multiple compression.</p>
+    <p><strong>Debt Paydown</strong> converts enterprise value growth directly into equity value. A company that pays down $100M of debt over five years creates $100M of equity value even if EV stays flat. In a cash-sweeping structure, strong FCF conversion is as valuable as EBITDA growth. Debt paydown is most impactful in the early years when absolute debt levels are highest.</p>
+
+    <h3 style="font-size:1.1rem;font-weight:700;margin:2rem 0 0.75rem;color:var(--green);">How to Stress-Test a Deal</h3>
+    <p>A well-constructed deal thesis should clear its hurdle rate under a range of adverse scenarios, not just the base case. Use the IRR sensitivity table to ask: does this deal still work if EBITDA growth comes in 5–10 percentage points below plan? What if we're forced to sell at a discount to our entry multiple? What leverage level makes the deal fragile?</p>
+    <p>Most experienced PE professionals run three scenarios: a base case (management plan with a modest haircut), a downside case (flat to slightly growing EBITDA, entry multiple at exit), and a bear case (EBITDA declining, multiple compression, constrained exit). A deal that generates 15%+ IRR in the downside case and 20%+ in the base case is considered robust. A deal that requires the bull case to hit the hurdle is considered speculative.</p>
+    <p>The bolt-on acquisition module allows you to model an incremental M&A program on top of organic growth. Bolt-ons are one of the most powerful value-creation levers in PE — buying smaller companies at lower multiples and folding them into a platform that exits at a higher blended multiple generates significant arbitrage value on top of organic EBITDA growth.</p>
+  </div>
+</section>
+
+<!-- ── DEEP CONTENT: LBO GUIDE ── -->
+<section style="background:#f8fafc;border-top:1px solid var(--border);padding:3.5rem 2rem;">
+  <div style="max-width:900px;margin:0 auto;font-family:var(--sans);color:var(--text);line-height:1.8;">
+
+    <h2 style="font-size:1.4rem;font-weight:700;margin:0 0 1.5rem;">The Complete Guide to LBO Modelling</h2>
+
+    <h3 style="font-size:1.05rem;font-weight:700;color:var(--green);margin:2rem 0 0.5rem;">1. Sources & Uses — The Entry Capitalisation</h3>
+    <p>Every LBO begins with a Sources & Uses table that shows how the acquisition is funded. Uses represent the total cash required to close the deal: purchase price (enterprise value), transaction costs (legal, banking, advisory fees — typically 1–3% of EV), and any cash required to fund the business at close. Sources represent where that cash comes from: senior secured debt, subordinated or mezzanine debt, equity from the sponsor, and sometimes rollover equity from management.</p>
+    <p>The purchase price is typically expressed as an EV/EBITDA multiple. At 10× EBITDA with 5× leverage and 2% transaction costs, a $50M EBITDA business requires $510M of capital: $500M purchase price + $10M fees = $510M uses. Sources: $250M debt + $260M equity = $510M. The equity check is the sponsor's invested capital and the denominator for all return calculations.</p>
+    <p>Entry leverage is the most important structural variable. Higher leverage amplifies equity returns when EBITDA grows and debt is repaid — but it also amplifies losses when things go wrong. A highly leveraged business with thin FCF margins has very little cushion against an EBITDA shortfall before debt covenants are breached and the lender controls the situation.</p>
+
+    <h3 style="font-size:1.05rem;font-weight:700;color:var(--green);margin:2rem 0 0.5rem;">2. The Income Statement & FCF Walk</h3>
+    <p>The projection section of an LBO model starts with revenue and works down to free cash flow. Revenue grows at the assumed CAGR. EBITDA margin may expand or compress depending on the operational thesis. D&A (depreciation and amortisation) is subtracted to get EBIT. Taxes are applied to EBIT to get NOPAT (net operating profit after tax). D&A is added back, and capex and working capital changes are subtracted to arrive at unlevered free cash flow.</p>
+    <p>Interest expense is then subtracted — using the average debt balance for the period multiplied by the all-in interest rate — to arrive at levered free cash flow. This is the cash available for debt repayment (if the cash sweep is on) or balance sheet accumulation (if the cash sweep is off). In most LBO structures, the loan agreement requires a cash sweep: all excess cash above a minimum operating balance is applied to debt repayment quarterly.</p>
+    <p>FCF conversion — free cash flow as a percentage of EBITDA — is a critical assumption. Software businesses with minimal capex and negative working capital investment often convert at 70–90%. Capital-intensive industrials with heavy maintenance capex and seasonal working capital swings might convert at 25–40%. The right FCF conversion assumption requires understanding the business's capex intensity and cash cycle.</p>
+
+    <h3 style="font-size:1.05rem;font-weight:700;color:var(--green);margin:2rem 0 0.5rem;">3. Debt Schedule & Capital Structure</h3>
+    <p>The debt schedule tracks opening and closing debt balances year by year, applying the cash sweep to reduce principal. Most LBO capital structures include multiple tranches: a Term Loan B (the primary institutional debt, floating rate, no amortisation except the cash sweep), sometimes a Second Lien or Unitranche (higher yield, subordinated, often from direct lenders in middle-market deals), and a Revolving Credit Facility (used for working capital, typically undrawn at close).</p>
+    <p>Interest rates on LBO debt are typically expressed as a spread over SOFR (Secured Overnight Financing Rate, which replaced LIBOR). A Term Loan B at "SOFR + 500bps" means the all-in rate is the current SOFR rate (which fluctuates) plus 5%. In the 2024–2025 rate environment, this might translate to an all-in rate of 9–11% on senior debt. This calculator uses a single blended all-in interest rate for simplicity.</p>
+    <p>Net leverage (net debt / EBITDA) is the ratio most closely monitored by lenders and credit committees. A deal that opens at 6.5× net leverage is expected to delever to 3–4× by exit through a combination of EBITDA growth and debt repayment. Interest coverage (EBITDA / interest expense) is the other key metric — most lenders require a minimum of 2× coverage as a covenant floor.</p>
+
+    <h3 style="font-size:1.05rem;font-weight:700;color:var(--green);margin:2rem 0 0.5rem;">4. Exit & Returns</h3>
+    <p>The exit is modelled by applying the assumed exit EV/EBITDA multiple to the company's EBITDA in the exit year. Exit EV minus remaining debt plus any accrued cash equals gross equity proceeds. Exit fees (typically 1–2% of exit EV for advisory, banking, and legal costs) are subtracted. If a management option pool was set up at entry, the gain attributable to management's options is subtracted to give the sponsor's net equity proceeds.</p>
+    <p>Net equity proceeds divided by the original equity check gives the MoM. The MoM raised to the power of (1/hold period) minus one gives the gross IRR. For example: a $300M equity check that returns $780M after five years is a 2.6× MoM, which equals an IRR of (2.6^0.2) − 1 = approximately 21.1% — a solid outcome that clears most institutional fund hurdle rates.</p>
+    <p>The value bridge decomposes the MoM or dollar equity gain into its constituent drivers: EBITDA growth contribution (increase in EBITDA × entry multiple), multiple expansion (exit year EBITDA × change in multiple), debt paydown (initial debt minus remaining debt plus accrued cash, minus transaction costs), bolt-on value creation, management dilution, and exit fees. This attribution is essential for diagnosing whether returns were driven by operational improvement or financial engineering.</p>
+
+    <h3 style="font-size:1.05rem;font-weight:700;color:var(--green);margin:2rem 0 0.5rem;">5. What Makes a Good LBO Candidate?</h3>
+    <p>Not all businesses make good LBO targets. The characteristics that lenders and sponsors look for include: stable and predictable free cash flow (the debt must be serviceable), a defensible market position (revenue can't drop 30% in year one due to competition), limited capex requirements (capex-intensive businesses leave little free cash for debt service), low customer concentration (the loss of one or two customers shouldn't crater EBITDA), and a management team capable of executing the operational plan.</p>
+    <p>Businesses that traditionally make strong LBO candidates include software companies with recurring subscription revenue, healthcare services businesses with reimbursement-backed revenue, business services companies with long-term contracts, and consumer brands with pricing power and low capex. Businesses that are historically poor LBO candidates include highly cyclical industrials, commodity-exposed businesses, companies in regulated industries facing pricing pressure, and high-growth companies that require significant reinvestment to fund growth.</p>
+    <p>The ideal LBO candidate has EBITDA margins above 20%, FCF conversion above 50%, net leverage capacity of at least 4–5× (lenders are willing to provide that level of debt against the business's cash flows), and a clear path to operational value creation — whether through revenue growth, margin improvement, or bolt-on acquisitions in a fragmented market.</p>
+
+    <h3 style="font-size:1.05rem;font-weight:700;color:var(--green);margin:2rem 0 0.5rem;">6. Sector Benchmarks — What Returns Does PE Target?</h3>
+    <p><strong>Technology / Software:</strong> Entry multiples 15–25× EBITDA (or revenue for pre-profit businesses), FCF conversion 60–80%, target gross IRR 20–25%. High entry multiples require significant revenue growth and margin expansion to generate strong returns. Bolt-on M&A in fragmented software verticals is a common strategy.</p>
+    <p><strong>Healthcare Services:</strong> Entry multiples 10–15×, FCF conversion 40–60%, target gross IRR 20–25%. Reimbursement risk, regulatory exposure, and labour costs are key risks. Physician practice management, dental services organisations (DSOs), and veterinary groups are popular subsectors.</p>
+    <p><strong>Business Services / B2B:</strong> Entry multiples 8–14×, FCF conversion 50–70%, target gross IRR 20–30%. Low capex intensity, recurring revenue, and fragmented markets make this an ideal LBO sector. Distribution, staffing, and facilities management are typical examples.</p>
+    <p><strong>Consumer / Retail:</strong> Entry multiples 7–12×, FCF conversion 30–50%, target gross IRR 18–25%. Brand strength, pricing power, and channel diversification are key value drivers. Brick-and-mortar retail is generally avoided; branded consumer goods and e-commerce businesses are more attractive.</p>
+    <p><strong>Industrials / Manufacturing:</strong> Entry multiples 6–10×, FCF conversion 25–45%, target gross IRR 20–30%. Higher capex and cyclicality require higher return targets. Proprietary products, niche markets, and aftermarket parts/service revenue are value-adding characteristics.</p>
+  </div>
+</section>
+
+<!-- ── PRIVACY POLICY ── -->
+<section id="privacy" style="background:#fff;border-top:1px solid var(--border);padding:3rem 2rem;">
+  <div style="max-width:900px;margin:0 auto;font-family:var(--sans);color:var(--text);line-height:1.8;">
+    <h2 style="font-size:1.3rem;font-weight:700;margin:0 0 1rem;">Privacy Policy</h2>
+    <p><em>Last updated: April 2026</em></p>
+
+    <h3 style="font-size:1rem;font-weight:700;margin:1.5rem 0 0.5rem;">Data Collection</h3>
+    <p>LBOReturns.com does not collect, store, or process any personal data entered into the calculator. All calculations run entirely in your browser using JavaScript. No deal assumptions, financial figures, or model outputs are transmitted to any server. The calculator works fully offline once loaded.</p>
+
+    <h3 style="font-size:1rem;font-weight:700;margin:1.5rem 0 0.5rem;">Analytics</h3>
+    <p>We use Google Analytics 4 (GA4) to collect anonymous usage data including page views, session duration, and general geographic region (country/city level). GA4 does not collect personally identifiable information. We use this data solely to understand how the calculator is being used and to improve the product. You can opt out of Google Analytics tracking using the <a href="https://tools.google.com/dlpage/gaoptout" style="color:var(--green);">Google Analytics Opt-out Browser Add-on</a>.</p>
+
+    <h3 style="font-size:1rem;font-weight:700;margin:1.5rem 0 0.5rem;">Advertising</h3>
+    <p>LBOReturns.com uses Google AdSense to display advertisements. Google AdSense may use cookies to show ads relevant to your interests based on your browsing activity. This may constitute "targeted advertising" under applicable privacy laws. You can manage your ad personalisation preferences at <a href="https://www.google.com/settings/ads" style="color:var(--green);">Google Ad Settings</a>. EU/EEA users may also use the <a href="https://www.youronlinechoices.eu/" style="color:var(--green);">Your Online Choices</a> tool.</p>
+
+    <h3 style="font-size:1rem;font-weight:700;margin:1.5rem 0 0.5rem;">Cookies</h3>
+    <p>This site uses cookies solely for the purposes of Google Analytics (anonymous usage measurement) and Google AdSense (ad delivery). No first-party cookies are set by LBOReturns.com itself. You can disable cookies in your browser settings, though this may affect the display of advertisements.</p>
+
+    <h3 style="font-size:1rem;font-weight:700;margin:1.5rem 0 0.5rem;">Your Rights</h3>
+    <p>If you are located in the European Economic Area (EEA), you have rights under the General Data Protection Regulation (GDPR) including the right to access, correct, or delete any personal data held about you. As LBOReturns.com does not collect personal data directly, the relevant data controller for analytics and advertising data is Google LLC. You may exercise your rights with respect to Google's data processing via <a href="https://myaccount.google.com" style="color:var(--green);">Google Account settings</a>.</p>
+
+    <h3 style="font-size:1rem;font-weight:700;margin:1.5rem 0 0.5rem;">Contact</h3>
+    <p>Questions about this Privacy Policy can be directed to <a href="mailto:hello@lboreturns.com" style="color:var(--green);">hello@lboreturns.com</a>.</p>
+  </div>
+</section>
 
 <!-- FOOTER -->
 <footer class="page-footer">
@@ -1933,7 +2016,8 @@
     <a href="#about">About</a>
     <a href="#methodology">Methodology</a>
     <a href="mailto:advertise@lboreturns.com">Advertise</a>
-    <a href="#privacy">Privacy</a>
+    <a href="#privacy">Privacy Policy</a>
+    <a href="mailto:hello@lboreturns.com">Contact</a>
   </div>
 </footer>
 
@@ -2237,10 +2321,19 @@
       p.fillRect(bx,by,bW,bh,c.c);
       if(ci<comps.length-1)p.hline(bx+bW,bx+bW+gpB+1,yZB-runB*sclB,'#888888',0.4);
       const lv=isA?fX(c.v):fMoMv(c.v);
-      // Label: above bar for positive, below for negative; clamp strictly inside chart+label zone
-      const labY=c.v>=0?by-6:by+bh+7;
-      const clampedY=Math.min(Math.max(labY,cYb+5),cYb+cHb-2);
-      p.text(lv,bx+bW/2,clampedY,{sz:4.8,col:c.c,align:'center'});
+      // Label placement: inside bar if tall enough (≥14pt), outside otherwise
+      let labY;
+      if(bh>=14){
+        // Center label inside the bar
+        labY=by+bh/2+2.5;  // +2.5 to account for text descent
+        p.text(lv,bx+bW/2,labY,{sz:4.8,col:'#ffffff',align:'center'});
+      }else{
+        // Short bar: label above for positive, below for negative
+        labY=c.v>=0?by-5:by+bh+8;
+        // Only clamp if it would go outside the box (not against bar)
+        labY=Math.min(Math.max(labY,cYb+5),cYb+cHb+12);
+        p.text(lv,bx+bW/2,labY,{sz:4.8,col:c.c,align:'center'});
+      }
       p.text(c.l,bx+bW/2,cYb+cHb+10,{sz:4.5,col:DGREY,align:'center',max:bW+8});
     });
 
