@@ -1371,24 +1371,34 @@
             </div>
           </div>
           <div class="input-row">
-            <div class="input-label">D&A<span class="input-hint">% of EBITDA (add-back to FCF)</span></div>
+            <div class="input-label">D&A<span class="input-hint" id="daHint">% of EBITDA (add-back to FCF)</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="daRate" value="8" min="0" max="40" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="daRate" value="8" min="0" max="40" step="0.5" oninput="calculate()"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
           <div class="input-row">
-            <div class="input-label">Capex<span class="input-hint">% of EBITDA</span></div>
+            <div class="input-label">Capex<span class="input-hint" id="capexHint">% of EBITDA</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="capexRate" value="6" min="0" max="60" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="capexRate" value="6" min="0" max="60" step="0.5" oninput="calculate()"/>
               <span class="input-suffix">%</span>
             </div>
           </div>
           <div class="input-row">
-            <div class="input-label">Working Capital<span class="input-hint">% of EBITDA increment (+ = use)</span></div>
+            <div class="input-label">Working Capital<span class="input-hint" id="wcHint">% of EBITDA increment (+ = use)</span></div>
             <div class="input-field-wrap">
-              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="wcRate" value="3" min="-20" max="30" step="0.5"/>
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="wcRate" value="3" min="-20" max="30" step="0.5" oninput="calculate()"/>
               <span class="input-suffix">%</span>
+            </div>
+          </div>
+          <!-- Revenue basis toggle — only visible when Rev+Margin mode is on -->
+          <div id="fcfRevModeRow" style="display:none;margin-top:0.4rem;">
+            <div class="toggle-row" style="margin-bottom:0;">
+              <span style="font-size:0.72rem;color:var(--muted);">D&amp;A / Capex / NWC basis</span>
+              <div class="toggle" style="font-size:0.68rem;">
+                <button id="fcfRevModeEbitda" class="active" onclick="setFcfRevMode('ebitda')">% EBITDA</button>
+                <button id="fcfRevModeRev"            onclick="setFcfRevMode('revenue')">% Revenue</button>
+              </div>
             </div>
           </div>
           <!-- Implied FCF % display -->
@@ -2074,6 +2084,7 @@
            exitDebt,accruedCash,exitFeeAmt,mgmtPayout}=s.results;
     const {ebitdaGrowthContrib,multipleExpansion,debtPaydown,acqContrib}=s.attribution;
     const rows=s.rows;
+    const {cagrMode,sensGrowthStep,sensExitStep,entryMargin,exitMargin}=s.meta||{cagrMode:'simple',sensGrowthStep:0.05,sensExitStep:1,entryMargin:0,exitMargin:0};
     const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
 
     const fM=v=>{const a=Math.abs(v),n=v<0;return(n?'(':'')+`$${a>=1000?(a/1e3).toFixed(1)+'B':a.toFixed(1)+'M'}`+(n?')':'');};
@@ -2222,8 +2233,7 @@
 
     sBar('INCOME');
     if(cagrMode==='detail'){
-      const em=+document.getElementById('entryMargin')?.value/100||0;
-      const xm2=+document.getElementById('exitMargin')?.value/100||0;
+      const em=entryMargin, xm2=exitMargin;
       if(em>0){
         const mgs=rows.map((_,i)=>em+(xm2-em)*(i+1)/hold);
         pR('Revenue',mkV(i=>fM(mgs[i]>0?rows[i].organicEbitda/mgs[i]:0)),{col:GREEN,bold:true});
@@ -2369,9 +2379,11 @@
     };
 
     // Growth values centred on current
-    const gSteps=[growth-0.10,growth-0.05,growth,growth+0.05,growth+0.10,growth+0.15,growth+0.20];
-    const xSteps=[exitMult-2,exitMult-1,exitMult,exitMult+1,exitMult+2];
-    const nSteps=[entryMult-2,entryMult-1,entryMult,entryMult+1,entryMult+2];
+    const gs=sensGrowthStep||0.05;
+    const xs=sensExitStep||1.0;
+    const gSteps=[growth-gs*3,growth-gs*2,growth-gs,growth,growth+gs,growth+gs*2,growth+gs*3];
+    const xSteps=[exitMult-xs*2,exitMult-xs,exitMult,exitMult+xs,exitMult+xs*2];
+    const nSteps=[entryMult-xs*2,entryMult-xs,entryMult,entryMult+xs,entryMult+xs*2];
 
     const sensH=21+7*((EH-21)/7); // fixed height for each table
     const TABLEH=84;               // 11 hdr + 10 col hdr + 7*9 rows = ~84
@@ -2741,6 +2753,42 @@
     document.getElementById('fcfModeDetail').classList.toggle('active', mode === 'detail');
     document.getElementById('fcfSimple').style.display = mode === 'simple' ? '' : 'none';
     document.getElementById('fcfDetail').style.display = mode === 'detail' ? '' : 'none';
+    const showRevBasis = mode === 'detail' && cagrMode === 'detail';
+    const row = document.getElementById('fcfRevModeRow');
+    if(row) row.style.display = showRevBasis ? '' : 'none';
+    updateFcfHints();
+    calculate();
+  }
+
+  let fcfRevMode = 'ebitda';
+  function setFcfRevMode(mode) {
+    fcfRevMode = mode;
+    document.getElementById('fcfRevModeEbitda').classList.toggle('active', mode === 'ebitda');
+    document.getElementById('fcfRevModeRev').classList.toggle('active', mode === 'revenue');
+    updateFcfHints();
+    calculate();
+  }
+  function updateFcfHints() {
+    const useRev = fcfRevMode === 'revenue' && cagrMode === 'detail' && fcfMode === 'detail';
+    const basis = useRev ? 'Revenue' : 'EBITDA';
+    const daHint = document.getElementById('daHint');
+    const capexHint = document.getElementById('capexHint');
+    const wcHint = document.getElementById('wcHint');
+    if(daHint)    daHint.textContent    = `% of ${basis} (add-back to FCF)`;
+    if(capexHint) capexHint.textContent = `% of ${basis}`;
+    if(wcHint)    wcHint.textContent    = `% of ${basis} increment (+ = use)`;
+  }
+
+  function setCagrMode(mode) {
+    cagrMode = mode;
+    document.getElementById('cagrModeSimple').classList.toggle('active', mode === 'simple');
+    document.getElementById('cagrModeDetail').classList.toggle('active', mode === 'detail');
+    document.getElementById('cagrSimple').style.display = mode === 'simple' ? '' : 'none';
+    document.getElementById('cagrDetail').style.display = mode === 'detail' ? '' : 'none';
+    const showRevBasis = mode === 'detail' && fcfMode === 'detail';
+    const row = document.getElementById('fcfRevModeRow');
+    if(row) row.style.display = showRevBasis ? '' : 'none';
+    updateFcfHints();
     calculate();
   }
 
@@ -2870,16 +2918,42 @@
       const daRate   = +document.getElementById('daRate').value   / 100;
       const capexRate= +document.getElementById('capexRate').value/ 100;
       const wcRate   = +document.getElementById('wcRate').value   / 100;
-      computeFcf = (ebitdaVal, prevEbitda) => {
-        // Unlevered FCF: EBIT × (1−tax) + D&A − Capex − ΔNWC
-        const da    = ebitdaVal * daRate;
-        const nopat = (ebitdaVal - da) * (1 - taxRate); // no interest deduction
-        const wc    = (ebitdaVal - prevEbitda) * wcRate;
-        return nopat + da - ebitdaVal * capexRate - wc;
+      const useRevBasis = fcfRevMode === 'revenue' && cagrMode === 'detail';
+
+      // If revenue basis: D&A/Capex/NWC applied to revenue = EBITDA/margin
+      // revFn(ebitdaVal, margin) returns revenue; margin interpolated by caller via entryMargin/exitMargin
+      const entMV = cagrMode === 'detail' ? +document.getElementById('entryMargin').value/100 : 0;
+      const exMV  = cagrMode === 'detail' ? +document.getElementById('exitMargin').value/100  : 0;
+
+      computeFcf = (ebitdaVal, prevEbitda, yr=1) => {
+        let da, capex, wc;
+        if (useRevBasis && entMV > 0) {
+          const margin = entMV + (exMV - entMV) * yr / hold;
+          const rev    = margin > 0 ? ebitdaVal / margin : ebitdaVal;
+          const prevMargin = entMV + (exMV - entMV) * (yr - 1) / hold;
+          const prevRev    = prevMargin > 0 ? prevEbitda / prevMargin : prevEbitda;
+          da    = rev * daRate;
+          capex = rev * capexRate;
+          wc    = (rev - prevRev) * wcRate;
+        } else {
+          da    = ebitdaVal * daRate;
+          capex = ebitdaVal * capexRate;
+          wc    = (ebitdaVal - prevEbitda) * wcRate;
+        }
+        const nopat = (ebitdaVal - da) * (1 - taxRate);
+        return nopat + da - capex - wc;
       };
-      // Analytical implied FCF% (no leverage dependency):
-      // FCF% = (1−D&A%)(1−tax) + D&A% − Capex% − WC%×growth
-      const impliedFcfPct = (1 - daRate) * (1 - taxRate) + daRate - capexRate - wcRate * growth;
+
+      // Implied FCF% display
+      const impliedFcfPct = useRevBasis && entMV > 0
+        ? (() => {
+            // At entry margin: revenue = EBITDA/entMV, so da=rev*daRate, capex=rev*capexRate
+            // implied% = (EBITDA - da)(1-tax) + da - capex - wc*Δrev) / EBITDA
+            const da0 = daRate / entMV;    // da as % of EBITDA
+            const cx0 = capexRate / entMV; // capex as % of EBITDA
+            return (1 - da0) * (1 - taxRate) + da0 - cx0 - wcRate * growth / entMV;
+          })()
+        : (1 - daRate) * (1 - taxRate) + daRate - capexRate - wcRate * growth;
       document.getElementById('impliedFcf').textContent =
         (impliedFcfPct * 100).toFixed(1) + '% of EBITDA';
       document.getElementById('fcfVal').value = Math.max(0, Math.min(100, +(impliedFcfPct * 100).toFixed(0)));
@@ -2920,7 +2994,7 @@
       const acqEbitdaYr    = totalAcqEbitdaFn(yr);
       const combinedEbitda = platformEbitda + acqEbitdaYr;
       const intExp         = debt * interest;
-      const fcfAbs         = computeFcf(combinedEbitda, prevLoopEbitda);
+      const fcfAbs         = computeFcf(combinedEbitda, prevLoopEbitda, yr);
       prevLoopEbitda       = combinedEbitda;
 
       if (cashSweep) {
@@ -3078,6 +3152,15 @@
       results: { irr, mom, entryEquity, netExitEq, entryEV, exitEBITDA: combinedExitEBITDA, exitEV, exitDebt, totalAcqDebt, accruedCash, mgmtPayout, exitFeeAmt },
       attribution: { ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, revGrowthContrib, marginContrib },
       rows,
+      meta: {
+        cagrMode,
+        fcfMode,
+        fcfRevMode: fcfMode==='detail' && cagrMode==='detail' ? (document.getElementById('fcfRevMode')?.value || 'ebitda') : 'ebitda',
+        sensGrowthStep: +document.getElementById('sensGrowthStep').value,
+        sensExitStep:   +document.getElementById('sensExitStep').value,
+        entryMargin: cagrMode==='detail' ? +document.getElementById('entryMargin')?.value/100||0 : 0,
+        exitMargin:  cagrMode==='detail' ? +document.getElementById('exitMargin')?.value/100||0  : 0,
+      },
     };
 
     // ── New output panels ──
