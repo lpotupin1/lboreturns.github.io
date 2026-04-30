@@ -2079,7 +2079,7 @@
     const s=window._lboState;
     if(!s){alert('Run the model first.');return;}
     const {ebitda,entryMult,leverage,interest,growth,exitMult,hold,
-           txCost,exitFee,fcfPct,acqEnabled,acqEbitda,acqMult,cashSweep,mgmtPoolPct}=s.inputs;
+           txCost,exitFee,fcfPct,acqEnabled,acqEbitda,acqMult,acqGrowth,cashSweep,mgmtPoolPct}=s.inputs;
     const {irr,mom,entryEquity,netExitEq,entryEV,exitEV,
            exitDebt,accruedCash,exitFeeAmt,mgmtPayout}=s.results;
     const {ebitdaGrowthContrib,multipleExpansion,debtPaydown,acqContrib}=s.attribution;
