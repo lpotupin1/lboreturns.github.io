@@ -2095,21 +2095,32 @@
 
     // MoM sensitivity engine — takes entryMult, growth, exitMult, optional acqEbitda/yr
     const calcMoM=(entM,g,xm,acqEb=0)=>{
-      const eq0=ebitda*entM-ebitda*leverage+ebitda*entM*txCost;
+      const eq0=ebitda*entM*(1+txCost)-ebitda*leverage;
       if(eq0<=0)return null;
-      let debt=ebitda*leverage,cash=0;
+      let debt=ebitda*leverage, cash=0;
+      // Replicate totalAcqEbitdaFn: each year adds acqEb of new EBITDA at acqMult debt
+      // Cohorts grow at acqGrowth from year of acquisition
+      const acqTotalFn = yr => {
+        if(!acqEb||acqEb===0) return 0;
+        if(Math.abs(acqGrowth)<1e-9) return acqEb*yr;
+        return acqEb*(Math.pow(1+acqGrowth,yr)-1)/acqGrowth;
+      };
       for(let yr=1;yr<=hold;yr++){
-        if(acqEb>0)debt+=acqEb*acqMult;
-        const eb=ebitda*Math.pow(1+g,yr);
-        const fc=(fcfPct||0.45)*eb;
+        if(acqEb>0) debt+=acqEb*acqMult;           // new bolt-on debt added each year
+        const organicEb=ebitda*Math.pow(1+g,yr);
+        const acqEbYr=acqTotalFn(yr);
+        const combinedEb=organicEb+acqEbYr;
+        const fc=(fcfPct||0.45)*combinedEb;         // FCF on combined EBITDA
         const ie=debt*interest;
         const net=Math.max(fc-ie,0);
         const dp=cashSweep?Math.min(net,debt):0;
         debt=Math.max(debt-dp,0);
         cash+=Math.max(net-dp,0);
       }
-      const exitEb=ebitda*Math.pow(1+g,hold);
-      const ev=exitEb*xm;
+      const exitOrganicEb=ebitda*Math.pow(1+g,hold);
+      const exitAcqEb=acqTotalFn(hold);
+      const exitCombinedEb=exitOrganicEb+exitAcqEb;  // exit on combined EBITDA
+      const ev=exitCombinedEb*xm;
       const gr=ev-(ev*(exitFee||0))-debt+cash;
       const pool=Math.max(gr-eq0,0)*mgmtPoolPct;
       const m=(gr-pool)/eq0;
