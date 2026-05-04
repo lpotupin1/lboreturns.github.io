@@ -1310,11 +1310,17 @@
         <div class="input-row" style="margin-top:0.5rem">
           <div class="input-label">
             Exit Fees
-            <span class="input-hint">% of Exit EV (advisory, closing)</span>
+            <span class="input-hint" id="exitFeeHint">% of Exit EV (advisory, closing)</span>
           </div>
-          <div class="input-field-wrap">
-            <input class="num-input has-suffix" type="number" onfocus="this.select()" id="exitFee" value="0" min="0" max="10" step="0.25"/>
-            <span class="input-suffix">%</span>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <div class="input-field-wrap" style="flex:1;">
+              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="exitFee" value="0" min="0" max="999" step="0.25" oninput="calculate()"/>
+              <span class="input-suffix" id="exitFeeSuffix">%</span>
+            </div>
+            <div class="toggle" style="font-size:0.65rem;flex-shrink:0;">
+              <button id="exitFeeModePct" class="active" onclick="setExitFeeMode('pct')">%</button>
+              <button id="exitFeeModeDollar"              onclick="setExitFeeMode('dollar')">$M</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2079,10 +2085,10 @@
     const s=window._lboState;
     if(!s){alert('Run the model first.');return;}
     const {ebitda,entryMult,leverage,interest,growth,exitMult,hold,
-           txCost,exitFee,fcfPct,acqEnabled,acqEbitda,acqMult,acqGrowth,cashSweep,mgmtPoolPct}=s.inputs;
+           txCost,exitFee,exitFeeAbs,fcfPct,acqEnabled,acqEbitda,acqMult,acqGrowth,cashSweep,mgmtPoolPct}=s.inputs;
     const {irr,mom,entryEquity,netExitEq,entryEV,exitEV,
            exitDebt,accruedCash,exitFeeAmt,mgmtPayout}=s.results;
-    const {ebitdaGrowthContrib,multipleExpansion,debtPaydown,acqContrib}=s.attribution;
+    const {ebitdaGrowthContrib,multipleExpansion,debtPaydown,acqContrib,revGrowthContrib,marginContrib}=s.attribution;
     const rows=s.rows;
     const {cagrMode,sensGrowthStep,sensExitStep,entryMargin,exitMargin}=s.meta||{cagrMode:'simple',sensGrowthStep:0.05,sensExitStep:1,entryMargin:0,exitMargin:0};
     const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
@@ -2121,7 +2127,8 @@
       const exitAcqEb=acqTotalFn(hold);
       const exitCombinedEb=exitOrganicEb+exitAcqEb;  // exit on combined EBITDA
       const ev=exitCombinedEb*xm;
-      const gr=ev-(ev*(exitFee||0))-debt+cash;
+      const feeAmt = (exitFeeAbs||0)>0 ? exitFeeAbs : ev*(exitFee||0);
+      const gr=ev-feeAmt-debt+cash;
       const pool=Math.max(gr-eq0,0)*mgmtPoolPct;
       const m=(gr-pool)/eq0;
       return m>0?m:null;
@@ -2310,12 +2317,26 @@
     p.strokeRect(R2X,EY,HW,EH);
     const comps=[
       {l:'Entry Eq.',v:1.00,                              c:'#4b5563'},
-      {l:'EBITDA Gr.',v:ebitdaGrowthContrib/entryEquity,  c:ebitdaGrowthContrib>=0?GREEN:RED},
-      {l:'Mult. Exp.', v:multipleExpansion/entryEquity,   c:multipleExpansion>=0?GREEN:RED},
-      {l:'Debt Pay.',  v:debtPaydown/entryEquity,          c:debtPaydown>=0?GREEN:RED},
-      ...(Math.abs(acqContrib||0)/entryEquity>0.005?[{l:'Bolt-on',v:acqContrib/entryEquity,c:(acqContrib||0)>=0?GREEN:RED}]:[]),
-      ...((exitFeeAmt||0)>0?[{l:'Exit Fees',v:-(exitFeeAmt)/entryEquity,c:RED}]:[]),
-      ...(mgmtPoolPct>0&&mgmtPayout>0?[{l:'Mgmt Pool',v:-mgmtPayout/entryEquity,c:RED}]:[]),
+      // Build floating components and sort most positive → most negative
+      ...(() => {
+        const floaters = [];
+        const showRev2 = cagrMode==='detail' && revGrowthContrib!=null && marginContrib!=null;
+        if(showRev2){
+          floaters.push({l:'Rev Growth',  v:revGrowthContrib/entryEquity,  c:revGrowthContrib>=0?GREEN:RED});
+          floaters.push({l:'Margin Exp.', v:marginContrib/entryEquity,     c:marginContrib>=0?GREEN:RED});
+        } else {
+          floaters.push({l:'EBITDA Gr.',  v:ebitdaGrowthContrib/entryEquity, c:ebitdaGrowthContrib>=0?GREEN:RED});
+        }
+        floaters.push({l:'Mult. Exp.',  v:multipleExpansion/entryEquity,    c:multipleExpansion>=0?GREEN:RED});
+        floaters.push({l:'Debt Pay.',   v:debtPaydown/entryEquity,           c:debtPaydown>=0?GREEN:RED});
+        if(Math.abs(acqContrib||0)/entryEquity>0.005)
+          floaters.push({l:'Bolt-on',   v:acqContrib/entryEquity,            c:(acqContrib||0)>=0?GREEN:RED});
+        if((exitFeeAmt||0)>0)
+          floaters.push({l:'Exit Fees', v:-(exitFeeAmt)/entryEquity,         c:RED});
+        if(mgmtPoolPct>0&&mgmtPayout>0)
+          floaters.push({l:'Mgmt Pool', v:-mgmtPayout/entryEquity,           c:RED});
+        return floaters.sort((a,b)=>b.v-a.v);  // most positive first
+      })(),
       {l:'Exit Eq.',   v:mom,                              c:'#1f2937'},
     ];
     const fMoMv=v=>(v>=0?'+':'')+v.toFixed(2)+'x';
@@ -2430,7 +2451,29 @@
 
     let finalY=SY+TABLEH;
 
-    // Table 3 (full width, only if bolt-on active): Bolt-on EBITDA × Exit Multiple
+    // Tables 3-5: additional tables on new rows
+    // Table 3: Revenue Growth × Exit Multiple (if rev+margin mode)
+    const showRevSens = cagrMode==='detail' && revGrowthContrib!=null;
+    if(showRevSens){
+      finalY+=4;
+      const rg=+document.getElementById('revGrowthVal')?.value/100||growth;
+      const em2=+document.getElementById('entryMargin')?.value/100||0;
+      const xm2=+document.getElementById('exitMargin')?.value/100||0;
+      const rgSteps=[rg-gs*3,rg-gs*2,rg-gs,rg,rg+gs,rg+gs*2,rg+gs*3];
+      const emSteps=[em2-0.03,em2-0.02,em2-0.01,em2,em2+0.01,em2+0.02,em2+0.03].filter(v=>v>0);
+      // Rev Growth × Exit Multiple
+      drawSensTable(
+        'MoM: Revenue Growth vs. Exit Multiple',
+        rgSteps.map(g2=>fP(g2)), xSteps.map(x=>fX1(x)),
+        (gStr,xStr)=>calcMoM(entryMult,parseFloat(gStr)/100,parseFloat(xStr),acqEnabled?acqEbitda:0),
+        gStr=>Math.abs(parseFloat(gStr)/100-rg)<0.001,
+        xStr=>Math.abs(parseFloat(xStr)-exitMult)<0.1,
+        LM,finalY,CW,TABLEH
+      );
+      finalY+=TABLEH+4;
+    }
+
+    // Table 4 (full width, only if bolt-on active): Bolt-on EBITDA × Exit Multiple
     if(acqEnabled&&acqEbitda>0){
       const aqSteps=[0,acqEbitda*0.5,acqEbitda,acqEbitda*1.5,acqEbitda*2,acqEbitda*2.5,acqEbitda*3];
       finalY+=4;
@@ -2772,6 +2815,21 @@
   }
 
   let fcfRevMode = 'ebitda';
+  window._exitFeeMode = 'pct';
+  function setExitFeeMode(mode) {
+    window._exitFeeMode = mode;
+    document.getElementById('exitFeeModePct').classList.toggle('active', mode==='pct');
+    document.getElementById('exitFeeModeDollar').classList.toggle('active', mode==='dollar');
+    document.getElementById('exitFeeSuffix').textContent = mode==='dollar' ? '$M' : '%';
+    document.getElementById('exitFeeHint').textContent = mode==='dollar'
+      ? '$ amount (advisory, closing)'
+      : '% of Exit EV (advisory, closing)';
+    // Adjust input step/max
+    const inp = document.getElementById('exitFee');
+    if(mode==='dollar'){ inp.max=9999; inp.step=0.5; } else { inp.max=10; inp.step=0.25; }
+    calculate();
+  }
+
   function setFcfRevMode(mode) {
     fcfRevMode = mode;
     document.getElementById('fcfRevModeEbitda').classList.toggle('active', mode === 'ebitda');
@@ -2881,7 +2939,9 @@
     const exitMult  = +document.getElementById('exitMultVal').value  || 12;
     const hold      = Math.round(+document.getElementById('holdVal').value) || 5;
     const txCost    = +document.getElementById('txCost').value       / 100;
-    const exitFee   = +document.getElementById('exitFee').value      / 100;
+    const _exitFeeRaw  = +document.getElementById('exitFee').value;
+    const _exitFeeMode = window._exitFeeMode || 'pct';
+    const exitFeeAbs   = _exitFeeMode === 'dollar' ? _exitFeeRaw : null;  // $ amount, or null if % mode
     const acqEbitda  = acqEnabled ? (+document.getElementById('acqEbitda').value  || 0) : 0;
     const acqMult    = acqEnabled ? (+document.getElementById('acqMultVal').value  || 10) : 10;
     const acqGrowth  = acqEnabled ? (+document.getElementById('acqGrowthVal').value / 100) : 0;
@@ -3026,7 +3086,8 @@
     const acqExitEBITDA      = totalAcqEbitdaFn(hold);
     const combinedExitEBITDA = exitEBITDA + acqExitEBITDA;
     const exitEV             = combinedExitEBITDA * exitMult;
-    const exitFeeAmt         = exitEV * exitFee;                    // advisory + closing fees at exit
+    const exitFee   = exitFeeAbs !== null ? (exitEV > 0 ? exitFeeAbs / exitEV : 0) : _exitFeeRaw / 100;
+    const exitFeeAmt         = exitFeeAbs !== null ? exitFeeAbs : exitEV * exitFee;  // $ or % of EV
     const exitDebt           = debt;
     const totalAcqDebt       = acqEnabled ? acqEbitda * acqMult * hold : 0;
     const grossExitEq        = exitEV - exitFeeAmt - exitDebt + accruedCash;
@@ -3159,7 +3220,7 @@
 
     // Store state
     window._lboState = {
-      inputs: { ebitda, entryMult, leverage, interest, fcfPct: fcfPctEff, growth, exitMult, hold, txCost, exitFee, acqEbitda, acqMult, acqGrowth, acqEnabled, cashSweep, mgmtPoolPct, fcfDetailParams },
+      inputs: { ebitda, entryMult, leverage, interest, fcfPct: fcfPctEff, growth, exitMult, hold, txCost, exitFee, exitFeeAbs: exitFeeAbs||0, acqEbitda, acqMult, acqGrowth, acqEnabled, cashSweep, mgmtPoolPct, fcfDetailParams },
       results: { irr, mom, entryEquity, netExitEq, entryEV, exitEBITDA: combinedExitEBITDA, exitEV, exitDebt, totalAcqDebt, accruedCash, mgmtPayout, exitFeeAmt },
       attribution: { ebitdaGrowthContrib, multipleExpansion, debtPaydown, acqContrib, revGrowthContrib, marginContrib },
       rows,
