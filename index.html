@@ -2087,6 +2087,7 @@
     if(!s){alert('Run the model first.');return;}
     const {ebitda,entryMult,leverage,interest,growth,exitMult,hold,
            txCost,exitFee,exitFeeAbs,fcfPct,acqEnabled,acqEbitda,acqMult,acqGrowth,cashSweep,mgmtPoolPct}=s.inputs;
+    const fcfDetailParams=s.inputs.fcfDetailParams||null;
     const {irr,mom,entryEquity,netExitEq,entryEV,exitEV,
            exitDebt,accruedCash,exitFeeAmt,mgmtPayout}=s.results;
     const {ebitdaGrowthContrib,multipleExpansion,debtPaydown,acqContrib,revGrowthContrib,marginContrib}=s.attribution;
@@ -2101,34 +2102,55 @@
     const fYoY=(c,pr)=>pr>0.01?((c-pr)/pr*100>=0?'+':'')+((c-pr)/pr*100).toFixed(1)+'%':'--';
 
     // MoM sensitivity engine — takes entryMult, growth, exitMult, optional acqEbitda/yr
-    const calcMoM=(entM,g,xm,acqEb=0)=>{
+    const calcMoM=(entM,g,xm,acqEb=0,fdp=null)=>{
       const eq0=ebitda*entM*(1+txCost)-ebitda*leverage;
       if(eq0<=0)return null;
       let debt=ebitda*leverage, cash=0;
-      // Replicate totalAcqEbitdaFn: each year adds acqEb of new EBITDA at acqMult debt
-      // Cohorts grow at acqGrowth from year of acquisition
-      const acqTotalFn = yr => {
-        if(!acqEb||acqEb===0) return 0;
-        if(Math.abs(acqGrowth)<1e-9) return acqEb*yr;
+      const acqTotalFn=yr=>{
+        if(!acqEb)return 0;
+        if(Math.abs(acqGrowth)<1e-9)return acqEb*yr;
         return acqEb*(Math.pow(1+acqGrowth,yr)-1)/acqGrowth;
       };
+      let prevEb=ebitda;
       for(let yr=1;yr<=hold;yr++){
-        if(acqEb>0) debt+=acqEb*acqMult;           // new bolt-on debt added each year
-        const organicEb=ebitda*Math.pow(1+g,yr);
-        const acqEbYr=acqTotalFn(yr);
-        const combinedEb=organicEb+acqEbYr;
-        const fc=(fcfPct||0.45)*combinedEb;         // FCF on combined EBITDA
-        const ie=debt*interest;
-        const net=Math.max(fc-ie,0);
-        const dp=cashSweep?Math.min(net,debt):0;
-        debt=Math.max(debt-dp,0);
-        cash+=Math.max(net-dp,0);
+        // Mirror main loop exactly: bolt-on debt first, then interest on updated debt
+        if(acqEb>0) debt+=acqEb*acqMult;
+        const combinedEb=ebitda*Math.pow(1+g,yr)+acqTotalFn(yr);
+        const intExp=debt*interest;
+        // Use fcfDetailParams when available, else simple %
+        let fcfAbs;
+        if(fdp){
+          const dp2=fdp;
+          const taxRate=dp2.taxRate||0,daRate=dp2.daRate||0,capexRate=dp2.capexRate||0,
+                wcRate=dp2.wcRate||0,useRevBasis=!!dp2.useRevBasis,entM2=dp2.em||0,exitM2=dp2.xm||0;
+          if(useRevBasis&&entM2>0){
+            const mar=entM2+(exitM2-entM2)*yr/hold;
+            const rev=mar>0?combinedEb/mar:combinedEb;
+            const prevMar=entM2+(exitM2-entM2)*(yr-1)/hold;
+            const prevRev=prevMar>0?prevEb/prevMar:prevEb;
+            const da=rev*daRate,capex=rev*capexRate,wc=(rev-prevRev)*wcRate;
+            fcfAbs=(combinedEb-da)*(1-taxRate)+da-capex-wc;
+          } else {
+            const da=combinedEb*daRate,capex=combinedEb*capexRate,wc=(combinedEb-prevEb)*wcRate;
+            fcfAbs=(combinedEb-da)*(1-taxRate)+da-capex-wc;
+          }
+        } else {
+          fcfAbs=(fcfPct||0.45)*combinedEb;
+        }
+        prevEb=combinedEb;
+        // Cash sweep mirrors main loop exactly
+        if(cashSweep){
+          const avail=Math.max(fcfAbs-intExp,0);
+          const dp=Math.min(avail,debt);
+          debt=Math.max(debt-dp,0);
+          cash+=Math.max(avail-dp,0);
+        } else {
+          cash+=Math.max(fcfAbs-intExp,0);
+        }
       }
-      const exitOrganicEb=ebitda*Math.pow(1+g,hold);
-      const exitAcqEb=acqTotalFn(hold);
-      const exitCombinedEb=exitOrganicEb+exitAcqEb;  // exit on combined EBITDA
+      const exitCombinedEb=ebitda*Math.pow(1+g,hold)+acqTotalFn(hold);
       const ev=exitCombinedEb*xm;
-      const feeAmt = (exitFeeAbs||0)>0 ? exitFeeAbs : ev*(exitFee||0);
+      const feeAmt=(exitFeeAbs||0)>0?exitFeeAbs:ev*(exitFee||0);
       const gr=ev-feeAmt-debt+cash;
       const pool=Math.max(gr-eq0,0)*mgmtPoolPct;
       const m=(gr-pool)/eq0;
@@ -2429,7 +2451,7 @@
       xSteps.map(x=>fX1(x)),
       (gStr,xStr)=>{
         const g2=parseFloat(gStr)/100,x2=parseFloat(xStr);
-        return calcMoM(entryMult,g2,x2,acqEnabled?acqEbitda:0);
+        return calcMoM(entryMult,g2,x2,acqEnabled?acqEbitda:0,fcfDetailParams);
       },
       gStr=>Math.abs(parseFloat(gStr)/100-growth)<0.001,
       xStr=>Math.abs(parseFloat(xStr)-exitMult)<0.1,
@@ -2443,7 +2465,7 @@
       xSteps.map(x=>fX1(x)),
       (nStr,xStr)=>{
         const n2=parseFloat(nStr),x2=parseFloat(xStr);
-        return calcMoM(n2,growth,x2,acqEnabled?acqEbitda:0);
+        return calcMoM(n2,growth,x2,acqEnabled?acqEbitda:0,fcfDetailParams);
       },
       nStr=>Math.abs(parseFloat(nStr)-entryMult)<0.1,
       xStr=>Math.abs(parseFloat(xStr)-exitMult)<0.1,
@@ -2514,7 +2536,7 @@
         xSteps.map(x=>fX1(x)),
         (aStr,xStr)=>{
           const a2=parseFloat(aStr.replace(/[$MB]/g,''))*1,x2=parseFloat(xStr);
-          return calcMoM(entryMult,growth,x2,a2);
+          return calcMoM(entryMult,growth,x2,a2,fcfDetailParams);
         },
         aStr=>Math.abs(parseFloat(aStr.replace(/[$MB]/g,''))-acqEbitda)<0.1,
         xStr=>Math.abs(parseFloat(xStr)-exitMult)<0.1,
@@ -3228,10 +3250,13 @@
 
     // FCF detail params for sensitivity — pass exact inputs so calc loop matches model exactly
     const fcfDetailParams = fcfMode === 'detail' ? {
-      taxRate:   +document.getElementById('taxRate').value   / 100,
-      daRate:    +document.getElementById('daRate').value    / 100,
-      capexRate: +document.getElementById('capexRate').value / 100,
-      wcRate:    +document.getElementById('wcRate').value    / 100,
+      taxRate:      +document.getElementById('taxRate').value   / 100,
+      daRate:       +document.getElementById('daRate').value    / 100,
+      capexRate:    +document.getElementById('capexRate').value / 100,
+      wcRate:       +document.getElementById('wcRate').value    / 100,
+      useRevBasis:  fcfRevMode === 'revenue' && cagrMode === 'detail',
+      em:           cagrMode === 'detail' ? +document.getElementById('entryMargin')?.value/100||0 : 0,
+      xm:           cagrMode === 'detail' ? +document.getElementById('exitMargin')?.value/100||0  : 0,
     } : null;
 
     // Sensitivity — dynamic exit multiple range centred on current exitMult
