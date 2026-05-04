@@ -1727,6 +1727,37 @@
       </div>
     </div>
 
+    <!-- Revenue Growth Sensitivity (shown only when Rev+Margin mode is on) -->
+    <div class="panel" id="sensRevPanel" style="animation-delay:0.45s;display:none;">
+      <div class="panel-header">
+        <span class="panel-title">Sensitivity — Revenue Growth vs. Exit Multiple</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
+            <span>Rev Growth Step:</span>
+            <select id="sensRevStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.005">0.5%</option>
+              <option value="0.01" selected>1%</option>
+              <option value="0.02">2%</option>
+              <option value="0.05">5%</option>
+            </select>
+            <span>Exit Step:</span>
+            <select id="sensRevExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.25">0.25x</option>
+              <option value="0.5" selected>0.5x</option>
+              <option value="1.0">1.0x</option>
+            </select>
+          </div>
+          <div class="toggle">
+            <button id="sensModeIRR4"              onclick="setSensMode('irr')">IRR</button>
+            <button id="sensModeMoM4" class="active" onclick="setSensMode('mom')">MoM</button>
+          </div>
+        </div>
+      </div>
+      <div class="sensitivity-wrap">
+        <table class="sens-table" id="sensTable4"></table>
+      </div>
+    </div>
+
         </div>
 
     <!-- AD ZONE -->
@@ -2843,19 +2874,20 @@
 
   function setSensMode(mode) {
     sensMode = mode;
-    document.getElementById('sensModeIRR').classList.toggle('active', mode === 'irr');
-    document.getElementById('sensModeMoM').classList.toggle('active', mode === 'mom');
-    document.getElementById('sensModeIRR2').classList.toggle('active', mode === 'irr');
-    document.getElementById('sensModeMoM2').classList.toggle('active', mode === 'mom');
-    document.getElementById('sensModeIRR3').classList.toggle('active', mode === 'irr');
-    document.getElementById('sensModeMoM3').classList.toggle('active', mode === 'mom');
+    ['','2','3','4'].forEach(n=>{
+      document.getElementById('sensModeIRR'+n)?.classList.toggle('active', mode==='irr');
+      document.getElementById('sensModeMoM'+n)?.classList.toggle('active', mode==='mom');
+    });
     const s = window._lboState;
     if (s) {
       const { ebitda, entryMult, leverage, interest, fcfPct, growth, exitMult, hold, txCost, acqEbitda, acqMult, acqGrowth, cashSweep: cs } = s.inputs;
       const entryDebt = ebitda * leverage;
-      drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, s.inputs.fcfDetailParams||null);
-      drawMultipleSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, s.inputs.fcfDetailParams||null);
-      if (s.inputs.acqEnabled && acqEbitda > 0) drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, s.inputs.fcfDetailParams||null);
+      const fdp = s.inputs.fcfDetailParams||null;
+      drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, fdp);
+      drawMultipleSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, fdp);
+      if (s.inputs.acqEnabled && acqEbitda > 0) drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, fdp);
+      if (document.getElementById('sensRevPanel')?.style.display !== 'none')
+        drawRevSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cs, s.inputs.mgmtPoolPct||0, fdp);
     }
   }
 
@@ -3296,6 +3328,18 @@
       drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPctEff, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cashSweep, mgmtPoolPct, fcfDetailParams);
     } else {
       acqPanel.style.display = 'none';
+    }
+
+    // Revenue growth sensitivity — shown only when Rev+Margin mode is on
+    const revPanel = document.getElementById('sensRevPanel');
+    const showRevSens = cagrMode === 'detail' &&
+      +document.getElementById('entryMargin')?.value > 0 &&
+      +document.getElementById('exitMargin')?.value > 0;
+    if (showRevSens) {
+      revPanel.style.display = '';
+      drawRevSensitivity(ebitda, entryMult, leverage, interest, fcfPctEff, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, exitMult, cashSweep, mgmtPoolPct, fcfDetailParams);
+    } else {
+      revPanel.style.display = 'none';
     }
 
     // Store state
@@ -3914,9 +3958,101 @@
     });
     htmlStr+='</tbody>'; table.innerHTML=htmlStr;
   }
+  function drawRevSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
+    const entryMargin = +document.getElementById('entryMargin')?.value/100||0;
+    const exitMargin  = +document.getElementById('exitMargin')?.value/100||0;
+    if (entryMargin <= 0 || exitMargin <= 0) return;
+
+    const exitFeePct = window._exitFeeMode==='dollar'
+      ? 0  // dollar mode: handled separately
+      : +(document.getElementById('exitFee')?.value||0)/100;
+    const exitFeeAbs = window._exitFeeMode==='dollar'
+      ? +(document.getElementById('exitFee')?.value||0) : 0;
+
+    const rgStep  = +(document.getElementById('sensRevStep')?.value || 0.01);
+    const xStep   = +(document.getElementById('sensRevExitStep')?.value || 0.5);
+    const entryDebt = ebitda * leverage;
+    const entryRev  = ebitda / entryMargin;
+
+    // Implied base-case revenue growth = rg such that entryRev*(1+rg)^hold*exitMargin = exitEBITDA
+    const impliedRg = Math.pow(Math.pow(1+growth,hold)*entryMargin/exitMargin, 1/hold) - 1;
+
+    // Revenue growth axis: centred on implied base
+    const rgVals = [-3,-2,-1,0,1,2,3,4].map(d => impliedRg + d*rgStep);
+
+    // Exit multiple axis
+    const snapX = v => Math.round(v/xStep)*xStep;
+    let exitVals = [-4,-3,-2,-1,0,1,2,3].map(d => Math.max(snapX(activeExit)+d*xStep,1));
+    const xi = exitVals.reduce((bi,x,i)=>Math.abs(x-activeExit)<Math.abs(exitVals[bi]-activeExit)?i:bi,0);
+    exitVals[xi]=activeExit;
+
+    const acqFnFor = (n) => {
+      if (!acqEbitda) return 0;
+      if (Math.abs(acqGrowth)<1e-9) return acqEbitda*n;
+      return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
+    };
+
+    const calc = (rg, ex) => {
+      const eq0 = ebitda*entryMult*(1+txCost) - entryDebt;
+      if (eq0<=0) return null;
+      let debt=entryDebt, cash=0, prevEb=ebitda;
+      for (let yr=1; yr<=hold; yr++) {
+        if (acqEbitda>0) debt += acqEbitda*acqMult;
+        const rev_yr  = entryRev*Math.pow(1+rg, yr);
+        const margin_yr = entryMargin+(exitMargin-entryMargin)*yr/hold;
+        const combinedEb = rev_yr*margin_yr + acqFnFor(yr);
+        const intExp = debt*interest;
+        let fcfAbs;
+        if (fcfDetailParams) {
+          const {taxRate,daRate,capexRate,wcRate,useRevBasis,em:em2,xm:xm2} = fcfDetailParams;
+          if (useRevBasis && em2>0) {
+            const mar=em2+(xm2-em2)*yr/hold, rev=mar>0?combinedEb/mar:combinedEb;
+            const prevMar=em2+(xm2-em2)*(yr-1)/hold, prevRev=prevMar>0?prevEb/prevMar:prevEb;
+            const da=rev*daRate,capex=rev*capexRate,wc=(rev-prevRev)*wcRate;
+            fcfAbs=(combinedEb-da)*(1-taxRate)+da-capex-wc;
+          } else {
+            const da=combinedEb*daRate,capex=combinedEb*capexRate,wc=(combinedEb-prevEb)*wcRate;
+            fcfAbs=(combinedEb-da)*(1-taxRate)+da-capex-wc;
+          }
+        } else {
+          fcfAbs = fcfPct*combinedEb;
+        }
+        prevEb=combinedEb;
+        if (cashSweep){const av=Math.max(fcfAbs-intExp,0),dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}
+        else cash+=Math.max(fcfAbs-intExp,0);
+      }
+      const exitRevF  = entryRev*Math.pow(1+rg,hold);
+      const exitEbF   = exitRevF*exitMargin + acqFnFor(hold);
+      const ev        = exitEbF*ex;
+      const feeAmt    = exitFeeAbs>0 ? exitFeeAbs : ev*exitFeePct;
+      const grossEq   = ev-feeAmt-debt+cash;
+      const exitEq    = grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
+      const mom       = Math.max(exitEq/eq0,0);
+      return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
+    };
+
+    const showMom = sensMode==='mom';
+    const table = document.getElementById('sensTable4');
+    let htmlStr = `<thead><tr><th>Rev Growth ↓ / Exit →</th>`;
+    exitVals.forEach(ex=>{ htmlStr+=`<th>${ex.toFixed(1)}x</th>`; });
+    htmlStr += '</tr></thead><tbody>';
+    rgVals.forEach(rg => {
+      htmlStr += `<tr><td>${(rg*100).toFixed(1)}%</td>`;
+      exitVals.forEach(ex => {
+        const res=calc(rg,ex);
+        const isActive=Math.abs(rg-impliedRg)<rgStep*0.5+0.0001 && Math.abs(ex-activeExit)<0.01;
+        if (!res||res.mom<=0){htmlStr+=`<td style="background:#fcc8c3" class="${isActive?'active-cell':''}">N/A</td>`;return;}
+        const bg  = showMom ? heatColorMom(res.mom) : heatColorIRR(res.irr);
+        const lbl = showMom ? res.mom.toFixed(2)+'x' : res.irr.toFixed(1)+'%';
+        htmlStr+=`<td style="background:${bg}" class="${isActive?'active-cell':''}">${lbl}</td>`;
+      });
+      htmlStr+='</tr>';
+    });
+    htmlStr+='</tbody>';
+    table.innerHTML=htmlStr;
+  }
 
 
-  // Generates a real .xlsx (OOXML) file with full cell formatting.
   // Uses STORE (uncompressed) ZIP for simplicity and reliability.
   // ═══════════════════════════════════════════════════════════════
   const XLSX = (() => {
