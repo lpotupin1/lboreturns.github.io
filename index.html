@@ -2493,22 +2493,46 @@
         const eq0=ebitda*entryMult*(1+(txCost||0))-ebitda*leverage;
         if(eq0<=0) return null;
         let debt=ebitda*leverage, cash=0;
+        const acqTF=yr=>{if(!acqEnabled||!acqEbitda)return 0;if(Math.abs(acqGrowth)<1e-9)return acqEbitda*yr;return acqEbitda*(Math.pow(1+acqGrowth,yr)-1)/acqGrowth;};
+        let prevEb=ebitda;
         for(let yr=1;yr<=hold;yr++){
           if(acqEnabled&&acqEbitda>0) debt+=acqEbitda*acqMult;
           const rev_yr=entryRev2*Math.pow(1+rg2,yr);
           const margin_yr=em2+(xm2-em2)*yr/hold;
-          const eb_yr=rev_yr*margin_yr;
-          const fc=(fcfPct||0.45)*eb_yr;
-          const ie=debt*interest;
-          const net=Math.max(fc-ie,0);
-          const dp=cashSweep?Math.min(net,debt):0;
-          debt=Math.max(debt-dp,0);
-          cash+=Math.max(net-dp,0);
+          const eb_yr=rev_yr*margin_yr + acqTF(yr);
+          const intExp=debt*interest;
+          // FCF: mirror main loop exactly, including detailed params
+          let fcfAbs;
+          const fdp2=fcfDetailParams;
+          if(fdp2){
+            if(fdp2.useRevBasis&&fdp2.em>0){
+              const mar=fdp2.em+(fdp2.xm-fdp2.em)*yr/hold;
+              const rev=mar>0?eb_yr/mar:eb_yr;
+              const prevMar=fdp2.em+(fdp2.xm-fdp2.em)*(yr-1)/hold;
+              const prevRev=prevMar>0?prevEb/prevMar:prevEb;
+              const da=rev*fdp2.daRate,capex=rev*fdp2.capexRate,wc=(rev-prevRev)*fdp2.wcRate;
+              fcfAbs=(eb_yr-da)*(1-fdp2.taxRate)+da-capex-wc;
+            } else {
+              const da=eb_yr*fdp2.daRate,capex=eb_yr*fdp2.capexRate,wc=(eb_yr-prevEb)*fdp2.wcRate;
+              fcfAbs=(eb_yr-da)*(1-fdp2.taxRate)+da-capex-wc;
+            }
+          } else {
+            fcfAbs=(fcfPct||0.45)*eb_yr;
+          }
+          prevEb=eb_yr;
+          // Mirror main loop sweep exactly
+          if(cashSweep){
+            const avail=Math.max(fcfAbs-intExp,0);
+            const dp=Math.min(avail,debt);
+            debt=Math.max(debt-dp,0);
+            cash+=Math.max(avail-dp,0);
+          } else {
+            cash+=Math.max(fcfAbs-intExp,0);
+          }
         }
         const exitRev2=entryRev2*Math.pow(1+rg2,hold);
-        const exitEb2=exitRev2*xm2; // exit EBITDA = exit rev × exit margin
-        const acqTF=yr=>{if(!acqEnabled||!acqEbitda)return 0;if(Math.abs(acqGrowth)<1e-9)return acqEbitda*yr;return acqEbitda*(Math.pow(1+acqGrowth,yr)-1)/acqGrowth;};
-        const ev=(exitEb2+acqTF(hold))*exitMultF;
+        const exitEb2=exitRev2*xm2+acqTF(hold);
+        const ev=exitEb2*exitMultF;
         const feeAmt=(exitFeeAbs||0)>0?exitFeeAbs:ev*(exitFee||0);
         const gr=ev-feeAmt-debt+cash;
         const pool=Math.max(gr-eq0,0)*(mgmtPoolPct||0);
