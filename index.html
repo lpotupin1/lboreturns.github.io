@@ -1312,10 +1312,10 @@
             Exit Fees
             <span class="input-hint" id="exitFeeHint">% of Exit EV (advisory, closing)</span>
           </div>
-          <div style="display:flex;gap:4px;align-items:center;">
-            <div class="input-field-wrap" style="flex:1;">
-              <input class="num-input has-suffix" type="number" onfocus="this.select()" id="exitFee" value="0" min="0" max="999" step="0.25" oninput="calculate()"/>
-              <span class="input-suffix" id="exitFeeSuffix">%</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <div style="display:flex;align-items:center;gap:3px;flex:1;">
+              <input class="num-input" type="number" onfocus="this.select()" id="exitFee" value="0" min="0" max="999" step="0.25" oninput="calculate()" style="flex:1;min-width:0;"/>
+              <span id="exitFeeSuffix" style="font-size:0.78rem;color:var(--muted);white-space:nowrap;">%</span>
             </div>
             <div class="toggle" style="font-size:0.65rem;flex-shrink:0;">
               <button id="exitFeeModePct" class="active" onclick="setExitFeeMode('pct')">%</button>
@@ -1578,8 +1578,8 @@
         <div class="panel-header">
           <span class="panel-title">Value Bridge</span>
           <div class="toggle" style="margin-left:auto;">
-            <button id="wfDollar" class="active" onclick="setWfMode('dollar')">$</button>
-            <button id="wfMoic"                  onclick="setWfMode('moic')">MoM</button>
+            <button id="wfDollar"            onclick="setWfMode('dollar')">$</button>
+            <button id="wfMoic" class="active" onclick="setWfMode('moic')">MoM</button>
           </div>
         </div>
         <div class="waterfall-wrap">
@@ -1587,101 +1587,6 @@
         </div>
       </div>
 
-    </div>
-
-    <!-- SENSITIVITY TABLE -->
-    <div class="panel" style="animation-delay:0.3s">
-      <div class="panel-header">
-        <span class="panel-title">Sensitivity — Exit Multiple vs. EBITDA Growth</span>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
-          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
-            <span>Step:</span>
-            <select id="sensGrowthStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
-              <option value="0.005">0.5%</option>
-              <option value="0.010" selected>1.0%</option>
-              <option value="0.025">2.5%</option>
-              <option value="0.050">5.0%</option>
-              <option value="0.100">10.0%</option>
-            </select>
-            <select id="sensExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
-              <option value="0.25">0.25x</option>
-              <option value="0.5" selected>0.5x</option>
-              <option value="1.0">1.0x</option>
-              <option value="1.5">1.5x</option>
-              <option value="2.0">2.0x</option>
-            </select>
-          </div>
-          <div class="toggle">
-            <button id="sensModeIRR"  class="active" onclick="setSensMode('irr')">IRR</button>
-            <button id="sensModeMoM"          onclick="setSensMode('mom')">MoM</button>
-          </div>
-        </div>
-      </div>
-      <div class="sensitivity-wrap">
-        <table class="sens-table" id="sensTable"></table>
-      </div>
-    </div>
-
-    <!-- ENTRY vs EXIT MULTIPLE SENSITIVITY TABLE -->
-    <div class="panel" style="animation-delay:0.35s">
-      <div class="panel-header">
-        <span class="panel-title">Sensitivity — Entry Multiple vs. Exit Multiple</span>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
-          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
-            <span>Step:</span>
-            <select id="sensMultStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
-              <option value="0.25">0.25x</option>
-              <option value="0.5" selected>0.5x</option>
-              <option value="1.0">1.0x</option>
-              <option value="1.5">1.5x</option>
-              <option value="2.0">2.0x</option>
-            </select>
-          </div>
-          <div class="toggle">
-            <button id="sensModeIRR2" class="active" onclick="setSensMode('irr')">IRR</button>
-            <button id="sensModeMoM2"          onclick="setSensMode('mom')">MoM</button>
-          </div>
-        </div>
-      </div>
-      <div class="sensitivity-wrap">
-        <table class="sens-table" id="sensTable2"></table>
-      </div>
-    </div>
-
-    <!-- BOLT-ON SENSITIVITY TABLE (shown only when bolt-on is ON) -->
-    <div class="panel" id="sensAcqPanel" style="animation-delay:0.4s;display:none;">
-      <div class="panel-header">
-        <span class="panel-title">Sensitivity — Acquired EBITDA vs. Exit Multiple</span>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
-          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
-            <span>Acq. Step:</span>
-            <select id="sensAcqStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
-              <option value="0.5">$0.5M</option>
-              <option value="1" selected>$1M</option>
-              <option value="2">$2M</option>
-              <option value="5">$5M</option>
-              <option value="10">$10M</option>
-              <option value="25">$25M</option>
-              <option value="10">$10M</option>
-            </select>
-            <span>Exit Step:</span>
-            <select id="sensAcqExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
-              <option value="0.25">0.25x</option>
-              <option value="0.5" selected>0.5x</option>
-              <option value="1.0">1.0x</option>
-              <option value="1.5">1.5x</option>
-              <option value="2.0">2.0x</option>
-            </select>
-          </div>
-          <div class="toggle">
-            <button id="sensModeIRR3" class="active" onclick="setSensMode('irr')">IRR</button>
-            <button id="sensModeMoM3"          onclick="setSensMode('mom')">MoM</button>
-          </div>
-        </div>
-      </div>
-      <div class="sensitivity-wrap">
-        <table class="sens-table" id="sensTable3"></table>
-      </div>
     </div>
 
     <!-- NEW OUTPUTS: 2-column row -->
@@ -1726,7 +1631,103 @@
       <div style="overflow-x:auto;">
         <table class="data-table sens-table" id="plTable" style="min-width:520px;"></table>
       </div>
+
+    <!-- SENSITIVITY TABLE -->
+    <div class="panel" style="animation-delay:0.3s">
+      <div class="panel-header">
+        <span class="panel-title">Sensitivity — Exit Multiple vs. EBITDA Growth</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
+            <span>Step:</span>
+            <select id="sensGrowthStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.005">0.5%</option>
+              <option value="0.010" selected>1.0%</option>
+              <option value="0.025">2.5%</option>
+              <option value="0.050">5.0%</option>
+              <option value="0.100">10.0%</option>
+            </select>
+            <select id="sensExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.25">0.25x</option>
+              <option value="0.5" selected>0.5x</option>
+              <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
+            </select>
+          </div>
+          <div class="toggle">
+            <button id="sensModeIRR"              onclick="setSensMode('irr')">IRR</button>
+            <button id="sensModeMoM" class="active" onclick="setSensMode('mom')">MoM</button>
+          </div>
+        </div>
+      </div>
+      <div class="sensitivity-wrap">
+        <table class="sens-table" id="sensTable"></table>
+      </div>
     </div>
+
+    <!-- ENTRY vs EXIT MULTIPLE SENSITIVITY TABLE -->
+    <div class="panel" style="animation-delay:0.35s">
+      <div class="panel-header">
+        <span class="panel-title">Sensitivity — Entry Multiple vs. Exit Multiple</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
+            <span>Step:</span>
+            <select id="sensMultStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.25">0.25x</option>
+              <option value="0.5" selected>0.5x</option>
+              <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
+            </select>
+          </div>
+          <div class="toggle">
+            <button id="sensModeIRR2"              onclick="setSensMode('irr')">IRR</button>
+            <button id="sensModeMoM2" class="active" onclick="setSensMode('mom')">MoM</button>
+          </div>
+        </div>
+      </div>
+      <div class="sensitivity-wrap">
+        <table class="sens-table" id="sensTable2"></table>
+      </div>
+    </div>
+
+    <!-- BOLT-ON SENSITIVITY TABLE (shown only when bolt-on is ON) -->
+    <div class="panel" id="sensAcqPanel" style="animation-delay:0.4s;display:none;">
+      <div class="panel-header">
+        <span class="panel-title">Sensitivity — Acquired EBITDA vs. Exit Multiple</span>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;">
+          <div style="display:flex;align-items:center;gap:0.3rem;font-size:0.72rem;color:var(--muted);">
+            <span>Acq. Step:</span>
+            <select id="sensAcqStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.5">$0.5M</option>
+              <option value="1" selected>$1M</option>
+              <option value="2">$2M</option>
+              <option value="5">$5M</option>
+              <option value="10">$10M</option>
+              <option value="25">$25M</option>
+              <option value="10">$10M</option>
+            </select>
+            <span>Exit Step:</span>
+            <select id="sensAcqExitStep" onchange="calculate()" style="font-size:0.72rem;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--panel-bg);cursor:pointer;">
+              <option value="0.25">0.25x</option>
+              <option value="0.5" selected>0.5x</option>
+              <option value="1.0">1.0x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2.0">2.0x</option>
+            </select>
+          </div>
+          <div class="toggle">
+            <button id="sensModeIRR3"              onclick="setSensMode('irr')">IRR</button>
+            <button id="sensModeMoM3" class="active" onclick="setSensMode('mom')">MoM</button>
+          </div>
+        </div>
+      </div>
+      <div class="sensitivity-wrap">
+        <table class="sens-table" id="sensTable3"></table>
+      </div>
+    </div>
+
+        </div>
 
     <!-- AD ZONE -->
     <div class="ad-zone">
@@ -2453,20 +2454,50 @@
 
     // Tables 3-5: additional tables on new rows
     // Table 3: Revenue Growth × Exit Multiple (if rev+margin mode)
-    const showRevSens = cagrMode==='detail' && revGrowthContrib!=null;
+    const showRevSens = cagrMode==='detail' && revGrowthContrib!=null && entryMargin>0 && exitMargin>0;
     if(showRevSens){
       finalY+=4;
-      const rg=+document.getElementById('revGrowthVal')?.value/100||growth;
-      const em2=+document.getElementById('entryMargin')?.value/100||0;
-      const xm2=+document.getElementById('exitMargin')?.value/100||0;
+      const em2=entryMargin;   // from meta
+      const xm2=exitMargin;    // from meta
+      // Derive base-case revenue growth implied by the model:
+      // exitRev = (ebitda*(1+growth)^hold)/exitMargin, entryRev = ebitda/entryMargin
+      // rg = (exitRev/entryRev)^(1/hold) - 1 = ((1+growth)^hold * entryMargin/exitMargin)^(1/hold) - 1
+      const rg = Math.pow(Math.pow(1+growth,hold)*em2/xm2, 1/hold) - 1;
       const rgSteps=[rg-gs*3,rg-gs*2,rg-gs,rg,rg+gs,rg+gs*2,rg+gs*3];
-      const emSteps=[em2-0.03,em2-0.02,em2-0.01,em2,em2+0.01,em2+0.02,em2+0.03].filter(v=>v>0);
-      // Rev Growth × Exit Multiple
+      // Rev Growth × Exit Multiple — proper engine: vary revGrowth, interpolate margin, compute EBITDA
+      const calcMoMRevG=(rg2,exitMultF)=>{
+        if(!em2||em2<=0) return null;
+        const entryRev2=ebitda/em2;
+        const eq0=ebitda*entryMult*(1+(txCost||0))-ebitda*leverage;
+        if(eq0<=0) return null;
+        let debt=ebitda*leverage, cash=0;
+        for(let yr=1;yr<=hold;yr++){
+          if(acqEnabled&&acqEbitda>0) debt+=acqEbitda*acqMult;
+          const rev_yr=entryRev2*Math.pow(1+rg2,yr);
+          const margin_yr=em2+(xm2-em2)*yr/hold;
+          const eb_yr=rev_yr*margin_yr;
+          const fc=(fcfPct||0.45)*eb_yr;
+          const ie=debt*interest;
+          const net=Math.max(fc-ie,0);
+          const dp=cashSweep?Math.min(net,debt):0;
+          debt=Math.max(debt-dp,0);
+          cash+=Math.max(net-dp,0);
+        }
+        const exitRev2=entryRev2*Math.pow(1+rg2,hold);
+        const exitEb2=exitRev2*xm2; // exit EBITDA = exit rev × exit margin
+        const acqTF=yr=>{if(!acqEnabled||!acqEbitda)return 0;if(Math.abs(acqGrowth)<1e-9)return acqEbitda*yr;return acqEbitda*(Math.pow(1+acqGrowth,yr)-1)/acqGrowth;};
+        const ev=(exitEb2+acqTF(hold))*exitMultF;
+        const feeAmt=(exitFeeAbs||0)>0?exitFeeAbs:ev*(exitFee||0);
+        const gr=ev-feeAmt-debt+cash;
+        const pool=Math.max(gr-eq0,0)*(mgmtPoolPct||0);
+        const m=(gr-pool)/eq0;
+        return m>0?m:null;
+      };
       drawSensTable(
         'MoM: Revenue Growth vs. Exit Multiple',
         rgSteps.map(g2=>fP(g2)), xSteps.map(x=>fX1(x)),
-        (gStr,xStr)=>calcMoM(entryMult,parseFloat(gStr)/100,parseFloat(xStr),acqEnabled?acqEbitda:0),
-        gStr=>Math.abs(parseFloat(gStr)/100-rg)<0.001,
+        (gStr,xStr)=>calcMoMRevG(parseFloat(gStr)/100,parseFloat(xStr)),
+        gStr=>Math.abs(parseFloat(gStr)/100-rg)<gs*0.5+0.001,
         xStr=>Math.abs(parseFloat(xStr)-exitMult)<0.1,
         LM,finalY,CW,TABLEH
       );
@@ -2750,8 +2781,8 @@
   let acqEnabled  = false;
   let cagrMode    = 'simple';
   let fcfMode     = 'simple';
-  let wfMode      = 'dollar';
-  let sensMode    = 'irr';
+  let wfMode      = 'moic';
+  let sensMode    = 'mom';
   let mgmtEnabled = false;
 
   function setMgmt(val) {
@@ -3279,8 +3310,7 @@
       ? v => v >= 0 ? v.toFixed(2)+'x' : '('+Math.abs(v).toFixed(2)+'x)'
       : v => fmtM(v);
 
-    const runBase4 = entryEq + ebitdaG + multExp + debtPay + acqContrib;
-    const runBase5 = runBase4 + (mgmtDrag < 0 ? mgmtDrag : 0);
+
     // In Rev+Margin detail mode, split EBITDA Growth into two bars
     const ebitdaItems = (revGrowthContrib !== null && marginContrib !== null)
       ? [
@@ -3291,15 +3321,21 @@
           { label: 'EBITDA\nGrowth', value: ebitdaG,          base: entryEq,                          type: ebitdaG          >= 0 ? 'pos' : 'neg' },
         ];
 
-    const raw = [
-      { label: 'Entry\nEquity',  value: entryEq,    base: 0,                                         type: 'base' },
+    // Sort floating bars most positive → most negative, then recompute bases
+    const floatingBars = [
       ...ebitdaItems,
-      { label: 'Multiple\nExp.', value: multExp,    base: entryEq + ebitdaG,                         type: multExp   >= 0 ? 'pos' : 'neg' },
-      { label: 'Debt\nPaydown',  value: debtPay,    base: entryEq + ebitdaG + multExp,               type: debtPay   >= 0 ? 'pos' : 'neg' },
-      { label: 'Bolt-on\nValue', value: acqContrib, base: entryEq + ebitdaG + multExp + debtPay,     type: acqContrib >= 0 ? 'pos' : 'neg' },
-      ...(mgmtDrag < 0   ? [{ label: 'Mgmt\nOptions', value: mgmtDrag,    base: runBase4,  type: 'neg' }] : []),
-      ...(exitFeeDrag < 0 ? [{ label: 'Exit\nFees',    value: exitFeeDrag, base: runBase5,  type: 'neg' }] : []),
-      { label: 'Exit\nEquity',   value: exitEq,     base: 0,                                         type: 'exit' },
+      { label: 'Multiple\nExp.', value: multExp,    type: multExp    >= 0 ? 'pos' : 'neg' },
+      { label: 'Debt\nPaydown',  value: debtPay,    type: debtPay    >= 0 ? 'pos' : 'neg' },
+      { label: 'Bolt-on\nValue', value: acqContrib, type: acqContrib >= 0 ? 'pos' : 'neg' },
+      ...(mgmtDrag   < 0 ? [{ label: 'Mgmt\nOptions', value: mgmtDrag,    type: 'neg' }] : []),
+      ...(exitFeeDrag < 0 ? [{ label: 'Exit\nFees',    value: exitFeeDrag, type: 'neg' }] : []),
+    ].sort((a, b) => b.value - a.value);
+    let _fb = entryEq;
+    floatingBars.forEach(bar => { bar.base = _fb; _fb += bar.value; });
+    const raw = [
+      { label: 'Entry\nEquity', value: entryEq, base: 0, type: 'base' },
+      ...floatingBars,
+      { label: 'Exit\nEquity',  value: exitEq,  base: 0, type: 'exit' },
     ];
 
     // Scale values for the chosen mode
@@ -4977,6 +5013,8 @@
 
   // Load URL hash state then run first calculation
   const loaded = loadFromHash();
+  // Sync toggle visual state with JS defaults (MoM for both)
+  setWfMode('moic');
   if (!loaded) calculate();
 
 </script>
