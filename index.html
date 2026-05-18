@@ -3529,7 +3529,7 @@
   // ── SENSITIVITY 1: Exit Multiple vs EBITDA Growth ──
   // ── SOURCES & USES ──
   function drawSU(inputs, results) {
-    const { ebitda, entryMult, leverage, txCost, acqEnabled, acqEbitda, acqMult, hold } = inputs;
+    const { ebitda, entryMult, leverage, txCost, acqEnabled, acqEbitda, acqMult, hold, fcfDetailParams } = inputs;
     const { entryEquity } = results;
     const entryEV      = ebitda * entryMult;
     const txCostAmt    = entryEV * txCost;
@@ -3537,8 +3537,18 @@
     const totalBoltDebt = acqEnabled ? acqEbitda * acqMult * hold : 0;
     const totalUses    = entryEV + txCostAmt;   // % denominator for BOTH sections
 
+    // EBITDA-Capex: available when detailed FCF is on
+    const capexRate = fcfDetailParams?.capexRate || 0;
+    const useRevBasis = fcfDetailParams?.useRevBasis && fcfDetailParams?.em > 0;
+    const entryCapexPct = useRevBasis
+      ? capexRate / (fcfDetailParams.em || 1)   // capex as % of EBITDA via rev basis
+      : capexRate;
+    const entryEbitdaLessCapex = ebitda * (1 - entryCapexPct);
+    const hasCapex = fcfDetailParams && capexRate > 0;
+
     const pct  = v => totalUses > 0 ? (v / totalUses * 100).toFixed(1) + '%' : '—';
     const xEb  = v => ebitda   > 0 ? (v / ebitda).toFixed(1) + 'x'         : '—';
+    const xEbCapex = v => entryEbitdaLessCapex > 0 ? (v / entryEbitdaLessCapex).toFixed(1) + 'x' : '—';
 
     const row = (label, val, bold=false) =>
       `<tr style="${bold?'font-weight:700;background:var(--green-lt);':''}">` +
@@ -3546,9 +3556,18 @@
       `<td class="${bold?'pos':'hi'}" style="text-align:right;">${fmtM(val)}</td>` +
       `<td style="text-align:right;color:var(--muted);font-size:0.68rem;">${pct(val)}</td>` +
       `<td style="text-align:right;color:var(--muted);font-size:0.68rem;">${xEb(val)}</td>` +
+      (hasCapex ? `<td style="text-align:right;color:var(--muted);font-size:0.68rem;">${xEbCapex(val)}</td>` : '') +
       `</tr>`;
     const div = label =>
-      `<tr style="background:var(--bg);"><td colspan="4" style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 0.75rem 0.25rem;">${label}</td></tr>`;
+      `<tr style="background:var(--bg);"><td colspan="${hasCapex?5:4}" style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);padding:0.5rem 0.75rem 0.25rem;">${label}</td></tr>`;
+
+    // Update table header to add/remove EBITDA-Capex column
+    const suTableHead = document.querySelector('#suTable thead tr');
+    if (suTableHead) {
+      suTableHead.innerHTML = hasCapex
+        ? '<th style="text-align:left">Item</th><th>$M</th><th>% of Total</th><th>x EBITDA</th><th>x (EBITDA−Capex)</th>'
+        : '<th style="text-align:left">Item</th><th>$M</th><th>% of Total</th><th>x EBITDA</th>';
+    }
 
     let html = div('Uses');
     html += row('Entry EV',            entryEV);
@@ -3566,16 +3585,32 @@
         `<td style="text-align:right;color:var(--amber);">${fmtM(totalBoltDebt)}</td>` +
         `<td style="text-align:right;color:var(--amber);font-size:0.68rem;">${pct(totalBoltDebt)}</td>` +
         `<td style="text-align:right;color:var(--amber);font-size:0.68rem;">${xEb(totalBoltDebt)}</td>` +
+        (hasCapex ? `<td style="text-align:right;color:var(--amber);font-size:0.68rem;">${xEbCapex(totalBoltDebt)}</td>` : '') +
         `</tr>`;
+
+    if (hasCapex)
+      html += `<tr style="background:#f0f9ff;"><td colspan="5" style="font-size:0.67rem;color:var(--muted);padding:0.35rem 0.75rem;">` +
+        `Entry EBITDA−Capex: ${fmtM(entryEbitdaLessCapex)} &nbsp;|&nbsp; ` +
+        `Entry EV / (EBITDA−Capex): <strong>${entryEbitdaLessCapex>0?(entryEV/entryEbitdaLessCapex).toFixed(1)+'x':'—'}</strong>` +
+        `</td></tr>`;
 
     document.getElementById('suBody').innerHTML = html;
   }
 
   // ── EXIT PROCEEDS ──
   function drawExitProceeds(inputs, results) {
-    const { exitMult, mgmtPoolPct } = inputs;
+    const { exitMult, mgmtPoolPct, fcfDetailParams } = inputs;
     const { exitEBITDA, exitEV, exitDebt, accruedCash, mgmtPayout, netExitEq, entryEquity, exitFeeAmt } = results;
     const grossExitEq = exitEV - (exitFeeAmt||0) - exitDebt + (accruedCash||0);
+
+    // EBITDA-Capex at exit
+    const capexRate = fcfDetailParams?.capexRate || 0;
+    const useRevBasis = fcfDetailParams?.useRevBasis && fcfDetailParams?.xm > 0;
+    const exitCapexPct = useRevBasis
+      ? capexRate / (fcfDetailParams.xm || 1)
+      : capexRate;
+    const exitEbitdaLessCapex = exitEBITDA * (1 - exitCapexPct);
+    const hasCapex = fcfDetailParams && capexRate > 0;
 
     const note = s => `<span style="color:var(--muted);font-size:0.68rem;">${s}</span>`;
     const row  = (label, val, n='', bold=false, green=false) =>
@@ -3587,7 +3622,19 @@
 
     let html = div('Exit Valuation');
     html += row('Exit EBITDA', exitEBITDA, 'LTM at exit');
-    html += `<tr><td>× Exit Multiple</td><td style="text-align:right;">${exitMult}x</td><td>${note('EV/EBITDA')}</td></tr>`;
+    if (hasCapex) {
+      const exitCapexAmt = exitEBITDA * exitCapexPct;
+      html += row('− Exit Capex', -exitCapexAmt, `${(exitCapexPct*100).toFixed(1)}% of EBITDA`);
+      html += row('= Exit EBITDA − Capex', exitEbitdaLessCapex, '', true);
+    }
+    html += `<tr><td>× Exit Multiple</td><td style="text-align:right;">${exitMult}x</td>` +
+      `<td>${note('EV/EBITDA')}</td></tr>`;
+    if (hasCapex && exitEbitdaLessCapex > 0) {
+      const xEbitdaCapex = exitEV / exitEbitdaLessCapex;
+      html += `<tr><td style="color:var(--muted);font-size:0.7rem;">&nbsp;&nbsp;(implied EV/EBITDA−Capex)</td>` +
+        `<td style="text-align:right;font-size:0.7rem;color:var(--muted);">${xEbitdaCapex.toFixed(1)}x</td>` +
+        `<td>${note('EV/(EBITDA−Capex)')}</td></tr>`;
+    }
     html += row('= Exit EV', exitEV, '', true);
     html += div('Deductions');
     if (exitFeeAmt > 0) html += row('− Exit Fees', -exitFeeAmt, 'Advisory + closing');
@@ -3605,7 +3652,8 @@
     html += row(`= Equity Gain`, gain, '', false, true);
 
     document.getElementById('exitBody').innerHTML = html;
-    document.getElementById('exitPanelBadge').textContent = `${exitMult}x Exit`;
+    document.getElementById('exitPanelBadge').textContent = `${exitMult}x Exit` +
+      (hasCapex && exitEbitdaLessCapex > 0 ? ` | ${(exitEV/exitEbitdaLessCapex).toFixed(1)}x (EBITDA−Capex)` : '');
   }
 
   // ── COMBINED P&L + FCF WALK ──
@@ -3747,7 +3795,11 @@
   }
 
   function drawSensitivity(ebitda, entryMult, entryDebt, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, activeGrowth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
-    const exitFee = +(document.getElementById('exitFee')?.value||0)/100;
+    const _efRaw = +(document.getElementById('exitFee')?.value||0);
+    const _efMode = window._exitFeeMode||'pct';
+    const _efAbs  = _efMode==='dollar' ? _efRaw : 0;
+    const _efPct  = _efMode==='pct'    ? _efRaw/100 : 0;
+    const calcFeeAmt = (ev) => _efAbs>0 ? _efAbs : ev*_efPct;
     const gStep = +( document.getElementById('sensGrowthStep')?.value || 0.025);
     const xStep = +( document.getElementById('sensExitStep')?.value  || 0.5);
     const snapG = v => Math.round(v / gStep) * gStep;
@@ -3766,32 +3818,37 @@
       if (Math.abs(acqGrowth)<1e-9) return acqEbitda*n;
       return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
     };
-    // Exact FCF function — mirrors computeFcf in calculate()
+        // Exact FCF function — mirrors computeFcf in calculate(), supports rev-basis and yr param
     const calcFcfExact = fcfDetailParams
-      ? (eVal, prevEVal) => {
-          const {taxRate,daRate,capexRate,wcRate} = fcfDetailParams;
-          const da = eVal * daRate;
-          const nopat = (eVal - da) * (1 - taxRate);
-          const wc = (eVal - prevEVal) * wcRate;
-          return nopat + da - eVal * capexRate - wc;
+      ? (eVal, prevEVal, yr) => {
+          const {taxRate,daRate,capexRate,wcRate,useRevBasis,em:em_,xm:xm_} = fcfDetailParams;
+          let da,capex,wc;
+          if(useRevBasis&&em_>0){
+            const mar=em_+(xm_-em_)*yr/hold, rev=mar>0?eVal/mar:eVal;
+            const prevMar=em_+(xm_-em_)*(yr-1)/hold, prevRev=prevMar>0?prevEVal/prevMar:prevEVal;
+            da=rev*daRate; capex=rev*capexRate; wc=(rev-prevRev)*wcRate;
+          } else {
+            da=eVal*daRate; capex=eVal*capexRate; wc=(eVal-prevEVal)*wcRate;
+          }
+          return (eVal-da)*(1-taxRate)+da-capex-wc;
         }
-      : (eVal) => eVal * fcfPct;
+      : (eVal) => eVal*fcfPct;
 
     const calc = (g, ex) => {
-      const eq0 = ebitda*entryMult - entryDebt + ebitda*entryMult*txCost;
+      const eq0 = ebitda*entryMult*(1+txCost) - entryDebt;
       if (eq0<=0) return null;
       let debt=entryDebt, cash=0, prevE=ebitda;
       for (let yr=1;yr<=hold;yr++) {
-        debt += acqEbitda*acqMult;
+        if(acqEbitda>0) debt += acqEbitda*acqMult;
         const combinedE = ebitda*Math.pow(1+g,yr)+acqFn(yr);
         const intExp=debt*interest;
-        const fcfAbs = calcFcfExact(combinedE, prevE);
+        const fcfAbs = calcFcfExact(combinedE, prevE, yr);
         prevE = combinedE;
         if (cashSweep){const avail=Math.max(fcfAbs-intExp,0);const dp=Math.min(avail,debt);debt=Math.max(debt-dp,0);cash+=Math.max(avail-dp,0);}
         else cash+=Math.max(fcfAbs-intExp,0);
       }
-      const grossExit=(ebitda*Math.pow(1+g,hold)+acqFn(hold))*ex;
-      const grossEq=grossExit*(1-exitFee)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
+      const ev=(ebitda*Math.pow(1+g,hold)+acqFn(hold))*ex;
+      const grossEq=ev-calcFeeAmt(ev)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -3818,7 +3875,11 @@
 
   // ── SENSITIVITY 2: Entry Multiple vs Exit Multiple ──
   function drawMultipleSensitivity(ebitda, activeEntry, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
-    const exitFee = +(document.getElementById('exitFee')?.value||0)/100;
+        const _efRaw = +(document.getElementById('exitFee')?.value||0);
+    const _efMode = window._exitFeeMode||'pct';
+    const _efAbs  = _efMode==='dollar' ? _efRaw : 0;
+    const _efPct  = _efMode==='pct'    ? _efRaw/100 : 0;
+    const calcFeeAmt = (ev) => _efAbs>0 ? _efAbs : ev*_efPct;
     const mStep = +( document.getElementById('sensMultStep')?.value || 0.5);
     const snapM = v => Math.round(v / mStep) * mStep;
     const entryDebt = ebitda*leverage;
@@ -3835,33 +3896,37 @@
       if (Math.abs(acqGrowth)<1e-9) return acqEbitda*n;
       return acqEbitda*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
     };
-    // Exact FCF function — mirrors computeFcf in calculate()
+        // Exact FCF function — mirrors computeFcf in calculate(), supports rev-basis and yr param
     const calcFcfExact = fcfDetailParams
-      ? (eVal, prevEVal) => {
-          const {taxRate,daRate,capexRate,wcRate} = fcfDetailParams;
-          const da = eVal * daRate;
-          const nopat = (eVal - da) * (1 - taxRate);
-          const wc = (eVal - prevEVal) * wcRate;
-          return nopat + da - eVal * capexRate - wc;
+      ? (eVal, prevEVal, yr) => {
+          const {taxRate,daRate,capexRate,wcRate,useRevBasis,em:em_,xm:xm_} = fcfDetailParams;
+          let da,capex,wc;
+          if(useRevBasis&&em_>0){
+            const mar=em_+(xm_-em_)*yr/hold, rev=mar>0?eVal/mar:eVal;
+            const prevMar=em_+(xm_-em_)*(yr-1)/hold, prevRev=prevMar>0?prevEVal/prevMar:prevEVal;
+            da=rev*daRate; capex=rev*capexRate; wc=(rev-prevRev)*wcRate;
+          } else {
+            da=eVal*daRate; capex=eVal*capexRate; wc=(eVal-prevEVal)*wcRate;
+          }
+          return (eVal-da)*(1-taxRate)+da-capex-wc;
         }
-      : (eVal) => eVal * fcfPct;
+      : (eVal) => eVal*fcfPct;
 
     const calc = (en, ex) => {
-      const ev0=ebitda*en, d0=entryDebt;
-      const eq0=ev0-d0+ev0*txCost;
+      const eq0=ebitda*en*(1+txCost)-entryDebt;
       if (eq0<=0) return null;
-      let debt=d0, cash=0, prevE=ebitda;
+      let debt=entryDebt, cash=0, prevE=ebitda;
       for (let yr=1;yr<=hold;yr++) {
-        debt+=acqEbitda*acqMult;
+        if(acqEbitda>0) debt+=acqEbitda*acqMult;
         const combinedE=ebitda*Math.pow(1+growth,yr)+acqFn(yr);
         const intExp=debt*interest;
-        const fcfAbs=calcFcfExact(combinedE, prevE);
+        const fcfAbs=calcFcfExact(combinedE, prevE, yr);
         prevE=combinedE;
         if (cashSweep){const avail=Math.max(fcfAbs-intExp,0);const dp=Math.min(avail,debt);debt=Math.max(debt-dp,0);cash+=Math.max(avail-dp,0);}
         else cash+=Math.max(fcfAbs-intExp,0);
       }
-      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFn(hold))*ex;
-      const grossEq=grossExit*(1-exitFee)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
+      const ev=(ebitda*Math.pow(1+growth,hold)+acqFn(hold))*ex;
+      const grossEq=ev-calcFeeAmt(ev)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
@@ -3888,7 +3953,11 @@
 
   // ── SENSITIVITY 3: Acquired EBITDA vs Exit Multiple ──
   function drawAcqSensitivity(ebitda, entryMult, leverage, interest, fcfPct, hold, txCost, acqEbitda, acqMult, acqGrowth, growth, activeExit, cashSweep, mgmtPoolPct=0, fcfDetailParams=null) {
-    const exitFee = +(document.getElementById('exitFee')?.value||0)/100;
+        const _efRaw = +(document.getElementById('exitFee')?.value||0);
+    const _efMode = window._exitFeeMode||'pct';
+    const _efAbs  = _efMode==='dollar' ? _efRaw : 0;
+    const _efPct  = _efMode==='pct'    ? _efRaw/100 : 0;
+    const calcFeeAmt = (ev) => _efAbs>0 ? _efAbs : ev*_efPct;
     const xStep = +( document.getElementById('sensAcqExitStep')?.value || 0.5);
     const snapX = v => Math.round(v / xStep) * xStep;
     const aqStep = +( document.getElementById('sensAcqStep')?.value || 1);
@@ -3912,12 +3981,17 @@
       return aq*(Math.pow(1+acqGrowth,n)-1)/acqGrowth;
     };
     const calcFcfExact = fcfDetailParams
-      ? (eVal, prevEVal) => {
-          const {taxRate,daRate,capexRate,wcRate} = fcfDetailParams;
-          const da = eVal*daRate;
-          const nopat = (eVal-da)*(1-taxRate);
-          const wc = (eVal-prevEVal)*wcRate;
-          return nopat+da-eVal*capexRate-wc;
+      ? (eVal, prevEVal, yr) => {
+          const {taxRate,daRate,capexRate,wcRate,useRevBasis,em:em_,xm:xm_} = fcfDetailParams;
+          let da,capex,wc;
+          if(useRevBasis&&em_>0){
+            const mar=em_+(xm_-em_)*yr/hold, rev=mar>0?eVal/mar:eVal;
+            const prevMar=em_+(xm_-em_)*(yr-1)/hold, prevRev=prevMar>0?prevEVal/prevMar:prevEVal;
+            da=rev*daRate; capex=rev*capexRate; wc=(rev-prevRev)*wcRate;
+          } else {
+            da=eVal*daRate; capex=eVal*capexRate; wc=(eVal-prevEVal)*wcRate;
+          }
+          return (eVal-da)*(1-taxRate)+da-capex-wc;
         }
       : (eVal) => eVal*fcfPct;
 
@@ -3929,12 +4003,12 @@
         debt += aq * acqMult;
         const combinedE = ebitda*Math.pow(1+growth,yr) + acqFnFor(aq,yr);
         const intExp = debt*interest;
-        const fcfAbs = calcFcfExact(combinedE, prevE); prevE = combinedE;
+        const fcfAbs = calcFcfExact(combinedE, prevE, yr); prevE = combinedE;
         if (cashSweep){const av=Math.max(fcfAbs-intExp,0);const dp=Math.min(av,debt);debt=Math.max(debt-dp,0);cash+=Math.max(av-dp,0);}
         else cash+=Math.max(fcfAbs-intExp,0);
       }
-      const grossExit=(ebitda*Math.pow(1+growth,hold)+acqFnFor(aq,hold))*ex;
-      const grossEq=grossExit*(1-exitFee)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
+      const ev=(ebitda*Math.pow(1+growth,hold)+acqFnFor(aq,hold))*ex;
+      const grossEq=ev-calcFeeAmt(ev)-debt+cash; const exitE=grossEq-Math.max(grossEq-eq0,0)*mgmtPoolPct;
       const mom=Math.max(exitE/eq0,0);
       return {irr:(Math.pow(mom,1/hold)-1)*100, mom};
     };
