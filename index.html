@@ -3789,22 +3789,39 @@
     html += sectHdr('Free Cash Flow Bridge');
 
     if (isDetailFcf) {
-      const { taxRate, daRate, capexRate, wcRate } = fcfDetailParams;
-      const prevEbitdas = rows.map((r,i) => i === 0 ? inputs.ebitda : rows[i-1].ebitda);
-      const da    = rows.map(r => r.ebitda * daRate);
-      const ebit  = rows.map(r => r.ebitda * (1 - daRate));
-      const tax   = rows.map(r => r.ebitda * (1 - daRate) * taxRate);
-      const nopat = rows.map(r => r.ebitda * (1 - daRate) * (1 - taxRate));
-      const capex = rows.map(r => r.ebitda * capexRate);
-      const nwc   = rows.map((r,i) => Math.max(r.ebitda - prevEbitdas[i], 0) * wcRate);
+      const { taxRate, daRate, capexRate, wcRate, useRevBasis, em: em_, xm: xm_ } = fcfDetailParams;
+      const hold_ = inputs.hold;
+      const revBasis = useRevBasis && em_ > 0;
 
-      html += dRow('− D&A', da.map(v => -v), 'neg', false, true);
+      // Compute per-year basis (revenue or EBITDA)
+      const basis = rows.map((r, i) => {
+        if (!revBasis) return r.ebitda;
+        const mar = em_ + (xm_ - em_) * (i + 1) / hold_;
+        return mar > 0 ? r.ebitda / mar : r.ebitda;
+      });
+      const prevBasis = rows.map((r, i) => {
+        if (!revBasis) return i === 0 ? inputs.ebitda : rows[i-1].ebitda;
+        const prevYr = i; // yr-1 index (i=0 → entry)
+        const prevMar = em_ + (xm_ - em_) * prevYr / hold_;
+        const prevEb  = i === 0 ? inputs.ebitda : rows[i-1].ebitda;
+        return prevMar > 0 ? prevEb / prevMar : prevEb;
+      });
+
+      const da    = basis.map(b => b * daRate);
+      const ebit  = rows.map((r, i) => r.ebitda - da[i]);
+      const tax   = ebit.map(e => e * taxRate);
+      const nopat = ebit.map((e, i) => e - tax[i]);
+      const capex = basis.map(b => b * capexRate);
+      const nwc   = basis.map((b, i) => Math.max(b - prevBasis[i], 0) * wcRate);
+
+      const basisLabel = revBasis ? 'Revenue' : 'EBITDA';
+      html += dRow(`− D&A (% of ${basisLabel})`, da.map(v => -v), 'neg', false, true);
       html += dRow('= EBIT', ebit, '', true);
       html += dRow('− Tax', tax.map(v => -v), 'neg', false, true);
       html += dRow('= NOPAT', nopat, '', true);
-      html += dRow('+ D&A', da, 'pos', false, true);
-      html += dRow('− Capex', capex.map(v => -v), 'neg', false, true);
-      html += dRow('− ΔNWC', nwc.map(v => -v), 'neg', false, true);
+      html += dRow(`+ D&A`, da, 'pos', false, true);
+      html += dRow(`− Capex (% of ${basisLabel})`, capex.map(v => -v), 'neg', false, true);
+      html += dRow(`− ΔNWC (% of Δ${basisLabel})`, nwc.map(v => -v), 'neg', false, true);
     } else {
       html += dRow(`× FCF Conv. (${(fcfPct*100).toFixed(1)}%)`, rows.map(r => r.fcf - r.ebitda), 'neg', false, true);
     }
@@ -4761,41 +4778,35 @@
 
         const prevEbs = [ebitda,...SR.slice(0,-1).map(r=>r.ebitda)];
 
-        const mkFcfRow = (lbl, vals0fn, valsKfn, vStyle=S.FML) => {
-          const row = [{...vals0fn(), z:N1}];
+        // mkFcfRow: entry column always blank for flow items
+        const mkFcfRow = (lbl, valsKfn, vStyle=S.FML) => {
+          const row = [{v:null,s:S.LBL}];
           for (let k=1;k<=hold;k++) row.push({...valsKfn(k), z:N1});
           return dataRow(lbl, row, vStyle);
         };
-
-        const R_da_x  = mkFcfRow('− D&A',
-          ()=>f$(-(daBase(0)*daRate),        `-${baseRef(0)}*${bRef(IR.daRate)}`),
-          k =>f$(-(daBase(k)*daRate),        `-${baseRef(k)}*${bRef(IR.daRate)}`));
+        const basisLbl = revBasis ? 'Revenue' : 'EBITDA';
+        const R_da_x  = mkFcfRow(`− D&A (% of ${basisLbl})`,
+          k =>f$(-(daBase(k)*daRate), `-${baseRef(k)}*${bRef(IR.daRate)}`));
         const R_ebit_x= mkFcfRow('= EBIT',
-          ()=>f$(ebitdaAt(0)-daBase(0)*daRate,  `${ebitdaRef(0)}+${cRef(0,R_da_x)}`),
-          k =>f$(ebitdaAt(k)-daBase(k)*daRate,  `${ebitdaRef(k)}+${cRef(k,R_da_x)}`));
+          k =>f$(ebitdaAt(k)-daBase(k)*daRate, `${ebitdaRef(k)}+${cRef(k,R_da_x)}`));
         const R_tax_x = mkFcfRow('− Tax on EBIT',
-          ()=>f$(-((ebitdaAt(0)-daBase(0)*daRate)*taxRate),`-${cRef(0,R_ebit_x)}*${bRef(IR.taxRate)}`),
-          k =>f$(-((ebitdaAt(k)-daBase(k)*daRate)*taxRate),`-${cRef(k,R_ebit_x)}*${bRef(IR.taxRate)}`));
+          k =>f$(-((ebitdaAt(k)-daBase(k)*daRate)*taxRate), `-${cRef(k,R_ebit_x)}*${bRef(IR.taxRate)}`));
         const R_nop_x = mkFcfRow('= NOPAT',
-          ()=>f$((ebitdaAt(0)-daBase(0)*daRate)*(1-taxRate),`${cRef(0,R_ebit_x)}+${cRef(0,R_tax_x)}`),
-          k =>f$((ebitdaAt(k)-daBase(k)*daRate)*(1-taxRate),`${cRef(k,R_ebit_x)}+${cRef(k,R_tax_x)}`));
+          k =>f$((ebitdaAt(k)-daBase(k)*daRate)*(1-taxRate), `${cRef(k,R_ebit_x)}+${cRef(k,R_tax_x)}`));
         mkFcfRow('+ D&A',
-          ()=>f$(daBase(0)*daRate,  `-${cRef(0,R_da_x)}`),
-          k =>f$(daBase(k)*daRate,  `-${cRef(k,R_da_x)}`));
+          k =>f$(daBase(k)*daRate, `-${cRef(k,R_da_x)}`));
         const R_daB_x = rn;
-        mkFcfRow('− Capex',
-          ()=>f$(-(capBase(0)*capexRate),`-${baseRef(0)}*${bRef(IR.capexRate)}`),
-          k =>f$(-(capBase(k)*capexRate),`-${baseRef(k)}*${bRef(IR.capexRate)}`));
+        mkFcfRow(`− Capex (% of ${basisLbl})`,
+          k =>f$(-(capBase(k)*capexRate), `-${baseRef(k)}*${bRef(IR.capexRate)}`));
         const R_cap_x = rn;
-        mkFcfRow('− ΔNWC',
-          ()=>f$(0,'0'),
+        mkFcfRow(`− ΔNWC (% of Δ${basisLbl})`,
           k =>f$(-(wcDelta(k)*wcRate),
             revBasis && R_rev
               ? `-MAX(${baseRef(k)}-${baseRef(k-1)},0)*${bRef(IR.wcRate)}`
               : `-MAX(${ebitdaRef(k)}-${ebitdaRef(k-1)},0)*${bRef(IR.wcRate)}`));
         const R_nwc_x = rn;
         var R_fcf = dataRow('= Unlevered FCF',
-          [{...fx(ebitdaAt(0)*fcfPct,`${cRef(0,R_nop_x)}-${cRef(0,R_da_x)}+${cRef(0,R_daB_x)}+${cRef(0,R_cap_x)}+${cRef(0,R_nwc_x)}`),z:N1},
+          [{v:null,s:S.LBL},
            ...SR.map((r,k)=>({...fx(r.fcf,`${cRef(k+1,R_nop_x)}+${cRef(k+1,R_daB_x)}+${cRef(k+1,R_cap_x)}+${cRef(k+1,R_nwc_x)}`),z:N1}))]);
       } else {
         // Simple FCF%: single line, formula = EBITDA * fcfPct (from Assumptions)
