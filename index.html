@@ -2975,6 +2975,8 @@
     const showRevBasis = mode === 'detail' && cagrMode === 'detail';
     const row = document.getElementById('fcfRevModeRow');
     if(row) row.style.display = showRevBasis ? '' : 'none';
+    // Reset rev-basis to ebitda when toggle is hidden
+    if (!showRevBasis && fcfRevMode !== 'ebitda') setFcfRevMode('ebitda');
     updateFcfHints();
     calculate();
   }
@@ -3022,6 +3024,7 @@
     const showRevBasis = mode === 'detail' && fcfMode === 'detail';
     const row = document.getElementById('fcfRevModeRow');
     if(row) row.style.display = showRevBasis ? '' : 'none';
+    if (!showRevBasis && fcfRevMode !== 'ebitda') setFcfRevMode('ebitda');
     updateFcfHints();
     calculate();
   }
@@ -3033,15 +3036,6 @@
     const inputs = document.getElementById('acqInputs');
     inputs.style.opacity = val ? '1' : '0.3';
     inputs.style.pointerEvents = val ? 'auto' : 'none';
-    calculate();
-  }
-
-  function setCagrMode(mode) {
-    cagrMode = mode;
-    document.getElementById('cagrModeSimple').classList.toggle('active', mode === 'simple');
-    document.getElementById('cagrModeDetail').classList.toggle('active', mode === 'detail');
-    document.getElementById('cagrSimple').style.display = mode === 'simple' ? '' : 'none';
-    document.getElementById('cagrDetail').style.display = mode === 'detail' ? '' : 'none';
     calculate();
   }
 
