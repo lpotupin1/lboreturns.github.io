@@ -3806,7 +3806,7 @@
       const tax   = ebit.map(e => e * taxRate);
       const nopat = ebit.map((e, i) => e - tax[i]);
       const capex = basis.map(b => b * capexRate);
-      const nwc   = basis.map((b, i) => Math.max(b - prevBasis[i], 0) * wcRate);
+      const nwc   = basis.map((b, i) => (b - prevBasis[i]) * wcRate);
 
       const basisLabel = revBasis ? 'Revenue' : 'EBITDA';
       html += dRow(`− D&A (% of ${basisLabel})`, da.map(v => -v), 'neg', false, true);
@@ -4566,10 +4566,11 @@
         const da  = +document.getElementById('daRate').value    / 100;
         const cap = +document.getElementById('capexRate').value / 100;
         const wc  = +document.getElementById('wcRate').value    / 100;
-        inp('taxRate',   'Tax Rate',                     pIn(tx));
-        inp('daRate',    'D&A (% of EBITDA)',             pIn(da));
-        inp('capexRate', 'Capex (% of EBITDA)',           pIn(cap));
-        inp('wcRate',    'NWC Delta (% of ΔEBITDA)',      pIn(wc));
+        const fcfBasis = (fcfDetailParams?.useRevBasis && cagrMode==='detail') ? 'Revenue' : 'EBITDA';
+        inp('taxRate',   'Tax Rate',                              pIn(tx));
+        inp('daRate',    `D&A (% of ${fcfBasis})`,               pIn(da));
+        inp('capexRate', `Capex (% of ${fcfBasis})`,             pIn(cap));
+        inp('wcRate',    `NWC Delta (% of Δ${fcfBasis})`,        pIn(wc));
         // FCF% as formula: (1-da)*(1-tax)+da-capex-wc*growth
         const fcfFml = `(1-${bRef(IR.daRate)})*(1-${bRef(IR.taxRate)})+${bRef(IR.daRate)}-${bRef(IR.capexRate)}-${bRef(IR.wcRate)}*${bRef(IR.growth)}`;
         inp('fcfPct', 'Implied FCF % EBITDA (formula)', fp(fcfPct, fcfFml));
