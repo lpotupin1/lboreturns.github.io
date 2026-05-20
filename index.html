@@ -4673,22 +4673,6 @@
         platVals.push({...f$(SR[k-1].organicEbitda, `${bRef(IR.ebitda)}*(1+${bRef(IR.growth)})^${k}`), z:N1});
       const R_plat = dataRow('Platform EBITDA', platVals);
 
-      // Patch Revenue = Platform EBITDA / Margin
-      // CRITICAL: dataRow puts vals[k] at row[ENTRY-1+k] (0-based), so use ENTRY-1+k here
-      if (R_rev && R_marg_row) {
-        const entMV  = +document.getElementById('entryMargin').value / 100;
-        const exMV   = +document.getElementById('exitMargin').value  / 100;
-        const entRevV = entMV > 0 ? ebitda / entMV : ebitda;
-        // Entry col: index ENTRY-1
-        rows[R_rev-1][ENTRY-1] = {...f$(r1(entRevV), `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1};
-        // Year cols: index ENTRY-1+k for k=1..hold
-        for (let k=1; k<=hold; k++) {
-          const mv = entMV + (exMV-entMV)*k/hold;
-          rows[R_rev-1][ENTRY-1+k] = {...f$(r1(SR[k-1].organicEbitda/mv),
-            `${cRef(k,R_plat)}/${cRef(k,R_marg_row)}`), z:N1};
-        }
-      }
-
       // ── Bolt-on cohorts (if enabled) ──
       const R_cohorts = [];
       let R_totAcq = null;
@@ -4720,6 +4704,21 @@
       const ebitdaRef = k => R_totAcq
         ? `${colYr(k)}${combEbitdaRow}`
         : cRef(k, R_plat);
+
+      // ── Patch Revenue row to use COMBINED EBITDA / margin ──
+      // Must happen after combEbitdaRow is defined so the formula ref is correct.
+      // computeFcf uses combinedEbitda (organic + bolt-on) / margin for revenue basis,
+      // so the Revenue row must also use combined EBITDA.
+      if (R_rev && R_marg_row) {
+        const entMV  = +document.getElementById('entryMargin').value / 100;
+        const exMV   = +document.getElementById('exitMargin').value  / 100;
+        rows[R_rev-1][ENTRY-1] = {...f$(r1(entMV>0?ebitda/entMV:ebitda), `${bRef(IR.ebitda)}/${bRef(IR.entryMargin)}`), z:N1};
+        for (let k=1; k<=hold; k++) {
+          const mv = entMV + (exMV-entMV)*k/hold;
+          rows[R_rev-1][ENTRY-1+k] = {...f$(r1(SR[k-1].ebitda/mv),
+            `${ebitdaRef(k)}/${cRef(k,R_marg_row)}`), z:N1};
+        }
+      }
 
       let R_comb;
       if (R_totAcq) {
